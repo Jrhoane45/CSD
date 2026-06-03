@@ -1,0 +1,20 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100" role="img" aria-label="Westside Football Club">
+  <defs>
+    <linearGradient id="wfc-n" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0%" stop-color="#1d3a73"/><stop offset="100%" stop-color="#0e1b3a"/>
+    </linearGradient>
+  </defs>
+  <path d="M50 5 L90 18 L90 52 Q90 84 50 96 Q10 84 10 52 L10 18 Z" fill="url(#wfc-n)" stroke="#f5a800" stroke-width="3.5"/>
+  <!-- soccer ball -->
+  <circle cx="50" cy="37" r="13" fill="#ffffff" stroke="#0e1b3a" stroke-width="1.2"/>
+  <path d="M50 29 l6.5 4.7 -2.5 7.6 h-8 l-2.5 -7.6 z" fill="#0e1b3a"/>
+  <g stroke="#0e1b3a" stroke-width="1.2">
+    <line x1="50" y1="25" x2="50" y2="29"/>
+    <line x1="38.5" y1="33" x2="43.5" y2="36"/>
+    <line x1="61.5" y1="33" x2="56.5" y2="36"/>
+    <line x1="43" y1="48" x2="45.5" y2="42"/>
+    <line x1="57" y1="48" x2="54.5" y2="42"/>
+  </g>
+  <text x="50" y="73" text-anchor="middle" font-family="'Arial Black',Arial,sans-serif" font-weight="900" font-size="20" fill="#ffffff" letter-spacing="1">WFC</text>
+  <text x="50" y="86" text-anchor="middle" font-family="Arial,sans-serif" font-weight="700" font-size="7.5" fill="#f5a800" letter-spacing="1.5">EST. 2012</text>
+</svg>

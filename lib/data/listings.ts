@@ -107,6 +107,7 @@ const SEEDS: Seed[] = [
   {
     id: "westside-fc",
     name: "Westside Football Club",
+    logo: "/logos/westside-fc.svg",
     category: "club",
     sports: ["Soccer"],
     levels: ["Competitive", "Elite"],
@@ -156,6 +157,7 @@ const SEEDS: Seed[] = [
   {
     id: "valley-elite-hoops",
     name: "Valley Elite Hoops",
+    logo: "/logos/valley-elite-hoops.svg",
     category: "club",
     sports: ["Basketball"],
     levels: ["Competitive", "Elite"],
@@ -228,6 +230,7 @@ const SEEDS: Seed[] = [
   {
     id: "gridiron-prep-academy",
     name: "Gridiron Prep Academy",
+    logo: "/logos/gridiron-prep-academy.svg",
     category: "club",
     sports: ["Football"],
     levels: ["Competitive", "Elite"],
@@ -350,6 +353,7 @@ const SEEDS: Seed[] = [
   {
     id: "first-touch-training",
     name: "First Touch Soccer Training",
+    logo: "/logos/first-touch-training.svg",
     category: "trainer",
     sports: ["Soccer"],
     levels: ["Intermediate", "Competitive", "Elite"],
@@ -569,6 +573,7 @@ const SEEDS: Seed[] = [
   {
     id: "next-level-recruiting",
     name: "Next Level Recruiting Advisers",
+    logo: "/logos/next-level-recruiting.svg",
     category: "consultant",
     sports: ["Soccer", "Basketball", "Baseball", "Softball", "Football", "Volleyball"],
     levels: ["Competitive", "Elite"],
@@ -692,6 +697,7 @@ const SEEDS: Seed[] = [
   {
     id: "socal-storm-volleyball",
     name: "SoCal Storm Volleyball Club",
+    logo: "/logos/socal-storm-volleyball.svg",
     category: "club",
     sports: ["Volleyball"],
     levels: ["Competitive", "Elite"],

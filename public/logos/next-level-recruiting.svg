@@ -1,0 +1,10 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100" role="img" aria-label="Next Level Recruiting Advisers">
+  <path d="M50 5 L90 18 L90 52 Q90 84 50 96 Q10 84 10 52 L10 18 Z" fill="#0e1b3a" stroke="#f5a800" stroke-width="3.5"/>
+  <!-- upward chevrons -->
+  <g fill="none" stroke="#f5a800" stroke-width="5" stroke-linecap="round" stroke-linejoin="round">
+    <path d="M34 46 L50 32 L66 46"/>
+    <path d="M34 58 L50 44 L66 58"/>
+  </g>
+  <text x="50" y="78" text-anchor="middle" font-family="'Arial Black',Arial,sans-serif" font-weight="900" font-size="19" fill="#ffffff" letter-spacing="1">NL</text>
+  <text x="50" y="89" text-anchor="middle" font-family="Arial,sans-serif" font-weight="700" font-size="6" fill="#f5a800" letter-spacing="1.2">RECRUITING</text>
+</svg>
