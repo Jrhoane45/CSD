@@ -1,0 +1,206 @@
+"use client";
+
+import { useMemo, useState } from "react";
+import { Search, SlidersHorizontal, X } from "lucide-react";
+import type { Category } from "@/lib/types";
+import { computeCsdScore, averageRating } from "@/lib/scoring";
+import {
+  LISTINGS,
+  SPORTS_LIST,
+  COUNTIES_LIST,
+  LEVELS_LIST,
+  CATEGORY_PLURAL,
+} from "@/lib/data/listings";
+import { ListingCard } from "@/components/listing/ListingCard";
+import { Eyebrow } from "@/components/ui/Eyebrow";
+
+type Sort = "score" | "rating" | "name";
+
+const SCORED = LISTINGS.map((l) => ({
+  listing: l,
+  score: computeCsdScore(l).score,
+  rating: averageRating(l),
+}));
+
+export function DiscoverClient({ initialCategory }: { initialCategory?: Category }) {
+  const [query, setQuery] = useState("");
+  const [category, setCategory] = useState<Category | "all">(initialCategory ?? "all");
+  const [sport, setSport] = useState<string>("all");
+  const [level, setLevel] = useState<string>("all");
+  const [county, setCounty] = useState<string>("all");
+  const [minScore, setMinScore] = useState(0);
+  const [sort, setSort] = useState<Sort>("score");
+  const [showFilters, setShowFilters] = useState(false);
+
+  const results = useMemo(() => {
+    return SCORED.filter(({ listing, score }) => {
+      if (category !== "all" && listing.category !== category) return false;
+      if (sport !== "all" && !listing.sports.includes(sport as never)) return false;
+      if (level !== "all" && !listing.levels.includes(level as never)) return false;
+      if (county !== "all" && listing.county !== county) return false;
+      if (score < minScore) return false;
+      if (query) {
+        const q = query.toLowerCase();
+        if (
+          !listing.name.toLowerCase().includes(q) &&
+          !listing.city.toLowerCase().includes(q) &&
+          !listing.specialties.join(" ").toLowerCase().includes(q)
+        )
+          return false;
+      }
+      return true;
+    }).sort((a, b) => {
+      if (sort === "score") return b.score - a.score;
+      if (sort === "rating") return b.rating - a.rating;
+      return a.listing.name.localeCompare(b.listing.name);
+    });
+  }, [query, category, sport, level, county, minScore, sort]);
+
+  const reset = () => {
+    setQuery("");
+    setCategory("all");
+    setSport("all");
+    setLevel("all");
+    setCounty("all");
+    setMinScore(0);
+  };
+
+  const Filters = (
+    <div className="space-y-5">
+      <Select label="Category" value={category} onChange={(v) => setCategory(v as Category | "all")}>
+        <option value="all">All categories</option>
+        <option value="club">{CATEGORY_PLURAL.club}</option>
+        <option value="trainer">{CATEGORY_PLURAL.trainer}</option>
+        <option value="consultant">{CATEGORY_PLURAL.consultant}</option>
+      </Select>
+      <Select label="Sport" value={sport} onChange={setSport}>
+        <option value="all">All sports</option>
+        {SPORTS_LIST.map((s) => (
+          <option key={s} value={s}>
+            {s}
+          </option>
+        ))}
+      </Select>
+      <Select label="Development level" value={level} onChange={setLevel}>
+        <option value="all">All levels</option>
+        {LEVELS_LIST.map((l) => (
+          <option key={l} value={l}>
+            {l}
+          </option>
+        ))}
+      </Select>
+      <Select label="County" value={county} onChange={setCounty}>
+        <option value="all">All counties</option>
+        {COUNTIES_LIST.map((c) => (
+          <option key={c} value={c}>
+            {c}
+          </option>
+        ))}
+      </Select>
+      <div>
+        <label className="eyebrow text-ink/50">Minimum CSD Score · {minScore}</label>
+        <input
+          type="range"
+          min={0}
+          max={100}
+          step={5}
+          value={minScore}
+          onChange={(e) => setMinScore(Number(e.target.value))}
+          className="mt-2 w-full accent-navy"
+        />
+      </div>
+      <button onClick={reset} className="inline-flex items-center gap-1.5 text-sm font-medium text-red">
+        <X size={14} /> Reset filters
+      </button>
+    </div>
+  );
+
+  return (
+    <div className="mx-auto max-w-7xl px-6 py-10">
+      <Eyebrow>Discovery</Eyebrow>
+      <h1 className="display mt-3 text-4xl text-navy">FIND A PROGRAM</h1>
+
+      {/* search + sort bar */}
+      <div className="mt-6 flex flex-col gap-3 sm:flex-row sm:items-center">
+        <div className="relative flex-1">
+          <Search size={18} className="absolute left-3.5 top-1/2 -translate-y-1/2 text-ink/40" />
+          <input
+            value={query}
+            onChange={(e) => setQuery(e.target.value)}
+            placeholder="Search by name, city, or specialty…"
+            className="w-full rounded-xl border border-ink/15 bg-white py-3 pl-11 pr-4 text-sm outline-none focus:border-navy"
+          />
+        </div>
+        <select
+          value={sort}
+          onChange={(e) => setSort(e.target.value as Sort)}
+          className="rounded-xl border border-ink/15 bg-white px-4 py-3 text-sm outline-none focus:border-navy"
+        >
+          <option value="score">Sort: CSD Score</option>
+          <option value="rating">Sort: Rating</option>
+          <option value="name">Sort: Name</option>
+        </select>
+        <button
+          onClick={() => setShowFilters((v) => !v)}
+          className="inline-flex items-center justify-center gap-2 rounded-xl border border-ink/15 bg-white px-4 py-3 text-sm font-medium text-navy lg:hidden"
+        >
+          <SlidersHorizontal size={16} /> Filters
+        </button>
+      </div>
+
+      <div className="mt-8 grid gap-8 lg:grid-cols-[260px_1fr]">
+        {/* sidebar filters (desktop) */}
+        <aside className="hidden lg:block">
+          <div className="sticky top-28 rounded-2xl border border-ink/10 bg-white p-6">{Filters}</div>
+        </aside>
+
+        {/* mobile filters */}
+        {showFilters && (
+          <div className="rounded-2xl border border-ink/10 bg-white p-6 lg:hidden">{Filters}</div>
+        )}
+
+        <div>
+          <p className="mb-4 text-sm text-ink/55">
+            <span className="font-semibold text-navy">{results.length}</span> results
+          </p>
+          {results.length === 0 ? (
+            <div className="rounded-2xl border border-dashed border-ink/20 p-12 text-center text-ink/50">
+              No programs match those filters. Try widening your search.
+            </div>
+          ) : (
+            <div className="grid gap-6 sm:grid-cols-2 xl:grid-cols-3">
+              {results.map(({ listing }) => (
+                <ListingCard key={listing.id} listing={listing} />
+              ))}
+            </div>
+          )}
+        </div>
+      </div>
+    </div>
+  );
+}
+
+function Select({
+  label,
+  value,
+  onChange,
+  children,
+}: {
+  label: string;
+  value: string;
+  onChange: (v: string) => void;
+  children: React.ReactNode;
+}) {
+  return (
+    <div>
+      <label className="eyebrow text-ink/50">{label}</label>
+      <select
+        value={value}
+        onChange={(e) => onChange(e.target.value)}
+        className="mt-2 w-full rounded-lg border border-ink/15 bg-white px-3 py-2.5 text-sm outline-none focus:border-navy"
+      >
+        {children}
+      </select>
+    </div>
+  );
+}

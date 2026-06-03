@@ -1,0 +1,272 @@
+import type { Metadata } from "next";
+import Link from "next/link";
+import { notFound } from "next/navigation";
+import {
+  MapPin,
+  BadgeCheck,
+  Sparkles,
+  ArrowLeft,
+  Trophy,
+  GraduationCap,
+  Award,
+  Clock,
+  DollarSign,
+} from "lucide-react";
+import { LISTINGS, getListing, CATEGORY_LABEL } from "@/lib/data/listings";
+import { computeCsdScore, averageRating } from "@/lib/scoring";
+import { CsdScoreBadge } from "@/components/ui/CsdScoreBadge";
+import { StarRating } from "@/components/ui/StarRating";
+import { Eyebrow } from "@/components/ui/Eyebrow";
+import { ScoreBreakdown } from "@/components/listing/ScoreBreakdown";
+import { ReviewList } from "@/components/listing/ReviewList";
+import { SaveButton } from "@/components/app/SaveButton";
+import { DemoButton } from "@/components/app/DemoButton";
+
+export function generateStaticParams() {
+  return LISTINGS.map((l) => ({ id: l.id }));
+}
+
+export async function generateMetadata({
+  params,
+}: {
+  params: Promise<{ id: string }>;
+}): Promise<Metadata> {
+  const { id } = await params;
+  const listing = getListing(id);
+  if (!listing) return { title: "Listing not found" };
+  return {
+    title: listing.name,
+    description: listing.philosophy,
+  };
+}
+
+export default async function ListingPage({ params }: { params: Promise<{ id: string }> }) {
+  const { id } = await params;
+  const listing = getListing(id);
+  if (!listing) notFound();
+
+  const { score, parts } = computeCsdScore(listing);
+  const rating = averageRating(listing);
+
+  // Average each review dimension for the category-specific summary.
+  const dimMap = new Map<string, { sum: number; n: number }>();
+  for (const r of listing.reviews) {
+    for (const d of r.dimensions) {
+      const cur = dimMap.get(d.label) ?? { sum: 0, n: 0 };
+      dimMap.set(d.label, { sum: cur.sum + d.value, n: cur.n + 1 });
+    }
+  }
+  const dimAverages = [...dimMap.entries()].map(([label, v]) => ({
+    label,
+    value: v.sum / v.n,
+  }));
+
+  const alumniTotal =
+    listing.alumni.pro + listing.alumni.d1 + listing.alumni.d2 + listing.alumni.d3;
+
+  return (
+    <div className="mx-auto max-w-7xl px-6 py-8">
+      <Link
+        href="/app/discover"
+        className="inline-flex items-center gap-1.5 text-sm font-medium text-ink/55 hover:text-navy"
+      >
+        <ArrowLeft size={15} /> Back to directory
+      </Link>
+
+      {/* claim banner */}
+      {listing.claimState === "unclaimed" && (
+        <div className="mt-5 flex flex-wrap items-center justify-between gap-3 rounded-2xl border border-gold/50 bg-gold/[0.08] p-5">
+          <div className="flex items-start gap-3">
+            <Sparkles size={20} className="mt-0.5 text-gold" />
+            <div>
+              <p className="font-semibold text-navy">This is an auto-built profile.</p>
+              <p className="text-sm text-ink/65">
+                Built from public data. Is this your program? Claim it to control your narrative.
+              </p>
+            </div>
+          </div>
+          <Link
+            href="/app/provider"
+            className="rounded-lg bg-navy px-5 py-2.5 text-sm font-semibold text-white hover:bg-navy-deep"
+          >
+            Claim this profile
+          </Link>
+        </div>
+      )}
+
+      {/* header */}
+      <div className="mt-5 grid gap-6 rounded-3xl border border-ink/10 bg-white p-7 lg:grid-cols-[1fr_auto] lg:p-9">
+        <div>
+          <div className="flex items-center gap-3">
+            <Eyebrow tone="red">{CATEGORY_LABEL[listing.category]}</Eyebrow>
+            {listing.verified ? (
+              <span className="inline-flex items-center gap-1 text-xs font-semibold text-navy">
+                <BadgeCheck size={14} /> Verified
+              </span>
+            ) : (
+              <span className="inline-flex items-center gap-1 text-xs font-semibold text-gold">
+                <Sparkles size={13} /> Unclaimed
+              </span>
+            )}
+          </div>
+          <h1 className="display mt-2 text-4xl text-navy">{listing.name}</h1>
+          <div className="mt-3 flex flex-wrap items-center gap-x-4 gap-y-1.5 text-sm text-ink/65">
+            <span className="font-semibold text-ink/85">{listing.sports.join(" · ")}</span>
+            <span className="inline-flex items-center gap-1">
+              <MapPin size={14} /> {listing.city}, {listing.county} County
+            </span>
+            <StarRating value={rating} count={listing.reviews.length} />
+          </div>
+          <div className="mt-4 flex flex-wrap gap-2">
+            {listing.levels.map((l) => (
+              <span key={l} className="rounded-full bg-navy/[0.07] px-3 py-1 text-xs font-medium text-navy">
+                {l}
+              </span>
+            ))}
+            {listing.specialties.map((s) => (
+              <span key={s} className="rounded-full bg-gold/15 px-3 py-1 text-xs font-medium text-ink/75">
+                {s}
+              </span>
+            ))}
+          </div>
+          <div className="mt-6 flex flex-wrap gap-3">
+            <DemoButton variant="red">Request info</DemoButton>
+            <DemoButton variant="outline" done="Added (demo)">
+              Book a visit
+            </DemoButton>
+            <SaveButton id={listing.id} />
+          </div>
+        </div>
+
+        <div className="flex flex-row items-center gap-4 lg:flex-col lg:items-end lg:justify-center">
+          <CsdScoreBadge score={score} size="lg" />
+          <p className="eyebrow text-ink/45">CSD Score™</p>
+        </div>
+      </div>
+
+      <div className="mt-6 grid gap-6 lg:grid-cols-[1fr_320px]">
+        {/* main column */}
+        <div className="space-y-6">
+          {/* overview */}
+          <section className="rounded-2xl border border-ink/10 bg-white p-7">
+            <h2 className="display text-2xl text-navy">OVERVIEW</h2>
+            <p className="mt-3 text-ink/70">{listing.philosophy}</p>
+            <div className="mt-5 grid gap-3 sm:grid-cols-2">
+              {listing.goals.map((g) => (
+                <div key={g} className="flex items-center gap-2 rounded-lg bg-cream/60 px-3 py-2 text-sm">
+                  <Award size={15} className="text-gold" /> {g}
+                </div>
+              ))}
+            </div>
+          </section>
+
+          {/* alumni outcomes */}
+          <section className="rounded-2xl border border-ink/10 bg-white p-7">
+            <div className="flex items-center gap-2">
+              <Trophy size={20} className="text-gold" />
+              <h2 className="display text-2xl text-navy">ALUMNI OUTCOMES</h2>
+            </div>
+            <div className="mt-5 grid grid-cols-2 gap-3 sm:grid-cols-4">
+              {[
+                { l: "Pro", v: listing.alumni.pro },
+                { l: "D1", v: listing.alumni.d1 },
+                { l: "D2", v: listing.alumni.d2 },
+                { l: "D3", v: listing.alumni.d3 },
+              ].map((a) => (
+                <div key={a.l} className="rounded-xl bg-cream/60 p-4 text-center">
+                  <p className="display text-3xl text-navy">{a.v}</p>
+                  <p className="eyebrow mt-1 text-ink/50">{a.l}</p>
+                </div>
+              ))}
+            </div>
+            {alumniTotal === 0 && (
+              <p className="mt-4 text-sm text-ink/55">
+                No verified placements on file yet — common for newer or recreational programs.
+              </p>
+            )}
+            {listing.notableAthletes.length > 0 && (
+              <div className="mt-5">
+                <p className="eyebrow text-ink/50">Notable</p>
+                <ul className="mt-2 space-y-1.5">
+                  {listing.notableAthletes.map((n) => (
+                    <li key={n} className="flex items-center gap-2 text-sm text-ink/75">
+                      <GraduationCap size={15} className="text-navy" /> {n}
+                    </li>
+                  ))}
+                </ul>
+              </div>
+            )}
+          </section>
+
+          {/* reviews */}
+          <section>
+            <div className="flex items-center justify-between">
+              <h2 className="display text-2xl text-navy">REVIEWS</h2>
+              <StarRating value={rating} count={listing.reviews.length} />
+            </div>
+            {/* dimension summary */}
+            <div className="mt-4 grid gap-2 rounded-2xl border border-ink/10 bg-cream-200 p-5 sm:grid-cols-2">
+              {dimAverages.map((d) => (
+                <div key={d.label} className="flex items-center justify-between gap-3">
+                  <span className="text-sm text-ink/65">{d.label}</span>
+                  <div className="flex items-center gap-2">
+                    <div className="h-1.5 w-20 rounded-full bg-white">
+                      <div
+                        className="h-1.5 rounded-full bg-gold"
+                        style={{ width: `${(d.value / 5) * 100}%` }}
+                      />
+                    </div>
+                    <span className="w-7 text-right text-sm font-semibold text-navy">
+                      {d.value.toFixed(1)}
+                    </span>
+                  </div>
+                </div>
+              ))}
+            </div>
+            <div className="mt-5">
+              <ReviewList reviews={listing.reviews} />
+            </div>
+          </section>
+        </div>
+
+        {/* sidebar */}
+        <aside className="space-y-6">
+          <div className="sticky top-28 space-y-6">
+            <div className="rounded-2xl border border-ink/10 bg-white p-6">
+              <p className="eyebrow text-ink/50">CSD Score™ breakdown</p>
+              <div className="mt-3 flex items-center gap-3">
+                <CsdScoreBadge score={score} size="md" showTier />
+              </div>
+              <div className="mt-5">
+                <ScoreBreakdown parts={parts} />
+              </div>
+              <Link
+                href="/csd-score"
+                className="mt-4 inline-block text-sm font-semibold text-red hover:underline"
+              >
+                How is this calculated?
+              </Link>
+            </div>
+
+            <div className="rounded-2xl border border-ink/10 bg-white p-6">
+              <p className="eyebrow text-ink/50">Quick facts</p>
+              <ul className="mt-3 space-y-3 text-sm">
+                <li className="flex items-center gap-2.5 text-ink/75">
+                  <Clock size={16} className="text-navy" /> {listing.yearsInOperation} years operating
+                </li>
+                <li className="flex items-center gap-2.5 text-ink/75">
+                  <DollarSign size={16} className="text-navy" /> {listing.priceLabel}
+                </li>
+                {listing.certifications.map((c) => (
+                  <li key={c} className="flex items-center gap-2.5 text-ink/75">
+                    <BadgeCheck size={16} className="text-navy" /> {c}
+                  </li>
+                ))}
+              </ul>
+            </div>
+          </div>
+        </aside>
+      </div>
+    </div>
+  );
+}
