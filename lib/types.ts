@@ -52,6 +52,8 @@ export interface AlumniOutcomes {
 export interface Listing {
   id: string;
   name: string;
+  /** Optional business thumbnail logo (path in /public). Falls back to a monogram. */
+  logo?: string;
   category: Category;
   sports: Sport[];
   levels: DevLevel[];

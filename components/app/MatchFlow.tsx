@@ -22,6 +22,7 @@ import {
 import { CsdScoreBadge } from "@/components/ui/CsdScoreBadge";
 import { computeCsdScore } from "@/lib/scoring";
 import { SaveButton } from "@/components/app/SaveButton";
+import { LogoAvatar } from "@/components/listing/LogoAvatar";
 
 const LEVELS: { value: DevLevel; blurb: string }[] = [
   { value: "Recreational", blurb: "First exposure — fun and fundamentals." },
@@ -363,6 +364,7 @@ function MatchCard({
       <div className="flex flex-wrap items-start justify-between gap-4">
         <div className="flex items-start gap-4">
           <FitRing fit={fit} />
+          <LogoAvatar listing={listing} size="sm" />
           <div>
             {top && <span className="eyebrow text-gold">Top match</span>}
             <Link

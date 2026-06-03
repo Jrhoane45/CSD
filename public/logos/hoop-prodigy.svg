@@ -1,0 +1,34 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 140 120" role="img" aria-label="Hoop Prodigy">
+  <defs>
+    <linearGradient id="hp-red" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0%" stop-color="#e23042"/>
+      <stop offset="100%" stop-color="#a50d26"/>
+    </linearGradient>
+    <linearGradient id="hp-blue" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0%" stop-color="#2a49a8"/>
+      <stop offset="100%" stop-color="#16276b"/>
+    </linearGradient>
+    <linearGradient id="hp-gold" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0%" stop-color="#ffd76a"/>
+      <stop offset="100%" stop-color="#d28e1f"/>
+    </linearGradient>
+  </defs>
+
+  <!-- H -->
+  <text x="2" y="100" font-family="'Arial Black','Helvetica Neue',Arial,sans-serif" font-weight="900" font-size="96" fill="url(#hp-red)">H</text>
+  <!-- P -->
+  <text x="66" y="100" font-family="'Arial Black','Helvetica Neue',Arial,sans-serif" font-weight="900" font-size="96" fill="url(#hp-blue)">P</text>
+
+  <!-- crown over a basketball -->
+  <g transform="translate(58,4)">
+    <path d="M2 30 L2 14 L11 22 L21 7 L31 22 L40 14 L40 30 Z" fill="url(#hp-gold)" stroke="#9a6700" stroke-width="0.8"/>
+    <circle cx="2" cy="13" r="3.1" fill="url(#hp-gold)"/>
+    <circle cx="21" cy="6" r="3.4" fill="url(#hp-gold)"/>
+    <circle cx="40" cy="13" r="3.1" fill="url(#hp-gold)"/>
+    <circle cx="11" cy="20" r="2.6" fill="url(#hp-gold)"/>
+    <circle cx="31" cy="20" r="2.6" fill="url(#hp-gold)"/>
+    <!-- basketball -->
+    <circle cx="21" cy="34" r="10" fill="url(#hp-gold)" stroke="#16276b" stroke-width="1.4"/>
+    <path d="M11 34 H31 M21 24 V44 M13.5 27 Q21 34 13.5 41 M28.5 27 Q21 34 28.5 41" fill="none" stroke="#16276b" stroke-width="1.1"/>
+  </g>
+</svg>

@@ -81,6 +81,7 @@ const SEEDS: Seed[] = [
   {
     id: "hoop-prodigy",
     name: "Hoop Prodigy",
+    logo: "/logos/hoop-prodigy.svg",
     category: "club",
     sports: ["Basketball"],
     levels: ["Recreational", "Intermediate", "Competitive", "Elite"],

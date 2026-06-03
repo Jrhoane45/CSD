@@ -23,6 +23,8 @@ import { computeCsdScore } from "@/lib/scoring";
 import { CsdScoreBadge } from "@/components/ui/CsdScoreBadge";
 import { Eyebrow } from "@/components/ui/Eyebrow";
 import { DemoButton } from "@/components/app/DemoButton";
+import { LogoAvatar } from "@/components/listing/LogoAvatar";
+import { ImagePlus } from "lucide-react";
 
 const LISTING = getListing("hoop-prodigy")!;
 const SCORE = computeCsdScore(LISTING).score;
@@ -52,11 +54,14 @@ export function ProviderDashboard() {
     <div className="mx-auto max-w-6xl px-6 py-10">
       <Eyebrow>Provider dashboard</Eyebrow>
       <div className="mt-3 flex flex-wrap items-start justify-between gap-4">
-        <div>
-          <h1 className="display text-4xl text-navy">{LISTING.name}</h1>
-          <p className="mt-1 text-sm text-ink/60">
-            {CATEGORY_LABEL[LISTING.category]} · {LISTING.city}, {LISTING.county} County
-          </p>
+        <div className="flex items-center gap-4">
+          <LogoAvatar listing={LISTING} size="lg" />
+          <div>
+            <h1 className="display text-4xl text-navy">{LISTING.name}</h1>
+            <p className="mt-1 text-sm text-ink/60">
+              {CATEGORY_LABEL[LISTING.category]} · {LISTING.city}, {LISTING.county} County
+            </p>
+          </div>
         </div>
         <CsdScoreBadge score={SCORE} size="md" showTier />
       </div>
@@ -106,6 +111,29 @@ function Metric({
         {locked ? "—" : value}
       </p>
       <p className="eyebrow mt-1 text-ink/50">{label}</p>
+    </div>
+  );
+}
+
+function LogoSlot() {
+  return (
+    <div className="rounded-2xl border border-ink/10 bg-white p-6">
+      <div className="flex items-center gap-2">
+        <ImagePlus size={18} className="text-navy" />
+        <h3 className="font-semibold text-navy">Business logo</h3>
+      </div>
+      <p className="mt-1 text-sm text-ink/55">
+        Your thumbnail logo represents you across your profile, search results, and athlete matches.
+      </p>
+      <div className="mt-4 flex items-center gap-4">
+        <LogoAvatar listing={LISTING} size="lg" />
+        <div>
+          <DemoButton variant="primary" done="Uploaded (demo)">
+            <ImagePlus size={15} /> Upload logo
+          </DemoButton>
+          <p className="mt-2 text-xs text-ink/45">PNG, JPG, or SVG · square · at least 200×200px</p>
+        </div>
+      </div>
     </div>
   );
 }
@@ -177,6 +205,8 @@ function ClaimedFree({ onUpgrade }: { onUpgrade: () => void }) {
         <Metric icon={BarChart3} value="0" label="Analytics" locked />
       </div>
 
+      <LogoSlot />
+
       <LockedFeatures onUpgrade={onUpgrade} />
     </div>
   );
@@ -240,6 +270,8 @@ function ClaimedPaid() {
         <Metric icon={TrendingUp} value="38%" label="Lead conversion" />
         <Metric icon={Star} value="4.6" label="Avg rating" />
       </div>
+
+      <LogoSlot />
 
       <div className="grid gap-6 lg:grid-cols-2">
         {/* leads */}

@@ -17,6 +17,7 @@ import { computeCsdScore, averageRating } from "@/lib/scoring";
 import { CsdScoreBadge } from "@/components/ui/CsdScoreBadge";
 import { StarRating } from "@/components/ui/StarRating";
 import { Eyebrow } from "@/components/ui/Eyebrow";
+import { LogoAvatar } from "@/components/listing/LogoAvatar";
 import { ScoreBreakdown } from "@/components/listing/ScoreBreakdown";
 import { ReviewList } from "@/components/listing/ReviewList";
 import { SaveButton } from "@/components/app/SaveButton";
@@ -96,7 +97,9 @@ export default async function ListingPage({ params }: { params: Promise<{ id: st
 
       {/* header */}
       <div className="mt-5 grid gap-6 rounded-3xl border border-ink/10 bg-white p-7 lg:grid-cols-[1fr_auto] lg:p-9">
-        <div>
+        <div className="flex items-start gap-4">
+          <LogoAvatar listing={listing} size="lg" className="mt-1" />
+          <div className="flex-1">
           <div className="flex items-center gap-3">
             <Eyebrow tone="red">{CATEGORY_LABEL[listing.category]}</Eyebrow>
             {listing.verified ? (
@@ -135,6 +138,7 @@ export default async function ListingPage({ params }: { params: Promise<{ id: st
               Book a visit
             </DemoButton>
             <SaveButton id={listing.id} />
+          </div>
           </div>
         </div>
 

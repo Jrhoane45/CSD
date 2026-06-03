@@ -5,6 +5,7 @@ import { computeCsdScore, averageRating } from "@/lib/scoring";
 import { CATEGORY_LABEL } from "@/lib/data/listings";
 import { CsdScoreBadge } from "@/components/ui/CsdScoreBadge";
 import { StarRating } from "@/components/ui/StarRating";
+import { LogoAvatar } from "@/components/listing/LogoAvatar";
 
 const LEVEL_TONE: Record<string, string> = {
   Recreational: "bg-cream text-ink/70",
@@ -23,11 +24,14 @@ export function ListingCard({ listing }: { listing: Listing }) {
       className="group flex flex-col rounded-2xl border border-ink/10 bg-white p-5 shadow-[var(--shadow-card)] transition-all duration-200 hover:-translate-y-0.5 hover:border-navy/30 hover:shadow-[var(--shadow-lift)]"
     >
       <div className="flex items-start justify-between gap-3">
-        <div>
-          <p className="eyebrow text-red">{CATEGORY_LABEL[listing.category]}</p>
-          <h3 className="mt-1.5 text-lg font-bold leading-tight text-navy group-hover:text-navy-deep">
-            {listing.name}
-          </h3>
+        <div className="flex items-start gap-3">
+          <LogoAvatar listing={listing} size="sm" />
+          <div>
+            <p className="eyebrow text-red">{CATEGORY_LABEL[listing.category]}</p>
+            <h3 className="mt-1.5 text-lg font-bold leading-tight text-navy group-hover:text-navy-deep">
+              {listing.name}
+            </h3>
+          </div>
         </div>
         <CsdScoreBadge score={score} size="sm" />
       </div>
