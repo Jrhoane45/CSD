@@ -1,6 +1,18 @@
 # Club Sports Direct — Functional Demo Specification
 
-**Version:** 1.0 (for sign-off) · **Date:** 2026-06-02 · **Owner:** Justin Rhoane
+**Version:** 1.1 (locked) · **Date:** 2026-06-02 · **Owner:** Justin Rhoane
+
+### Locked decisions (v1.1)
+- **AI Matching = flagship, but labeled.** Foundation Layer features (Discovery, CSD Score, Claim→Paid
+  funnel, Event/Promo Posts) are the working "this is real now" core. The AI Match flow is built as the
+  flagship experience but clearly badged **"Intelligence Layer — Coming next"** so it reads as near-term
+  vision, not a beta overclaim. (Honors the locked Beta Scope while keeping the investor wow.)
+- **Coverage = full launch vision:** Southern California, all four launch sports (Soccer, Baseball/Softball,
+  Basketball, Football). Beta itself is LA + soccer/basketball; the demo shows the broader market story.
+- **Event & Promotional Posts** are a first-class, *distinct* revenue stream (not conflated with subscriptions).
+- **Four revenue pillars** framed for investors: Subscriptions · Event/Promo Posts · B2B Advertising · Data Licensing.
+- **Competitive positioning** included: platform/discovery vs. procurement/logistics — vs. BSN *Club Direct*,
+  TeamSnap, SportsEngine, GotSport; plus the "Club Sports Direct ≠ Club Direct" distinction.
 
 ---
 
@@ -113,6 +125,13 @@ alumni outcomes, notable athletes, years operating, aggregated reviews). A worke
 ### 5.5 Pricing `/pricing`
 Three listing tiers (illustrative): **Claimed-Free**, **Standard**, **Premium** — feature matrix
 (events/promos, analytics, lead tools, featured placement). Frames the supply-side subscription revenue.
+Also surfaces the **four revenue pillars** (Subscriptions · Event/Promo Posts · B2B Advertising · Data
+Licensing) and an à-la-carte **Event Boost** price — keeping subscriptions and event posts distinct.
+
+### 5.7 Why CSD / Competitive `/about` band (or `/why-csd`)
+Positioning band: **discovery & matching platform**, not procurement (BSN *Club Direct*) and not team
+logistics (TeamSnap, SportsEngine, GotSport). Makes the "Club Sports Direct ≠ Club Direct" distinction
+explicit and states the defensible moat: matching engine + CSD Score + data ownership + category-specific reviews.
 
 ### 5.6 About `/about`
 Mission, the independence/anti-apparel-company positioning, founder story (three years conceptualized,
@@ -124,7 +143,7 @@ one year building), SoCal launch focus.
 
 > The app uses a **role toggle** (Parent ⇄ Provider) so a single demo session can show both sides.
 
-### 6.1 ★ Match Flow `/app/match` (Hero #1 — parent side)
+### 6.1 ★ Match Flow `/app/match` (Hero #1 — parent side) — badged "Intelligence Layer · Coming next"
 A short, polished wizard:
 1. **Sport** (Soccer, Baseball/Softball, Basketball, Football) + **athlete age**
 2. **Development level** (Rec / Intermediate / Competitive-Travel / Elite) — *hard filter, explained*
@@ -159,6 +178,8 @@ The monetization story, shown as a guided state progression:
 - **Claimed-Free:** basic editing, limited visibility, sees locked premium features + upgrade CTA.
 - **Claimed-Paid:** unlocks events/promos, lead management, analytics, featured placement.
 - A visible **tier switcher** lets the viewer toggle states to *see* the upgrade value — built for investors.
+- **Event & Promotional Posts** module: create an event (tryout/camp/showcase/clinic) free within network,
+  plus a paid **Boost** (broader reach via push/featured/email) — shown as a *separate* revenue line.
 
 ### 6.6 Provider Analytics `/app/provider/analytics` (paid view)
 Profile views over time, search impressions, lead inquiries, conversion funnel, "fit quality" of leads —
