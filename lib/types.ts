@@ -7,7 +7,8 @@ export type Sport =
   | "Baseball"
   | "Softball"
   | "Basketball"
-  | "Football";
+  | "Football"
+  | "Volleyball";
 
 /** The four athletic development tiers — the heart of CSD's matching. */
 export type DevLevel =

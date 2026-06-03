@@ -7,8 +7,9 @@
   funnel, Event/Promo Posts) are the working "this is real now" core. The AI Match flow is built as the
   flagship experience but clearly badged **"Intelligence Layer — Coming next"** so it reads as near-term
   vision, not a beta overclaim. (Honors the locked Beta Scope while keeping the investor wow.)
-- **Coverage = full launch vision:** Southern California, all four launch sports (Soccer, Baseball/Softball,
-  Basketball, Football). Beta itself is LA + soccer/basketball; the demo shows the broader market story.
+- **Coverage = full launch vision:** Southern California, all launch sports (Soccer, Baseball/Softball,
+  Basketball, Football, and women's Club Volleyball). Beta itself is LA + soccer/basketball; the demo
+  shows the broader market story.
 - **Event & Promotional Posts** are a first-class, *distinct* revenue stream (not conflated with subscriptions).
 - **Four revenue pillars** framed for investors: Subscriptions · Event/Promo Posts · B2B Advertising · Data Licensing.
 - **Competitive positioning** included: platform/discovery vs. procurement/logistics — vs. BSN *Club Direct*,
@@ -145,7 +146,7 @@ one year building), SoCal launch focus.
 
 ### 6.1 ★ Match Flow `/app/match` (Hero #1 — parent side) — badged "Intelligence Layer · Coming next"
 A short, polished wizard:
-1. **Sport** (Soccer, Baseball/Softball, Basketball, Football) + **athlete age**
+1. **Sport** (Soccer, Baseball/Softball, Basketball, Football, Volleyball) + **athlete age**
 2. **Development level** (Rec / Intermediate / Competitive-Travel / Elite) — *hard filter, explained*
 3. **Location** (SoCal county/zip) + max travel distance
 4. **Goals & preferences** (e.g. "college recruiting," "skill development," schedule constraints, specialty needs)

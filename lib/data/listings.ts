@@ -2,7 +2,8 @@ import type { Category, Listing, Review, ReviewDimension } from "../types";
 
 /*
   Curated sample data for the Club Sports Direct demo.
-  Southern California · Soccer, Baseball/Softball, Basketball, Football.
+  Southern California · Soccer, Baseball/Softball, Basketball, Football, Volleyball.
+  Volleyball listings reflect women's/girls club volleyball (the prevalent club format).
   Numbers (alumni, pricing) are illustrative for demonstration only.
 */
 
@@ -544,7 +545,7 @@ const SEEDS: Seed[] = [
     id: "next-level-recruiting",
     name: "Next Level Recruiting Advisers",
     category: "consultant",
-    sports: ["Soccer", "Basketball", "Baseball", "Softball", "Football"],
+    sports: ["Soccer", "Basketball", "Baseball", "Softball", "Football", "Volleyball"],
     levels: ["Competitive", "Elite"],
     city: "El Segundo",
     county: "Los Angeles",
@@ -661,6 +662,129 @@ const SEEDS: Seed[] = [
     reviewCount: 4,
     avgRating: 4.2,
   },
+
+  // --- Women's Club Volleyball ----------------------------------------------
+  {
+    id: "socal-storm-volleyball",
+    name: "SoCal Storm Volleyball Club",
+    category: "club",
+    sports: ["Volleyball"],
+    levels: ["Competitive", "Elite"],
+    city: "Long Beach",
+    county: "Los Angeles",
+    milesFromAnchor: 22,
+    claimState: "claimed-paid",
+    verified: true,
+    yearsInOperation: 13,
+    certifications: ["USA Volleyball Member", "AVCA Affiliated", "SCVA Sanctioned"],
+    philosophy:
+      "Girls 12s–18s club program developing complete players with a strong record of collegiate placements and a positive, competitive culture.",
+    priceBand: 3,
+    priceLabel: "$2,900–$4,600 / season",
+    alumni: { pro: 1, d1: 12, d2: 16, d3: 24 },
+    notableAthletes: ["3x SCVA Gold finalist", "Multiple NCAA D1 commits (women's)"],
+    goals: ["College recruiting", "High-level competition", "Skill development"],
+    specialties: ["Girls 12s–18s", "Setter & libero development", "Recruiting pipeline"],
+    featured: true,
+    reviewCount: 7,
+    avgRating: 4.7,
+  },
+  {
+    id: "pacific-rise-volleyball",
+    name: "Pacific Rise Volleyball",
+    category: "club",
+    sports: ["Volleyball"],
+    levels: ["Intermediate", "Competitive"],
+    city: "Irvine",
+    county: "Orange",
+    milesFromAnchor: 41,
+    claimState: "claimed-free",
+    verified: true,
+    yearsInOperation: 8,
+    certifications: ["USA Volleyball Member", "SCVA Sanctioned"],
+    philosophy:
+      "Player-first girls volleyball club balancing fundamentals, competition, and a healthy practice-to-tournament ratio.",
+    priceBand: 2,
+    priceLabel: "$1,900–$3,000 / season",
+    alumni: { pro: 0, d1: 3, d2: 9, d3: 18 },
+    notableAthletes: ["SCVA Regionals qualifier"],
+    goals: ["Skill development", "High-level competition", "College recruiting"],
+    specialties: ["Girls 13s–17s", "All-position development"],
+    reviewCount: 6,
+    avgRating: 4.5,
+  },
+  {
+    id: "inland-juniors-volleyball",
+    name: "Inland Juniors Girls Volleyball",
+    category: "club",
+    sports: ["Volleyball"],
+    levels: ["Recreational", "Intermediate"],
+    city: "Riverside",
+    county: "Riverside",
+    milesFromAnchor: 58,
+    claimState: "unclaimed",
+    verified: false,
+    yearsInOperation: 5,
+    certifications: ["USA Volleyball Member"],
+    philosophy:
+      "Affordable entry-level and intermediate girls club volleyball focused on participation, fundamentals, and keeping athletes in the game.",
+    priceBand: 1,
+    priceLabel: "$650–$1,300 / season",
+    alumni: { pro: 0, d1: 0, d2: 1, d3: 5 },
+    notableAthletes: [],
+    goals: ["Fun & fundamentals", "Skill development", "Multi-sport friendly"],
+    specialties: ["Girls 12s–16s", "Beginner friendly"],
+    reviewCount: 4,
+    avgRating: 4.2,
+  },
+  {
+    id: "topspin-volleyball-training",
+    name: "Top Spin Volleyball Training",
+    category: "trainer",
+    sports: ["Volleyball"],
+    levels: ["Competitive", "Elite"],
+    city: "Torrance",
+    county: "Los Angeles",
+    milesFromAnchor: 16,
+    claimState: "claimed-paid",
+    verified: true,
+    yearsInOperation: 7,
+    certifications: ["USA Volleyball IMPACT Certified", "CAP II Certified"],
+    philosophy:
+      "Position-specific girls volleyball training — setting, hitting, passing, and serve-receive — with video feedback and individualized plans.",
+    priceBand: 2,
+    priceLabel: "$70–$105 / session",
+    alumni: { pro: 0, d1: 5, d2: 6, d3: 7 },
+    notableAthletes: ["Trained multiple all-league outside hitters (women's)"],
+    goals: ["Skill development", "College recruiting", "1-on-1 attention"],
+    specialties: ["Setter specific", "Hitting mechanics", "Girls 13s–18s"],
+    reviewCount: 6,
+    avgRating: 4.7,
+  },
+  {
+    id: "pipeline-volleyball-recruiting",
+    name: "Pipeline Volleyball Recruiting",
+    category: "consultant",
+    sports: ["Volleyball"],
+    levels: ["Competitive", "Elite"],
+    city: "Irvine",
+    county: "Orange",
+    milesFromAnchor: 41,
+    claimState: "claimed-free",
+    verified: true,
+    yearsInOperation: 9,
+    certifications: ["NCAA Compliance Trained", "AVCA Member"],
+    philosophy:
+      "Women's college volleyball recruiting — target lists, highlight strategy, coach outreach, and eligibility guidance.",
+    priceBand: 2,
+    priceLabel: "$1,000–$2,600 / package",
+    alumni: { pro: 0, d1: 14, d2: 22, d3: 26 },
+    notableAthletes: ["Placed 60+ female athletes in collegiate programs"],
+    goals: ["College recruiting", "Eligibility & compliance", "Academic fit"],
+    specialties: ["Women's volleyball recruiting", "Highlight strategy"],
+    reviewCount: 5,
+    avgRating: 4.6,
+  },
 ];
 
 export const LISTINGS: Listing[] = SEEDS.map(({ reviewCount, avgRating, ...rest }) => ({
@@ -672,7 +796,7 @@ export function getListing(id: string): Listing | undefined {
   return LISTINGS.find((l) => l.id === id);
 }
 
-export const SPORTS_LIST = ["Soccer", "Baseball", "Softball", "Basketball", "Football"] as const;
+export const SPORTS_LIST = ["Soccer", "Baseball", "Softball", "Basketball", "Football", "Volleyball"] as const;
 export const COUNTIES_LIST = [
   "Los Angeles",
   "Orange",
