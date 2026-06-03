@@ -24,7 +24,7 @@ import { CsdScoreBadge } from "@/components/ui/CsdScoreBadge";
 import { Eyebrow } from "@/components/ui/Eyebrow";
 import { DemoButton } from "@/components/app/DemoButton";
 
-const LISTING = getListing("valley-elite-hoops")!;
+const LISTING = getListing("hoop-prodigy")!;
 const SCORE = computeCsdScore(LISTING).score;
 
 const STATES: { value: ClaimState; label: string }[] = [
@@ -34,10 +34,10 @@ const STATES: { value: ClaimState; label: string }[] = [
 ];
 
 const LEADS = [
-  { parent: "Maria G.", athlete: "Diego, 14", note: "Competitive · Pasadena", fit: 94, when: "2h ago" },
+  { parent: "Maria G.", athlete: "Diego, 14", note: "Competitive · Fullerton", fit: 94, when: "2h ago" },
   { parent: "James T.", athlete: "Aaliyah, 16", note: "Elite · recruiting", fit: 91, when: "Yesterday" },
   { parent: "Priya S.", athlete: "Rohan, 13", note: "Competitive · guard", fit: 88, when: "2 days ago" },
-  { parent: "Tom W.", athlete: "Ella, 15", note: "Competitive · film", fit: 84, when: "3 days ago" },
+  { parent: "Tom W.", athlete: "Ella, 15", note: "Skills Academy · Brea", fit: 84, when: "3 days ago" },
 ];
 
 const EVENTS = [

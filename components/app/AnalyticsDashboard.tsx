@@ -58,7 +58,7 @@ export function AnalyticsDashboard() {
       <div className="mt-4 flex flex-wrap items-center justify-between gap-3">
         <div>
           <Eyebrow>Analytics · Premium</Eyebrow>
-          <h1 className="display mt-2 text-4xl text-navy">VALLEY ELITE HOOPS</h1>
+          <h1 className="display mt-2 text-4xl text-navy">HOOP PRODIGY</h1>
         </div>
         <span className="inline-flex items-center gap-1.5 rounded-full bg-gold/20 px-3 py-1.5 text-sm font-semibold text-ink">
           <Crown size={15} /> Paid tier
