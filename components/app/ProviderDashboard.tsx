@@ -24,7 +24,9 @@ import { CsdScoreBadge } from "@/components/ui/CsdScoreBadge";
 import { Eyebrow } from "@/components/ui/Eyebrow";
 import { DemoButton } from "@/components/app/DemoButton";
 import { LogoAvatar } from "@/components/listing/LogoAvatar";
-import { ImagePlus } from "lucide-react";
+import { MediaUploader } from "@/components/app/MediaUploader";
+import { ImagePlus, Images } from "lucide-react";
+import type { ProfileVideo } from "@/lib/types";
 
 const LISTING = getListing("hoop-prodigy")!;
 const SCORE = computeCsdScore(LISTING).score;
@@ -138,6 +140,25 @@ function LogoSlot() {
   );
 }
 
+function ProviderMediaSlot() {
+  const [photos, setPhotos] = useState<string[]>([]);
+  const [videos, setVideos] = useState<ProfileVideo[]>([]);
+  return (
+    <div className="rounded-2xl border border-ink/10 bg-white p-6">
+      <div className="flex items-center gap-2">
+        <Images size={18} className="text-navy" />
+        <h3 className="font-semibold text-navy">Photos &amp; video</h3>
+      </div>
+      <p className="mt-1 text-sm text-ink/55">
+        Showcase your facility, training, and highlights — up to 6 photos and 2 videos.
+      </p>
+      <div className="mt-4">
+        <MediaUploader photos={photos} videos={videos} onPhotos={setPhotos} onVideos={setVideos} />
+      </div>
+    </div>
+  );
+}
+
 function Unclaimed({ onClaim }: { onClaim: () => void }) {
   return (
     <div className="space-y-6">
@@ -207,6 +228,8 @@ function ClaimedFree({ onUpgrade }: { onUpgrade: () => void }) {
 
       <LogoSlot />
 
+      <ProviderMediaSlot />
+
       <LockedFeatures onUpgrade={onUpgrade} />
     </div>
   );
@@ -272,6 +295,8 @@ function ClaimedPaid() {
       </div>
 
       <LogoSlot />
+
+      <ProviderMediaSlot />
 
       <div className="grid gap-6 lg:grid-cols-2">
         {/* leads */}

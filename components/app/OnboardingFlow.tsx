@@ -12,14 +12,15 @@ import {
   MapPin,
   ShieldCheck,
 } from "lucide-react";
-import type { AthleteProfile, Category, DevLevel, Sport } from "@/lib/types";
+import type { AthleteProfile, Category, DevLevel, ProfileVideo, Sport } from "@/lib/types";
+import { MediaUploader } from "@/components/app/MediaUploader";
 import { zipToCounty, HEIGHT_OPTIONS } from "@/lib/location";
 import { PRICE_LABEL } from "@/lib/scoring";
 import { useProfile } from "@/lib/useProfile";
 import { SPORTS_LIST, GOALS_LIST, CATEGORY_LABEL } from "@/lib/data/listings";
 import { AthleteAvatar } from "@/components/app/AthleteAvatar";
 
-const STEPS = ["Account", "Athlete", "Stats", "Criteria", "Review"];
+const STEPS = ["Account", "Athlete", "Stats", "Criteria", "Media", "Review"];
 const LEVELS: DevLevel[] = ["Recreational", "Intermediate", "Competitive", "Elite"];
 const input =
   "w-full rounded-lg border border-ink/15 px-3 py-2.5 text-sm outline-none focus:border-navy";
@@ -44,6 +45,8 @@ interface Draft {
   priceMax: 0 | 1 | 2 | 3;
   category: Category | "any";
   goals: string[];
+  photos: string[];
+  videos: ProfileVideo[];
 }
 
 const EMPTY: Draft = {
@@ -66,6 +69,8 @@ const EMPTY: Draft = {
   priceMax: 0,
   category: "any",
   goals: [],
+  photos: [],
+  videos: [],
 };
 
 export function OnboardingFlow({ initial }: { initial?: AthleteProfile | null }) {
@@ -96,6 +101,8 @@ export function OnboardingFlow({ initial }: { initial?: AthleteProfile | null })
           priceMax: initial.priceMax ?? 0,
           category: initial.category ?? "any",
           goals: initial.goals ?? [],
+          photos: initial.photos ?? [],
+          videos: initial.videos ?? [],
         }
       : EMPTY,
   );
@@ -157,6 +164,8 @@ export function OnboardingFlow({ initial }: { initial?: AthleteProfile | null })
       priceMax: d.priceMax,
       category: d.category,
       goals: d.goals,
+      photos: d.photos,
+      videos: d.videos,
     };
     save(profile);
     router.push("/app/profile");
@@ -334,8 +343,20 @@ export function OnboardingFlow({ initial }: { initial?: AthleteProfile | null })
           </Section>
         )}
 
-        {/* STEP 4 — Review */}
+        {/* STEP 4 — Media */}
         {step === 4 && (
+          <Section title="Photos & video" subtitle="Add up to 6 photos and 2 highlight videos (optional).">
+            <MediaUploader
+              photos={d.photos}
+              videos={d.videos}
+              onPhotos={(photos) => set({ photos })}
+              onVideos={(videos) => set({ videos })}
+            />
+          </Section>
+        )}
+
+        {/* STEP 5 — Review */}
+        {step === 5 && (
           <Section title="Review your profile" subtitle="Confirm and create. You can edit anything later.">
             <div className="flex items-center gap-4 rounded-2xl bg-cream/60 p-4">
               <AthleteAvatar photo={d.photo} firstName={d.firstName} lastName={d.lastName} size={64} />
@@ -354,6 +375,7 @@ export function OnboardingFlow({ initial }: { initial?: AthleteProfile | null })
               <Review label="Budget" value={PRICE_LABEL[d.priceMax]} />
               <Review label="Looking for" value={d.category === "any" ? "Any" : CATEGORY_LABEL[d.category]} />
               <Review label="Goals" value={d.goals.join(", ")} />
+              <Review label="Media" value={`${d.photos.length} photos · ${d.videos.length} videos`} />
             </dl>
           </Section>
         )}

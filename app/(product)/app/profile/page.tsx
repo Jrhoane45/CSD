@@ -13,6 +13,7 @@ import {
   Sparkles,
   Wallet,
   Compass,
+  Images,
 } from "lucide-react";
 import { useProfile } from "@/lib/useProfile";
 import { rankMatches, PRICE_LABEL } from "@/lib/scoring";
@@ -21,6 +22,7 @@ import { LISTINGS, CATEGORY_LABEL } from "@/lib/data/listings";
 import { Eyebrow } from "@/components/ui/Eyebrow";
 import { AthleteAvatar } from "@/components/app/AthleteAvatar";
 import { LogoAvatar } from "@/components/listing/LogoAvatar";
+import { MediaUploader } from "@/components/app/MediaUploader";
 
 export default function ProfilePage() {
   const { profile, ready } = useProfile();
@@ -114,6 +116,19 @@ export default function ProfilePage() {
           )}
         </section>
       </div>
+
+      {/* media gallery */}
+      {((profile.photos?.length ?? 0) > 0 || (profile.videos?.length ?? 0) > 0) && (
+        <section className="mt-6 rounded-2xl border border-ink/10 bg-white p-6">
+          <div className="flex items-center gap-2">
+            <Images size={18} className="text-navy" />
+            <h2 className="font-semibold text-navy">Photos &amp; video</h2>
+          </div>
+          <div className="mt-4">
+            <MediaUploader photos={profile.photos ?? []} videos={profile.videos ?? []} editable={false} />
+          </div>
+        </section>
+      )}
 
       {/* matches driven by the profile */}
       <section className="mt-8">

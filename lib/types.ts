@@ -77,6 +77,12 @@ export interface Listing {
   featured?: boolean;
 }
 
+export interface ProfileVideo {
+  src: string;
+  name: string;
+  kind: "file" | "link";
+}
+
 export interface AthleteProfile {
   // --- Account / identity (optional; set during onboarding) ---
   parentName?: string;
@@ -90,6 +96,9 @@ export interface AthleteProfile {
   // --- Physical stats ---
   heightIn?: number | null; // total inches
   weightLb?: number | null;
+  // --- Media gallery ---
+  photos?: string[]; // up to 6 (data URLs)
+  videos?: ProfileVideo[]; // up to 2
   // --- Matching criteria ---
   sport: Sport | "";
   age: number | null;
