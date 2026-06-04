@@ -14,8 +14,12 @@ import {
   Wallet,
   Compass,
   Images,
+  ScanLine,
+  ShieldCheck,
 } from "lucide-react";
 import { useProfile } from "@/lib/useProfile";
+import { useProspectIQ } from "@/lib/useProspectIQ";
+import { PILLAR_NAME, TIER_META } from "@/lib/prospectiq";
 import { rankMatches, PRICE_LABEL } from "@/lib/scoring";
 import { formatHeight } from "@/lib/location";
 import { LISTINGS, CATEGORY_LABEL } from "@/lib/data/listings";
@@ -26,6 +30,7 @@ import { MediaUploader } from "@/components/app/MediaUploader";
 
 export default function ProfilePage() {
   const { profile, ready } = useProfile();
+  const { result: piq } = useProspectIQ();
 
   if (!ready) return null;
 
@@ -116,6 +121,68 @@ export default function ProfilePage() {
           )}
         </section>
       </div>
+
+      {/* Prospect IQ */}
+      {piq ? (
+        <section className="mt-6 overflow-hidden rounded-2xl border border-ink/10 bg-navy text-white">
+          <div className="flex flex-wrap items-center justify-between gap-4 p-6">
+            <div>
+              <p className="eyebrow text-gold-300">Prospect IQ™ · {piq.sport}</p>
+              <div className="mt-1.5 flex items-end gap-2">
+                <span className="display text-4xl text-white">{piq.tier}</span>
+                {piq.verified && (
+                  <span className="mb-1 inline-flex items-center gap-1 rounded-full bg-gold px-2 py-0.5 text-[0.6rem] font-bold text-ink">
+                    <ShieldCheck size={11} /> Verified
+                  </span>
+                )}
+              </div>
+              <p className="mt-1 text-xs text-cream/70">{TIER_META[piq.tier].blurb}</p>
+            </div>
+            <div className="flex gap-5 text-right">
+              <div>
+                <p className="display text-2xl text-gold">{piq.percentile}th</p>
+                <p className="eyebrow text-[0.5rem] text-cream/55">Percentile</p>
+              </div>
+              <div>
+                <p className="display text-2xl text-gold">{piq.composite}</p>
+                <p className="eyebrow text-[0.5rem] text-cream/55">PIQ</p>
+              </div>
+              <div>
+                <p className="display text-2xl text-gold">{piq.confidence}%</p>
+                <p className="eyebrow text-[0.5rem] text-cream/55">Confidence</p>
+              </div>
+            </div>
+          </div>
+          <div className="flex flex-wrap items-center justify-between gap-3 border-t border-white/10 px-6 py-3">
+            <div className="flex flex-wrap gap-3 text-xs text-cream/70">
+              {(["T", "A", "G", "C", "E"] as const).map((k) => (
+                <span key={k}>
+                  {PILLAR_NAME[k].split(" ")[0]} <span className="font-semibold text-white">{piq.pillars[k]}</span>
+                </span>
+              ))}
+            </div>
+            <Link href="/app/prospect-iq" className="inline-flex items-center gap-1.5 text-sm font-semibold text-gold-300">
+              View / re-evaluate <ArrowRight size={14} />
+            </Link>
+          </div>
+        </section>
+      ) : (
+        <Link
+          href="/app/prospect-iq"
+          className="mt-6 flex items-center justify-between gap-4 rounded-2xl border border-gold/40 bg-gold/[0.08] p-6 transition-colors hover:bg-gold/[0.14]"
+        >
+          <div className="flex items-center gap-3">
+            <div className="flex h-11 w-11 items-center justify-center rounded-xl bg-navy text-white">
+              <ScanLine size={20} />
+            </div>
+            <div>
+              <p className="font-bold text-navy">Evaluate your game with Prospect IQ™</p>
+              <p className="text-sm text-ink/60">The premium AI scout — get a tier, five-pillar breakdown, and a development plan.</p>
+            </div>
+          </div>
+          <ArrowRight size={18} className="shrink-0 text-navy" />
+        </Link>
+      )}
 
       {/* media gallery */}
       {((profile.photos?.length ?? 0) > 0 || (profile.videos?.length ?? 0) > 0) && (

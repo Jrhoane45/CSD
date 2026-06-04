@@ -12,6 +12,8 @@ import {
   ShieldCheck,
   Sparkles,
   MapPin,
+  ScanLine,
+  Crown,
 } from "lucide-react";
 import { ButtonLink } from "@/components/ui/Button";
 import { Eyebrow } from "@/components/ui/Eyebrow";
@@ -232,6 +234,62 @@ export default function HomePage() {
                   </div>
                 </div>
               ))}
+            </div>
+          </div>
+        </div>
+      </section>
+
+      {/* ---------------- PROSPECT IQ TEASER ---------------- */}
+      <section className="mx-auto max-w-7xl px-6 py-20">
+        <div className="relative overflow-hidden rounded-3xl bg-navy p-8 text-white sm:p-12">
+          <div className="absolute -right-16 -top-16 h-72 w-72 rounded-full bg-gold/15 blur-3xl" />
+          <div className="absolute -bottom-20 -left-10 h-72 w-72 rounded-full bg-red/20 blur-3xl" />
+          <div className="relative grid items-center gap-10 lg:grid-cols-2">
+            <div>
+              <p className="flex items-center gap-2">
+                <Crown size={16} className="text-gold-300" />
+                <span className="eyebrow text-gold-300">Premium · Prospect IQ™</span>
+              </p>
+              <h2 className="display mt-4 text-4xl text-white sm:text-5xl">
+                THE AI SCOUT FOR
+                <br />
+                <span className="text-gold display-italic">YOUR ATHLETE.</span>
+              </h2>
+              <p className="mt-5 max-w-lg text-cream/80">
+                Record a guided video Combine and get a structured talent evaluation — five pillars, a
+                national-cohort tier, a development pathway, and best-fit matches. AI measures, experts
+                define the rubric, and certified humans verify the top tier.
+              </p>
+              <div className="mt-7 flex flex-col gap-3 sm:flex-row">
+                <ButtonLink href="/app/prospect-iq" variant="gold" size="lg">
+                  <ScanLine size={18} /> Try a free snapshot
+                </ButtonLink>
+                <ButtonLink href="/prospect-iq" variant="light" size="lg">
+                  How it works
+                </ButtonLink>
+              </div>
+            </div>
+            <div className="grid gap-3 sm:grid-cols-2">
+              {[
+                { t: "Technical", v: 88 },
+                { t: "Athleticism", v: 82 },
+                { t: "Game IQ", v: 79 },
+                { t: "Compete", v: 84 },
+              ].map((p) => (
+                <div key={p.t} className="rounded-2xl border border-white/10 bg-white/[0.05] p-4">
+                  <div className="flex items-center justify-between">
+                    <span className="text-sm text-cream/75">{p.t}</span>
+                    <span className="display text-xl text-gold">{p.v}</span>
+                  </div>
+                  <div className="mt-2 h-1.5 rounded-full bg-white/10">
+                    <div className="h-1.5 rounded-full bg-gold" style={{ width: `${p.v}%` }} />
+                  </div>
+                </div>
+              ))}
+              <div className="col-span-2 flex items-center justify-between rounded-2xl border border-gold/30 bg-gold/[0.08] p-4">
+                <span className="eyebrow text-gold-300">Result</span>
+                <span className="display text-2xl text-white">Competitive · 84th percentile</span>
+              </div>
             </div>
           </div>
         </div>

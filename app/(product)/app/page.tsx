@@ -1,5 +1,5 @@
 import Link from "next/link";
-import { Target, Compass, LayoutDashboard, BarChart3, ArrowRight, UserRound } from "lucide-react";
+import { Target, Compass, LayoutDashboard, BarChart3, ArrowRight, UserRound, ScanLine } from "lucide-react";
 import { Eyebrow } from "@/components/ui/Eyebrow";
 import { LISTINGS } from "@/lib/data/listings";
 
@@ -53,6 +53,21 @@ export default function AppHome() {
                 </span>
               </span>
               <ArrowRight size={18} className="transition-transform group-hover:translate-x-1" />
+            </Link>
+            <Link
+              href="/app/prospect-iq"
+              className="group flex items-center justify-between rounded-xl border border-gold/40 bg-gold/[0.07] p-4 transition-colors hover:bg-gold/[0.14]"
+            >
+              <span className="flex items-center gap-3">
+                <ScanLine size={20} className="text-navy" />
+                <span>
+                  <span className="block font-semibold text-navy">
+                    Prospect IQ™ <span className="ml-1 rounded bg-navy px-1.5 py-0.5 text-[0.55rem] font-bold text-gold-300">PREMIUM</span>
+                  </span>
+                  <span className="block text-xs text-ink/55">AI scout — evaluate talent on video</span>
+                </span>
+              </span>
+              <ArrowRight size={18} className="text-ink/40 transition-transform group-hover:translate-x-1" />
             </Link>
             <Link
               href="/app/discover"

@@ -9,6 +9,7 @@ const LINKS = [
   { href: "/how-it-works/parents", label: "For Parents" },
   { href: "/how-it-works/providers", label: "For Providers" },
   { href: "/csd-score", label: "CSD Score" },
+  { href: "/prospect-iq", label: "Prospect IQ" },
   { href: "/pricing", label: "Pricing" },
   { href: "/about", label: "About" },
 ];
