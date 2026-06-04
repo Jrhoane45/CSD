@@ -12,7 +12,7 @@ export const metadata: Metadata = {
 
 const LEVELS = [
   {
-    name: "Recreational / Beginner",
+    name: "Recreational",
     body: "First exposure to the sport. Skill-building, fun, and social development.",
   },
   {
@@ -20,8 +20,8 @@ const LEVELS = [
     body: "Committed recreational or entry-level competitive. Building fundamentals.",
   },
   {
-    name: "Competitive / Travel",
-    body: "Year-round competitive play. Higher commitment, higher development demands.",
+    name: "Competitive",
+    body: "Year-round competitive and travel play. Higher commitment, higher development demands.",
   },
   {
     name: "Elite",
