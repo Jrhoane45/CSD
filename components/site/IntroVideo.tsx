@@ -23,7 +23,14 @@ export function IntroVideo() {
 
       <div className="mx-auto mt-10 max-w-4xl overflow-hidden rounded-3xl border border-ink/10 shadow-[var(--shadow-lift)]">
         {playing ? (
-          <video src={SRC} controls autoPlay playsInline className="aspect-video w-full bg-black">
+          <video
+            src={SRC}
+            poster="/intro-poster.jpg"
+            controls
+            autoPlay
+            playsInline
+            className="aspect-video w-full bg-black"
+          >
             Your browser doesn&apos;t support embedded video.
           </video>
         ) : (
