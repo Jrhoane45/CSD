@@ -44,7 +44,6 @@ export function IntroVideo() {
           poster="/intro-poster.jpg"
           autoPlay
           muted
-          loop
           playsInline
           controls
           className="aspect-video w-full bg-black"
