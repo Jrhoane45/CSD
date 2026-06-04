@@ -1,5 +1,5 @@
 import Link from "next/link";
-import { Target, Compass, LayoutDashboard, BarChart3, ArrowRight } from "lucide-react";
+import { Target, Compass, LayoutDashboard, BarChart3, ArrowRight, UserRound } from "lucide-react";
 import { Eyebrow } from "@/components/ui/Eyebrow";
 import { LISTINGS } from "@/lib/data/listings";
 
@@ -28,6 +28,19 @@ export default function AppHome() {
             Build an athlete profile for ranked matches, or browse the vetted directory.
           </p>
           <div className="mt-6 space-y-3">
+            <Link
+              href="/app/profile"
+              className="group flex items-center justify-between rounded-xl border border-ink/10 p-4 transition-colors hover:bg-cream"
+            >
+              <span className="flex items-center gap-3">
+                <UserRound size={20} className="text-navy" />
+                <span>
+                  <span className="block font-semibold text-navy">Create your athlete profile</span>
+                  <span className="block text-xs text-ink/55">Sign up · stats, photo &amp; matching criteria</span>
+                </span>
+              </span>
+              <ArrowRight size={18} className="text-ink/40 transition-transform group-hover:translate-x-1" />
+            </Link>
             <Link
               href="/app/match"
               className="group flex items-center justify-between rounded-xl bg-navy p-4 text-white transition-colors hover:bg-navy-deep"

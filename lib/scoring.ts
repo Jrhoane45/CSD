@@ -98,9 +98,9 @@ export interface MatchResult {
 }
 
 function levelFactor(profile: AthleteProfile, listing: Listing): MatchFactor {
-  const max = 40;
+  const max = 38;
   if (!profile.level) {
-    return { label: "Development level", points: 24, max, detail: "Open to all levels", strong: false };
+    return { label: "Development level", points: 22, max, detail: "Open to all levels", strong: false };
   }
   if (listing.levels.includes(profile.level)) {
     return {
@@ -118,7 +118,7 @@ function levelFactor(profile: AthleteProfile, listing: Listing): MatchFactor {
   if (nearest === 1) {
     return {
       label: "Development level",
-      points: 18,
+      points: 17,
       detail: `Serves an adjacent tier to ${profile.level}`,
       max,
       strong: false,
@@ -134,14 +134,14 @@ function levelFactor(profile: AthleteProfile, listing: Listing): MatchFactor {
 }
 
 function distanceFactor(profile: AthleteProfile, listing: Listing): MatchFactor {
-  const max = 20;
+  const max = 18;
   if (!profile.county) {
-    return { label: "Distance", points: 12, max, detail: "Location flexible", strong: false };
+    return { label: "Distance", points: 10, max, detail: "Location flexible", strong: false };
   }
   if (profile.county === listing.county) {
     return {
       label: "Distance",
-      points: 20,
+      points: 18,
       detail: `In ${listing.county} County`,
       max,
       strong: true,
@@ -151,16 +151,16 @@ function distanceFactor(profile: AthleteProfile, listing: Listing): MatchFactor 
   const distance = Math.abs(listing.milesFromAnchor - athlete);
   const maxMiles = profile.maxMiles || 50;
   if (distance <= maxMiles) {
-    const points = round(20 * (1 - (0.6 * distance) / maxMiles));
+    const points = round(18 * (1 - (0.6 * distance) / maxMiles));
     return {
       label: "Distance",
       points,
       detail: `~${round(distance)} mi — within your ${maxMiles} mi range`,
       max,
-      strong: points >= 14,
+      strong: points >= 13,
     };
   }
-  const points = Math.max(0, round(20 * (1 - distance / (maxMiles * 2))));
+  const points = Math.max(0, round(18 * (1 - distance / (maxMiles * 2))));
   return {
     label: "Distance",
     points,
@@ -168,6 +168,28 @@ function distanceFactor(profile: AthleteProfile, listing: Listing): MatchFactor 
     max,
     strong: false,
   };
+}
+
+export const PRICE_LABEL: Record<number, string> = {
+  0: "Any budget",
+  1: "$ Value",
+  2: "$$ Mid-range",
+  3: "$$$ Premium",
+};
+
+function priceFactor(profile: AthleteProfile, listing: Listing): MatchFactor {
+  const max = 10;
+  const budget = profile.priceMax ?? 0;
+  if (!budget) {
+    return { label: "Price range", points: max, max, detail: "Any budget", strong: false };
+  }
+  if (listing.priceBand <= budget) {
+    return { label: "Price range", points: max, max, detail: "Within your budget", strong: true };
+  }
+  if (listing.priceBand === budget + 1) {
+    return { label: "Price range", points: 5, max, detail: "Slightly above your budget", strong: false };
+  }
+  return { label: "Price range", points: 1, max, detail: "Above your budget", strong: false };
 }
 
 function goalsFactor(profile: AthleteProfile, listing: Listing): MatchFactor {
@@ -197,20 +219,21 @@ export function matchListing(
   const level = levelFactor(profile, listing);
   const distance = distanceFactor(profile, listing);
   const goals = goalsFactor(profile, listing);
+  const price = priceFactor(profile, listing);
 
   const csd = computeCsdScore(listing).score;
   const csdFactor: MatchFactor = {
     label: "CSD Score™",
-    points: round((csd / 100) * 15),
-    max: 15,
+    points: round((csd / 100) * 12),
+    max: 12,
     detail: `CSD Score ${csd} — vetted credibility`,
     strong: csd >= 75,
   };
 
   const sportFactor: MatchFactor = {
     label: "Sport",
-    points: profile.sport && listing.sports.includes(profile.sport) ? 15 : 6,
-    max: 15,
+    points: profile.sport && listing.sports.includes(profile.sport) ? 12 : 5,
+    max: 12,
     detail:
       profile.sport && listing.sports.includes(profile.sport)
         ? `${profile.sport} program`
@@ -218,7 +241,7 @@ export function matchListing(
     strong: true,
   };
 
-  const factors = [level, distance, csdFactor, sportFactor, goals];
+  const factors = [level, distance, csdFactor, sportFactor, goals, price];
   const fit = clamp(round(factors.reduce((s, f) => s + f.points, 0)));
 
   const top = [...factors].sort((a, b) => b.points / b.max - a.points / a.max)[0];

@@ -3,13 +3,14 @@
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { useEffect, useState } from "react";
-import { Compass, Target, Bookmark, LayoutDashboard, BarChart3, ArrowUpRight } from "lucide-react";
+import { Compass, Target, Bookmark, LayoutDashboard, BarChart3, ArrowUpRight, UserRound } from "lucide-react";
 import { CsdBadge } from "@/components/brand/CsdBadge";
 
 type Role = "parent" | "provider";
 
 const NAV: Record<Role, { href: string; label: string; icon: typeof Compass }[]> = {
   parent: [
+    { href: "/app/profile", label: "Profile", icon: UserRound },
     { href: "/app/match", label: "Find a match", icon: Target },
     { href: "/app/discover", label: "Discover", icon: Compass },
     { href: "/app/saved", label: "Saved", icon: Bookmark },

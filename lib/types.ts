@@ -78,11 +78,27 @@ export interface Listing {
 }
 
 export interface AthleteProfile {
+  // --- Account / identity (optional; set during onboarding) ---
+  parentName?: string;
+  email?: string;
+  firstName?: string;
+  lastName?: string;
+  photo?: string; // data URL
+  gender?: "" | "Male" | "Female" | "Other";
+  school?: string;
+  gradYear?: string;
+  // --- Physical stats ---
+  heightIn?: number | null; // total inches
+  weightLb?: number | null;
+  // --- Matching criteria ---
   sport: Sport | "";
   age: number | null;
   level: DevLevel | "";
+  zip?: string;
   county: County | "";
   maxMiles: number;
+  priceMax?: 0 | 1 | 2 | 3; // 0 = any budget
   category: Category | "any";
   goals: string[];
+  createdAt?: string;
 }
