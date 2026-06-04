@@ -1,15 +1,31 @@
 "use client";
 
-import { useState } from "react";
-import { Play } from "lucide-react";
-import { CsdBadge } from "@/components/brand/CsdBadge";
+import { useEffect, useRef, useState } from "react";
+import { Volume2, VolumeX } from "lucide-react";
 import { Eyebrow } from "@/components/ui/Eyebrow";
 
-// Drop the intro clip at /public/intro.mp4 (and optionally /public/intro-poster.jpg).
+// Intro clip lives at /public/intro.mp4 with a poster at /public/intro-poster.jpg.
 const SRC = "/intro.mp4";
 
 export function IntroVideo() {
-  const [playing, setPlaying] = useState(false);
+  const ref = useRef<HTMLVideoElement>(null);
+  const [muted, setMuted] = useState(true);
+
+  // Ensure muted autoplay starts (React can miss the `muted` attr on hydration).
+  useEffect(() => {
+    const v = ref.current;
+    if (!v) return;
+    v.muted = true;
+    v.play().catch(() => {});
+  }, []);
+
+  const toggleSound = () => {
+    const v = ref.current;
+    if (!v) return;
+    v.muted = !v.muted;
+    if (!v.muted) v.play().catch(() => {});
+    setMuted(v.muted);
+  };
 
   return (
     <section className="mx-auto max-w-7xl px-6 py-20">
@@ -21,42 +37,29 @@ export function IntroVideo() {
         </p>
       </div>
 
-      <div className="mx-auto mt-10 max-w-4xl overflow-hidden rounded-3xl border border-ink/10 shadow-[var(--shadow-lift)]">
-        {playing ? (
-          <video
-            src={SRC}
-            poster="/intro-poster.jpg"
-            controls
-            autoPlay
-            playsInline
-            className="aspect-video w-full bg-black"
-          >
-            Your browser doesn&apos;t support embedded video.
-          </video>
-        ) : (
-          <button
-            onClick={() => setPlaying(true)}
-            className="group relative flex aspect-video w-full items-center justify-center overflow-hidden bg-navy"
-            aria-label="Play intro video"
-          >
-            <div
-              className="pointer-events-none absolute inset-0 opacity-[0.18]"
-              style={{
-                backgroundImage: "radial-gradient(circle at 1px 1px, #ffffff 1px, transparent 0)",
-                backgroundSize: "22px 22px",
-              }}
-            />
-            <div className="absolute -right-16 -top-16 h-64 w-64 rounded-full bg-red/20 blur-3xl" />
-            <div className="absolute -bottom-20 left-1/4 h-64 w-64 rounded-full bg-gold/10 blur-3xl" />
-            <div className="relative flex flex-col items-center gap-5 text-white">
-              <CsdBadge className="h-16 w-16" />
-              <span className="flex h-20 w-20 items-center justify-center rounded-full bg-gold text-ink shadow-lg transition-transform group-hover:scale-105">
-                <Play size={34} className="ml-1" fill="currentColor" />
-              </span>
-              <span className="eyebrow text-gold-300">Watch the intro</span>
-            </div>
-          </button>
-        )}
+      <div className="group relative mx-auto mt-10 max-w-4xl overflow-hidden rounded-3xl border border-ink/10 shadow-[var(--shadow-lift)]">
+        <video
+          ref={ref}
+          src={SRC}
+          poster="/intro-poster.jpg"
+          autoPlay
+          muted
+          loop
+          playsInline
+          controls
+          className="aspect-video w-full bg-black"
+        >
+          Your browser doesn&apos;t support embedded video.
+        </video>
+
+        <button
+          onClick={toggleSound}
+          className="absolute right-4 top-4 inline-flex items-center gap-1.5 rounded-full bg-ink/70 px-3.5 py-2 text-sm font-semibold text-white backdrop-blur transition-colors hover:bg-ink"
+          aria-label={muted ? "Unmute video" : "Mute video"}
+        >
+          {muted ? <VolumeX size={16} /> : <Volume2 size={16} />}
+          {muted ? "Tap for sound" : "Sound on"}
+        </button>
       </div>
     </section>
   );
