@@ -19,6 +19,7 @@ import { ButtonLink } from "@/components/ui/Button";
 import { Eyebrow } from "@/components/ui/Eyebrow";
 import { CsdScoreBadge } from "@/components/ui/CsdScoreBadge";
 import { ListingCard } from "@/components/listing/ListingCard";
+import { IntroVideo } from "@/components/site/IntroVideo";
 import { LISTINGS } from "@/lib/data/listings";
 
 const featured = LISTINGS.filter((l) => l.featured).slice(0, 3);
@@ -73,6 +74,9 @@ export default function HomePage() {
           </div>
         </div>
       </section>
+
+      {/* ---------------- INTRO VIDEO ---------------- */}
+      <IntroVideo />
 
       {/* ---------------- PROBLEM / MARKET ---------------- */}
       <section className="bg-cream">
