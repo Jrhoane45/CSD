@@ -19,9 +19,8 @@ import { StarRating } from "@/components/ui/StarRating";
 import { Eyebrow } from "@/components/ui/Eyebrow";
 import { LogoAvatar } from "@/components/listing/LogoAvatar";
 import { ScoreBreakdown } from "@/components/listing/ScoreBreakdown";
-import { ReviewList } from "@/components/listing/ReviewList";
-import { SaveButton } from "@/components/app/SaveButton";
-import { DemoButton } from "@/components/app/DemoButton";
+import { ListingReviews } from "@/components/listing/ListingReviews";
+import { ListingActions } from "@/components/app/ListingActions";
 
 export function generateStaticParams() {
   return LISTINGS.map((l) => ({ id: l.id }));
@@ -48,19 +47,6 @@ export default async function ListingPage({ params }: { params: Promise<{ id: st
 
   const { score, parts } = computeCsdScore(listing);
   const rating = averageRating(listing);
-
-  // Average each review dimension for the category-specific summary.
-  const dimMap = new Map<string, { sum: number; n: number }>();
-  for (const r of listing.reviews) {
-    for (const d of r.dimensions) {
-      const cur = dimMap.get(d.label) ?? { sum: 0, n: 0 };
-      dimMap.set(d.label, { sum: cur.sum + d.value, n: cur.n + 1 });
-    }
-  }
-  const dimAverages = [...dimMap.entries()].map(([label, v]) => ({
-    label,
-    value: v.sum / v.n,
-  }));
 
   const alumniTotal =
     listing.alumni.pro + listing.alumni.d1 + listing.alumni.d2 + listing.alumni.d3;
@@ -132,13 +118,7 @@ export default async function ListingPage({ params }: { params: Promise<{ id: st
               </span>
             ))}
           </div>
-          <div className="mt-6 flex flex-wrap gap-3">
-            <DemoButton variant="red">Request info</DemoButton>
-            <DemoButton variant="outline" done="Added (demo)">
-              Book a visit
-            </DemoButton>
-            <SaveButton id={listing.id} />
-          </div>
+          <ListingActions listing={listing} />
           </div>
         </div>
 
@@ -202,35 +182,13 @@ export default async function ListingPage({ params }: { params: Promise<{ id: st
             )}
           </section>
 
-          {/* reviews */}
-          <section>
-            <div className="flex items-center justify-between">
-              <h2 className="display text-2xl text-navy">REVIEWS</h2>
-              <StarRating value={rating} count={listing.reviews.length} />
-            </div>
-            {/* dimension summary */}
-            <div className="mt-4 grid gap-2 rounded-2xl border border-ink/10 bg-cream-200 p-5 sm:grid-cols-2">
-              {dimAverages.map((d) => (
-                <div key={d.label} className="flex items-center justify-between gap-3">
-                  <span className="text-sm text-ink/65">{d.label}</span>
-                  <div className="flex items-center gap-2">
-                    <div className="h-1.5 w-20 rounded-full bg-white">
-                      <div
-                        className="h-1.5 rounded-full bg-gold"
-                        style={{ width: `${(d.value / 5) * 100}%` }}
-                      />
-                    </div>
-                    <span className="w-7 text-right text-sm font-semibold text-navy">
-                      {d.value.toFixed(1)}
-                    </span>
-                  </div>
-                </div>
-              ))}
-            </div>
-            <div className="mt-5">
-              <ReviewList reviews={listing.reviews} />
-            </div>
-          </section>
+          {/* reviews (live — merges user-submitted reviews) */}
+          <ListingReviews
+            listingId={listing.id}
+            listingName={listing.name}
+            category={listing.category}
+            seedReviews={listing.reviews}
+          />
         </div>
 
         {/* sidebar */}

@@ -17,8 +17,10 @@ import {
   ScanLine,
   ShieldCheck,
 } from "lucide-react";
+import { MessageSquare, CalendarCheck, Ticket } from "lucide-react";
 import { useProfile } from "@/lib/useProfile";
 import { useProspectIQ } from "@/lib/useProspectIQ";
+import { useStore } from "@/lib/store";
 import { PILLAR_NAME, TIER_META } from "@/lib/prospectiq";
 import { rankMatches, PRICE_LABEL } from "@/lib/scoring";
 import { formatHeight } from "@/lib/location";
@@ -31,6 +33,7 @@ import { MediaUploader } from "@/components/app/MediaUploader";
 export default function ProfilePage() {
   const { profile, ready } = useProfile();
   const { result: piq } = useProspectIQ();
+  const { threads, events } = useStore();
 
   if (!ready) return null;
 
@@ -57,6 +60,15 @@ export default function ProfilePage() {
 
   const matches = rankMatches(profile, LISTINGS).slice(0, 4);
   const fullName = `${profile.firstName ?? ""} ${profile.lastName ?? ""}`.trim() || "Your athlete";
+
+  const myThreads = threads.filter((t) => !t.seeded);
+  const bookings = myThreads.filter((t) => t.kind === "booking").length;
+  const registered = events.filter((e) => e.registered).length;
+  const activity = [
+    { icon: MessageSquare, n: myThreads.length, label: "Conversations", href: "/app/inbox" },
+    { icon: CalendarCheck, n: bookings, label: "Visits booked", href: "/app/inbox" },
+    { icon: Ticket, n: registered, label: "Events registered", href: "/app/events" },
+  ];
 
   return (
     <div className="mx-auto max-w-5xl px-6 py-10">
@@ -120,6 +132,23 @@ export default function ProfilePage() {
             </div>
           )}
         </section>
+      </div>
+
+      {/* live activity */}
+      <div className="mt-6 grid gap-4 sm:grid-cols-3">
+        {activity.map((a) => (
+          <Link
+            key={a.label}
+            href={a.href}
+            className="group flex items-center justify-between rounded-2xl border border-ink/10 bg-white p-5 transition-colors hover:border-navy/30"
+          >
+            <div>
+              <p className="display text-3xl text-navy">{a.n}</p>
+              <p className="eyebrow mt-1 text-ink/50">{a.label}</p>
+            </div>
+            <a.icon size={22} className="text-ink/30 transition-colors group-hover:text-navy" />
+          </Link>
+        ))}
       </div>
 
       {/* Prospect IQ */}

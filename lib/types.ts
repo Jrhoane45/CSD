@@ -83,6 +83,79 @@ export interface ProfileVideo {
   kind: "file" | "link";
 }
 
+// --- Live platform activity (demo store) ------------------------------------
+
+export type Role = "parent" | "provider";
+
+export type ThreadKind = "inquiry" | "booking";
+
+export interface ThreadMessage {
+  id: string;
+  from: Role;
+  body: string;
+  at: string; // ISO timestamp
+}
+
+export interface Thread {
+  id: string;
+  listingId: string;
+  listingName: string;
+  listingLogo?: string;
+  kind: ThreadKind;
+  parentName: string;
+  athlete: string; // e.g. "Diego, 14 · Competitive"
+  fit?: number;
+  /** booking specifics */
+  bookingDate?: string;
+  bookingTime?: string;
+  status: "new" | "active" | "scheduled" | "archived";
+  messages: ThreadMessage[];
+  /** which role has an unread message waiting */
+  unreadFor: Role | null;
+  createdAt: string;
+  updatedAt: string;
+  seeded?: boolean;
+}
+
+export type EventType = "Tryout" | "Camp" | "Showcase" | "Clinic" | "Open House";
+export type EventBoost = "none" | "basic" | "standard" | "premium";
+
+export interface PlatformEvent {
+  id: string;
+  listingId?: string;
+  listingName: string;
+  title: string;
+  type: EventType;
+  sport: Sport;
+  date: string; // ISO date (YYYY-MM-DD)
+  time: string;
+  city: string;
+  county: County;
+  description: string;
+  priceLabel: string;
+  boost: EventBoost;
+  reach: number;
+  rsvps: number;
+  registered: boolean;
+  createdBy: "seed" | "provider";
+  createdAt: string;
+}
+
+export interface UserReview extends Review {
+  id: string;
+  listingId: string;
+}
+
+export interface AppNotification {
+  id: string;
+  role: Role;
+  icon: "message" | "calendar" | "star" | "trophy" | "user";
+  text: string;
+  href?: string;
+  at: string;
+  read: boolean;
+}
+
 export interface AthleteProfile {
   // --- Account / identity (optional; set during onboarding) ---
   parentName?: string;
