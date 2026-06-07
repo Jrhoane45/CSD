@@ -156,6 +156,19 @@ export interface AppNotification {
   read: boolean;
 }
 
+/** A provider's public response to a review. */
+export interface ReviewReply {
+  body: string;
+  at: string;
+}
+
+/** Provider-editable overrides applied on top of seed listing data. */
+export interface ListingOverride {
+  name?: string;
+  philosophy?: string;
+  priceLabel?: string;
+}
+
 export interface AthleteProfile {
   // --- Account / identity (optional; set during onboarding) ---
   parentName?: string;

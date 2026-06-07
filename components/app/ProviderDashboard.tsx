@@ -25,9 +25,9 @@ import { Eyebrow } from "@/components/ui/Eyebrow";
 import { DemoButton } from "@/components/app/DemoButton";
 import { LogoAvatar } from "@/components/listing/LogoAvatar";
 import { MediaUploader } from "@/components/app/MediaUploader";
-import { ImagePlus, Images, MessageSquare, CalendarClock } from "lucide-react";
+import { ImagePlus, Images, MessageSquare, CalendarClock, Pencil } from "lucide-react";
 import type { EventBoost, ProfileVideo } from "@/lib/types";
-import { useStore, boostEvent, formatEventDate } from "@/lib/store";
+import { useStore, boostEvent, formatEventDate, setOverride } from "@/lib/store";
 import { EventFormModal } from "@/components/app/EventForm";
 
 const LISTING = getListing("hoop-prodigy")!;
@@ -41,6 +41,8 @@ const STATES: { value: ClaimState; label: string }[] = [
 
 export function ProviderDashboard() {
   const [state, setState] = useState<ClaimState>("unclaimed");
+  const { overrides } = useStore();
+  const displayName = overrides[LISTING.id]?.name ?? LISTING.name;
 
   return (
     <div className="mx-auto max-w-6xl px-6 py-10">
@@ -49,7 +51,7 @@ export function ProviderDashboard() {
         <div className="flex items-center gap-4">
           <LogoAvatar listing={LISTING} size="lg" />
           <div>
-            <h1 className="display text-4xl text-navy">{LISTING.name}</h1>
+            <h1 className="display text-4xl text-navy">{displayName}</h1>
             <p className="mt-1 text-sm text-ink/60">
               {CATEGORY_LABEL[LISTING.category]} · {LISTING.city}, {LISTING.county} County
             </p>
@@ -149,6 +151,83 @@ function ProviderMediaSlot() {
   );
 }
 
+function EditProfileCard() {
+  const { overrides } = useStore();
+  const ov = overrides[LISTING.id] ?? {};
+  const [name, setName] = useState(ov.name ?? LISTING.name);
+  const [philosophy, setPhilosophy] = useState(ov.philosophy ?? LISTING.philosophy);
+  const [priceLabel, setPriceLabel] = useState(ov.priceLabel ?? LISTING.priceLabel);
+  const [saved, setSaved] = useState(false);
+
+  const dirty =
+    name !== (ov.name ?? LISTING.name) ||
+    philosophy !== (ov.philosophy ?? LISTING.philosophy) ||
+    priceLabel !== (ov.priceLabel ?? LISTING.priceLabel);
+
+  const save = () => {
+    setOverride(LISTING.id, { name: name.trim() || LISTING.name, philosophy, priceLabel });
+    setSaved(true);
+    setTimeout(() => setSaved(false), 2200);
+  };
+
+  return (
+    <div className="rounded-2xl border border-ink/10 bg-white p-6">
+      <div className="flex items-center gap-2">
+        <Pencil size={18} className="text-navy" />
+        <h3 className="font-semibold text-navy">Edit your profile</h3>
+      </div>
+      <p className="mt-1 text-sm text-ink/55">
+        Control your narrative — changes show on your public listing immediately.
+      </p>
+      <div className="mt-4 space-y-3">
+        <label className="block">
+          <span className="eyebrow text-ink/50">Program name</span>
+          <input
+            value={name}
+            onChange={(e) => setName(e.target.value)}
+            className="mt-1.5 w-full rounded-lg border border-ink/15 px-3 py-2 text-sm outline-none focus:border-navy"
+          />
+        </label>
+        <label className="block">
+          <span className="eyebrow text-ink/50">Philosophy</span>
+          <textarea
+            value={philosophy}
+            onChange={(e) => setPhilosophy(e.target.value)}
+            rows={3}
+            className="mt-1.5 w-full resize-none rounded-lg border border-ink/15 px-3 py-2.5 text-sm outline-none focus:border-navy"
+          />
+        </label>
+        <label className="block">
+          <span className="eyebrow text-ink/50">Pricing</span>
+          <input
+            value={priceLabel}
+            onChange={(e) => setPriceLabel(e.target.value)}
+            className="mt-1.5 w-full rounded-lg border border-ink/15 px-3 py-2 text-sm outline-none focus:border-navy"
+          />
+        </label>
+      </div>
+      <div className="mt-4 flex items-center gap-3">
+        <button
+          onClick={save}
+          disabled={!dirty}
+          className="inline-flex items-center gap-2 rounded-lg bg-navy px-5 py-2.5 text-sm font-semibold text-white hover:bg-navy-deep disabled:opacity-40"
+        >
+          {saved ? (
+            <>
+              <Check size={15} /> Saved
+            </>
+          ) : (
+            "Save changes"
+          )}
+        </button>
+        <Link href={`/app/listing/${LISTING.id}`} className="text-sm font-semibold text-red hover:underline">
+          View public profile
+        </Link>
+      </div>
+    </div>
+  );
+}
+
 function Unclaimed({ onClaim }: { onClaim: () => void }) {
   return (
     <div className="space-y-6">
@@ -215,6 +294,8 @@ function ClaimedFree({ onUpgrade }: { onUpgrade: () => void }) {
         <Metric icon={Inbox} value="0" label="Leads" locked />
         <Metric icon={BarChart3} value="0" label="Analytics" locked />
       </div>
+
+      <EditProfileCard />
 
       <LogoSlot />
 
@@ -307,6 +388,8 @@ function ClaimedPaid() {
         <Metric icon={TrendingUp} value="38%" label="Lead conversion" />
         <Metric icon={Star} value="4.6" label="Avg rating" />
       </div>
+
+      <EditProfileCard />
 
       <LogoSlot />
 

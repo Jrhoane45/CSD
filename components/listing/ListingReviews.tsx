@@ -1,12 +1,12 @@
 "use client";
 
 import { useMemo, useState } from "react";
-import { Star, PenLine, Check } from "lucide-react";
+import { Star, PenLine, Check, CornerDownRight, MessageSquareReply } from "lucide-react";
 import type { Category, Review, ReviewDimension } from "@/lib/types";
-import { useStore, addReview } from "@/lib/store";
+import { useStore, addReview, addReviewReply, replyKey } from "@/lib/store";
+import { useRole } from "@/lib/useRole";
 import { useProfile } from "@/lib/useProfile";
 import { StarRating } from "@/components/ui/StarRating";
-import { ReviewList } from "@/components/listing/ReviewList";
 import { Modal } from "@/components/ui/Modal";
 
 const DIMENSIONS: Record<Category, string[]> = {
@@ -14,6 +14,8 @@ const DIMENSIONS: Record<Category, string[]> = {
   trainer: ["Communication", "Professionalism", "Training Tools & Equipment", "Facility Quality", "Price vs. Value"],
   consultant: ["Communication", "Professionalism", "Value", "Quality of Alumni"],
 };
+
+type KeyedReview = { review: Review; key: string };
 
 export function ListingReviews({
   listingId,
@@ -26,13 +28,23 @@ export function ListingReviews({
   category: Category;
   seedReviews: Review[];
 }) {
-  const { reviews } = useStore();
+  const { reviews, replies } = useStore();
+  const role = useRole();
+
   const mine = useMemo(
     () => reviews.filter((r) => r.listingId === listingId),
     [reviews, listingId],
   );
-  const all = useMemo<Review[]>(() => [...mine, ...seedReviews], [mine, seedReviews]);
 
+  const keyed = useMemo<KeyedReview[]>(
+    () => [
+      ...mine.map((r) => ({ review: r as Review, key: `u:${r.id}` })),
+      ...seedReviews.map((r, i) => ({ review: r, key: `s:${i}:${r.date}` })),
+    ],
+    [mine, seedReviews],
+  );
+
+  const all = keyed.map((k) => k.review);
   const rating = all.length ? all.reduce((s, r) => s + r.rating, 0) / all.length : 0;
 
   const dimAverages = useMemo(() => {
@@ -76,8 +88,17 @@ export function ListingReviews({
         ))}
       </div>
 
-      <div className="mt-5">
-        <ReviewList reviews={all} />
+      <div className="mt-5 space-y-5">
+        {keyed.map(({ review, key }) => (
+          <ReviewItem
+            key={key}
+            review={review}
+            reply={replies[replyKey(listingId, key)]}
+            canRespond={role === "provider"}
+            listingName={listingName}
+            onRespond={(body) => addReviewReply(listingId, listingName, key, body)}
+          />
+        ))}
       </div>
 
       <Modal
@@ -94,6 +115,104 @@ export function ListingReviews({
         />
       </Modal>
     </section>
+  );
+}
+
+function ReviewItem({
+  review: r,
+  reply,
+  canRespond,
+  listingName,
+  onRespond,
+}: {
+  review: Review;
+  reply?: { body: string; at: string };
+  canRespond: boolean;
+  listingName: string;
+  onRespond: (body: string) => void;
+}) {
+  const [composing, setComposing] = useState(false);
+  const [draft, setDraft] = useState("");
+
+  return (
+    <div className="rounded-2xl border border-ink/10 bg-white p-6">
+      <div className="flex flex-wrap items-center justify-between gap-2">
+        <div className="flex items-center gap-3">
+          <div className="flex h-9 w-9 items-center justify-center rounded-full bg-navy/[0.08] text-sm font-bold text-navy">
+            {r.author.charAt(0)}
+          </div>
+          <div>
+            <p className="text-sm font-semibold text-navy">{r.author}</p>
+            <p className="text-xs text-ink/45">{r.date}</p>
+          </div>
+        </div>
+        <StarRating value={r.rating} />
+      </div>
+
+      <h4 className="mt-4 font-semibold text-navy">{r.title}</h4>
+      <p className="mt-1 text-sm text-ink/70">{r.body}</p>
+
+      <div className="mt-4 flex flex-wrap gap-2">
+        {r.dimensions.map((d) => (
+          <span
+            key={d.label}
+            className="inline-flex items-center gap-1.5 rounded-full bg-cream px-3 py-1 text-xs"
+          >
+            <span className="text-ink/60">{d.label}</span>
+            <span className="font-semibold text-navy">{d.value.toFixed(1)}</span>
+          </span>
+        ))}
+      </div>
+
+      {/* provider response */}
+      {reply ? (
+        <div className="mt-4 rounded-xl border-l-2 border-navy/40 bg-cream/50 p-4">
+          <p className="flex items-center gap-1.5 text-xs font-semibold text-navy">
+            <CornerDownRight size={13} /> Response from {listingName}
+          </p>
+          <p className="mt-1 text-sm text-ink/70">{reply.body}</p>
+        </div>
+      ) : (
+        canRespond &&
+        (composing ? (
+          <div className="mt-4 rounded-xl bg-cream/50 p-3">
+            <textarea
+              value={draft}
+              onChange={(e) => setDraft(e.target.value)}
+              rows={2}
+              autoFocus
+              placeholder="Thank them, address the feedback, or add context…"
+              className="w-full resize-none rounded-lg border border-ink/15 px-3 py-2 text-sm outline-none focus:border-navy"
+            />
+            <div className="mt-2 flex justify-end gap-2">
+              <button
+                onClick={() => {
+                  setComposing(false);
+                  setDraft("");
+                }}
+                className="rounded-lg px-3 py-1.5 text-sm font-semibold text-ink/55 hover:text-navy"
+              >
+                Cancel
+              </button>
+              <button
+                onClick={() => draft.trim() && onRespond(draft.trim())}
+                disabled={!draft.trim()}
+                className="inline-flex items-center gap-1.5 rounded-lg bg-navy px-3.5 py-1.5 text-sm font-semibold text-white hover:bg-navy-deep disabled:opacity-40"
+              >
+                <Check size={14} /> Post response
+              </button>
+            </div>
+          </div>
+        ) : (
+          <button
+            onClick={() => setComposing(true)}
+            className="mt-4 inline-flex items-center gap-1.5 text-sm font-semibold text-red hover:underline"
+          >
+            <MessageSquareReply size={14} /> Respond as {listingName}
+          </button>
+        ))
+      )}
+    </div>
   );
 }
 
