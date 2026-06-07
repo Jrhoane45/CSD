@@ -21,6 +21,7 @@ import {
 } from "@/lib/data/listings";
 import { CsdScoreBadge } from "@/components/ui/CsdScoreBadge";
 import { computeCsdScore } from "@/lib/scoring";
+import { useStore, isPubliclyVisible } from "@/lib/store";
 import { SaveButton } from "@/components/app/SaveButton";
 import { LogoAvatar } from "@/components/listing/LogoAvatar";
 import { OverridableText } from "@/components/app/OverridableText";
@@ -48,6 +49,7 @@ export function MatchFlow() {
   const [step, setStep] = useState(0);
   const [profile, setProfile] = useState<AthleteProfile>(EMPTY);
   const [done, setDone] = useState(false);
+  const { vetting } = useStore();
 
   const set = (patch: Partial<AthleteProfile>) => setProfile((p) => ({ ...p, ...patch }));
   const toggleGoal = (g: string) =>
@@ -64,8 +66,14 @@ export function MatchFlow() {
     step === 3;
 
   const results = useMemo(
-    () => (done ? rankMatches(profile, LISTINGS).slice(0, 6) : []),
-    [done, profile],
+    () =>
+      done
+        ? rankMatches(
+            profile,
+            LISTINGS.filter((l) => isPubliclyVisible(l, vetting)),
+          ).slice(0, 6)
+        : [],
+    [done, profile, vetting],
   );
 
   if (done) {

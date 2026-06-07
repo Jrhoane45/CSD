@@ -15,7 +15,7 @@ import { ListingCard } from "@/components/listing/ListingCard";
 import { CompareBar } from "@/components/app/CompareBar";
 import { MapView } from "@/components/app/MapView";
 import { PromotedCard } from "@/components/app/PromotedCard";
-import { useStore, addSavedSearch, removeSavedSearch } from "@/lib/store";
+import { useStore, addSavedSearch, removeSavedSearch, isPubliclyVisible } from "@/lib/store";
 import { Eyebrow } from "@/components/ui/Eyebrow";
 
 type Sort = "score" | "rating" | "name";
@@ -44,7 +44,7 @@ export function DiscoverClient({ initialCategory }: { initialCategory?: Category
     );
   const compareListings = LISTINGS.filter((l) => compareIds.includes(l.id));
 
-  const { savedSearches } = useStore();
+  const { savedSearches, vetting } = useStore();
 
   const searchName = () => {
     const parts = [
@@ -73,6 +73,7 @@ export function DiscoverClient({ initialCategory }: { initialCategory?: Category
 
   const results = useMemo(() => {
     return SCORED.filter(({ listing, score }) => {
+      if (!isPubliclyVisible(listing, vetting)) return false;
       if (category !== "all" && listing.category !== category) return false;
       if (sport !== "all" && !listing.sports.includes(sport as never)) return false;
       if (level !== "all" && !listing.levels.includes(level as never)) return false;
@@ -93,7 +94,7 @@ export function DiscoverClient({ initialCategory }: { initialCategory?: Category
       if (sort === "rating") return b.rating - a.rating;
       return a.listing.name.localeCompare(b.listing.name);
     });
-  }, [query, category, sport, level, county, minScore, sort]);
+  }, [query, category, sport, level, county, minScore, sort, vetting]);
 
   const reset = () => {
     setQuery("");

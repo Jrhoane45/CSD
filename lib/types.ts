@@ -100,6 +100,9 @@ export interface ModerationItem {
   excerpt: string;
   reportedBy: string;
   reportedAt: string;
+  /** Links the report to real content so "remove" is consequential. */
+  reviewId?: string;
+  eventId?: string;
 }
 
 export type ThreadKind = "inquiry" | "booking";

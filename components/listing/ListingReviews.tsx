@@ -3,7 +3,7 @@
 import { useMemo, useState } from "react";
 import { Star, PenLine, Check, CornerDownRight, MessageSquareReply } from "lucide-react";
 import type { Category, Review, ReviewDimension } from "@/lib/types";
-import { useStore, addReview, addReviewReply, replyKey } from "@/lib/store";
+import { useStore, addReview, addReviewReply, replyKey, removedReviewIds } from "@/lib/store";
 import { useRole } from "@/lib/useRole";
 import { useProfile } from "@/lib/useProfile";
 import { StarRating } from "@/components/ui/StarRating";
@@ -28,13 +28,13 @@ export function ListingReviews({
   category: Category;
   seedReviews: Review[];
 }) {
-  const { reviews, replies } = useStore();
+  const { reviews, replies, moderation } = useStore();
   const role = useRole();
 
-  const mine = useMemo(
-    () => reviews.filter((r) => r.listingId === listingId),
-    [reviews, listingId],
-  );
+  const mine = useMemo(() => {
+    const removed = removedReviewIds(moderation);
+    return reviews.filter((r) => r.listingId === listingId && !removed.has(r.id));
+  }, [reviews, listingId, moderation]);
 
   const keyed = useMemo<KeyedReview[]>(
     () => [

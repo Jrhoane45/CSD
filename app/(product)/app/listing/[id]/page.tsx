@@ -22,6 +22,7 @@ import { ScoreBreakdown } from "@/components/listing/ScoreBreakdown";
 import { ListingReviews } from "@/components/listing/ListingReviews";
 import { ListingActions } from "@/components/app/ListingActions";
 import { OverridableText } from "@/components/app/OverridableText";
+import { ListingSuspendedNotice } from "@/components/app/ListingSuspendedNotice";
 
 export function generateStaticParams() {
   return LISTINGS.map((l) => ({ id: l.id }));
@@ -60,6 +61,8 @@ export default async function ListingPage({ params }: { params: Promise<{ id: st
       >
         <ArrowLeft size={15} /> Back to directory
       </Link>
+
+      <ListingSuspendedNotice listingId={listing.id} verified={listing.verified} />
 
       {/* claim banner */}
       {listing.claimState === "unclaimed" && (

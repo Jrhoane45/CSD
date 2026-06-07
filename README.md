@@ -61,6 +61,9 @@ parent's action shows up on the provider side in real time:
   moderation** (`/app/operator/moderation` — resolve reports on reviews, listings, and events), and
   the **ad-revenue dashboard** (`/app/operator/promotions` — recognized revenue, committed budget,
   projected run-rate, revenue by placement, top advertisers, and every campaign across providers).
+  Operator actions are **consequential on the public side**: suspending a provider removes it from
+  Discover and the match flow (and shows a notice on its profile), and removing a flagged review
+  drops it from the listing page — the trust-&-safety loop closes live.
 - **Analytics** (`/app/provider/analytics`) — premium views, lead funnel, and lead fit quality that
   **update live** with the leads, bookings, and RSVPs generated in the session.
 
