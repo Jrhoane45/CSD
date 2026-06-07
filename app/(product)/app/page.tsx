@@ -1,5 +1,5 @@
 import Link from "next/link";
-import { Target, Compass, LayoutDashboard, BarChart3, ArrowRight, UserRound, ScanLine, CalendarDays, Inbox } from "lucide-react";
+import { Target, Compass, LayoutDashboard, BarChart3, ArrowRight, UserRound, ScanLine, CalendarDays, Inbox, GraduationCap } from "lucide-react";
 import { Eyebrow } from "@/components/ui/Eyebrow";
 import { LISTINGS } from "@/lib/data/listings";
 
@@ -93,6 +93,19 @@ export default function AppHome() {
                 <span>
                   <span className="block font-semibold text-navy">Events board</span>
                   <span className="block text-xs text-ink/55">Tryouts, camps &amp; showcases — register in a tap</span>
+                </span>
+              </span>
+              <ArrowRight size={18} className="text-ink/40 transition-transform group-hover:translate-x-1" />
+            </Link>
+            <Link
+              href="/app/recruiting"
+              className="group flex items-center justify-between rounded-xl border border-ink/10 p-4 transition-colors hover:bg-cream"
+            >
+              <span className="flex items-center gap-3">
+                <GraduationCap size={20} className="text-navy" />
+                <span>
+                  <span className="block font-semibold text-navy">Recruiting Hub</span>
+                  <span className="block text-xs text-ink/55">College-pathway roadmap, target schools &amp; advisers</span>
                 </span>
               </span>
               <ArrowRight size={18} className="text-ink/40 transition-transform group-hover:translate-x-1" />

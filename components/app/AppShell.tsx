@@ -14,6 +14,7 @@ import {
   ScanLine,
   Inbox,
   CalendarDays,
+  GraduationCap,
 } from "lucide-react";
 import { CsdBadge } from "@/components/brand/CsdBadge";
 import { NotificationBell } from "@/components/app/NotificationBell";
@@ -27,6 +28,7 @@ const NAV: Record<Role, { href: string; label: string; icon: typeof Compass; bad
     { href: "/app/match", label: "Find a match", icon: Target },
     { href: "/app/prospect-iq", label: "Prospect IQ", icon: ScanLine },
     { href: "/app/discover", label: "Discover", icon: Compass },
+    { href: "/app/recruiting", label: "Recruiting", icon: GraduationCap },
     { href: "/app/events", label: "Events", icon: CalendarDays },
     { href: "/app/inbox", label: "Inbox", icon: Inbox, badge: "inbox" },
     { href: "/app/saved", label: "Saved", icon: Bookmark },
