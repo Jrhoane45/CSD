@@ -159,8 +159,8 @@ export function DiscoverClient({ initialCategory }: { initialCategory?: Category
       <h1 className="display mt-3 text-4xl text-navy">FIND A PROGRAM</h1>
 
       {/* search + sort bar */}
-      <div className="mt-6 flex flex-col gap-3 sm:flex-row sm:items-center">
-        <div className="relative flex-1">
+      <div className="mt-6 flex flex-col gap-3 lg:flex-row lg:items-center">
+        <div className="relative lg:flex-1">
           <Search size={18} className="absolute left-3.5 top-1/2 -translate-y-1/2 text-ink/40" />
           <input
             value={query}
@@ -169,6 +169,7 @@ export function DiscoverClient({ initialCategory }: { initialCategory?: Category
             className="w-full rounded-xl border border-ink/15 bg-white py-3 pl-11 pr-4 text-sm outline-none focus:border-navy"
           />
         </div>
+        <div className="flex flex-wrap items-center gap-2">
         <select
           value={sort}
           onChange={(e) => setSort(e.target.value as Sort)}
@@ -206,6 +207,7 @@ export function DiscoverClient({ initialCategory }: { initialCategory?: Category
               <o.icon size={16} /> <span className="hidden sm:inline">{o.label}</span>
             </button>
           ))}
+        </div>
         </div>
       </div>
 
@@ -255,7 +257,9 @@ export function DiscoverClient({ initialCategory }: { initialCategory?: Category
               No programs match those filters. Try widening your search.
             </div>
           ) : view === "map" ? (
-            <MapView listings={results.map((r) => r.listing)} />
+            <div className={compareIds.length ? "pb-24" : undefined}>
+              <MapView listings={results.map((r) => r.listing)} />
+            </div>
           ) : (
             <div className="grid gap-6 pb-20 sm:grid-cols-2 xl:grid-cols-3">
               {results.map(({ listing }) => {
