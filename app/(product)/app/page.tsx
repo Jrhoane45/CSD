@@ -1,5 +1,5 @@
 import Link from "next/link";
-import { Target, Compass, LayoutDashboard, BarChart3, ArrowRight, UserRound, ScanLine, CalendarDays, Inbox, GraduationCap, Megaphone } from "lucide-react";
+import { Target, Compass, LayoutDashboard, BarChart3, ArrowRight, UserRound, ScanLine, CalendarDays, Inbox, GraduationCap, Megaphone, ShieldCheck } from "lucide-react";
 import { Eyebrow } from "@/components/ui/Eyebrow";
 import { LISTINGS } from "@/lib/data/listings";
 
@@ -190,6 +190,23 @@ export default function AppHome() {
           </div>
         ))}
       </div>
+
+      {/* operator entry point */}
+      <Link
+        href="/app/operator"
+        className="group mt-6 flex items-center justify-between rounded-2xl border border-ink/10 bg-navy p-5 text-white transition-colors hover:bg-navy-deep"
+      >
+        <span className="flex items-center gap-3">
+          <ShieldCheck size={20} className="text-gold" />
+          <span>
+            <span className="block font-semibold">CSD Operator console</span>
+            <span className="block text-xs text-cream/70">
+              Internal: provider vetting, content moderation &amp; ad revenue
+            </span>
+          </span>
+        </span>
+        <ArrowRight size={18} className="transition-transform group-hover:translate-x-1" />
+      </Link>
     </div>
   );
 }

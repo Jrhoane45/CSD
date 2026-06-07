@@ -85,7 +85,22 @@ export interface ProfileVideo {
 
 // --- Live platform activity (demo store) ------------------------------------
 
-export type Role = "parent" | "provider";
+export type Role = "parent" | "provider" | "operator";
+
+/** Operator vetting state for a provider listing. */
+export type VettingStatus = "verified" | "pending" | "suspended";
+
+/** A content report in the operator moderation queue. */
+export interface ModerationItem {
+  id: string;
+  type: "review" | "listing" | "event";
+  listingId: string;
+  listingName: string;
+  reason: string;
+  excerpt: string;
+  reportedBy: string;
+  reportedAt: string;
+}
 
 export type ThreadKind = "inquiry" | "booking";
 

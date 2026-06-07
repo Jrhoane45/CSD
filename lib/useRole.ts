@@ -17,7 +17,7 @@ function hydrate() {
   if (hydrated || typeof window === "undefined") return;
   hydrated = true;
   const saved = localStorage.getItem(KEY) as Role | null;
-  if (saved === "parent" || saved === "provider") {
+  if (saved === "parent" || saved === "provider" || saved === "operator") {
     role = saved;
     for (const l of listeners) l();
   }

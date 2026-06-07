@@ -8,7 +8,9 @@ import type {
   Campaign,
   CampaignObjective,
   EventBoost,
+  Listing,
   PaymentMethod,
+  VettingStatus,
   ListingOverride,
   PlatformEvent,
   ProviderMedia,
@@ -22,7 +24,13 @@ import type {
   ThreadKind,
   UserReview,
 } from "./types";
-import { SEED_THREADS, SEED_EVENTS, SEED_NOTIFICATIONS, SEED_CAMPAIGNS } from "./data/activity";
+import {
+  SEED_THREADS,
+  SEED_EVENTS,
+  SEED_NOTIFICATIONS,
+  SEED_CAMPAIGNS,
+  SEED_VETTING,
+} from "./data/activity";
 import { addDaysISO, flightStatus } from "./promotions";
 
 /*
@@ -51,6 +59,10 @@ export interface StoreState {
   recruiting: RecruitingState;
   /** Paid promotion campaigns. */
   campaigns: Campaign[];
+  /** Operator vetting overrides, keyed by listingId. */
+  vetting: Record<string, VettingStatus>;
+  /** Operator moderation resolutions, keyed by moderation item id. */
+  moderation: Record<string, "dismissed" | "removed">;
 }
 
 function seedState(): StoreState {
@@ -65,6 +77,8 @@ function seedState(): StoreState {
     media: {},
     recruiting: { tasks: {}, schools: [] },
     campaigns: SEED_CAMPAIGNS.map((c) => ({ ...c, metrics: { ...c.metrics } })),
+    vetting: { ...SEED_VETTING },
+    moderation: {},
   };
 }
 
@@ -102,6 +116,8 @@ function hydrate() {
         media: saved.media ?? state.media,
         recruiting: saved.recruiting ?? state.recruiting,
         campaigns: saved.campaigns ?? state.campaigns,
+        vetting: saved.vetting ?? state.vetting,
+        moderation: saved.moderation ?? state.moderation,
       };
       emit();
     }
@@ -576,6 +592,24 @@ export function recordAdClick(id: string) {
       : c,
   );
   set({ campaigns });
+}
+
+// --- Operator: vetting & moderation ----------------------------------------
+
+/** A listing's effective vetting status (operator override, else its default). */
+export function vettingStatusFor(
+  listing: Pick<Listing, "id" | "verified">,
+  vetting: StoreState["vetting"],
+): VettingStatus {
+  return vetting[listing.id] ?? (listing.verified ? "verified" : "pending");
+}
+
+export function setVetting(listingId: string, status: VettingStatus) {
+  set({ vetting: { ...state.vetting, [listingId]: status } });
+}
+
+export function resolveModeration(itemId: string, action: "dismissed" | "removed") {
+  set({ moderation: { ...state.moderation, [itemId]: action } });
 }
 
 /** Wipe all demo state (activity, profile, saved, Prospect IQ, role) and reload. */
