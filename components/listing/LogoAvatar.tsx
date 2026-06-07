@@ -1,4 +1,7 @@
+"use client";
+
 import type { Listing } from "@/lib/types";
+import { useStore } from "@/lib/store";
 
 type Size = "sm" | "md" | "lg";
 
@@ -39,15 +42,18 @@ export function LogoAvatar({
   className?: string;
 }) {
   const s = SIZES[size];
+  const { media } = useStore();
+  // A provider-uploaded logo (persisted in the store) overrides the seed logo.
+  const logo = media[listing.id]?.logo ?? listing.logo;
 
-  if (listing.logo) {
+  if (logo) {
     return (
       <div
         className={`flex shrink-0 items-center justify-center overflow-hidden border border-ink/10 bg-white ${s} ${className}`}
       >
         {/* eslint-disable-next-line @next/next/no-img-element */}
         <img
-          src={listing.logo}
+          src={logo}
           alt={`${listing.name} logo`}
           className="h-full w-full object-contain p-1.5"
         />

@@ -37,6 +37,9 @@ parent's action shows up on the provider side in real time:
   simulated provider reply so threads feel alive. Bookings carry their requested date/time.
 - **Events** (`/app/events`) — a board of tryouts, camps, showcases, and clinics with **one-tap RSVP**;
   providers can **create** and **boost** events that appear here instantly.
+- **Recruiting Hub** (`/app/recruiting`) — a college-pathway roadmap: a grade-by-grade checklist
+  (with your current phase highlighted), a **target-school tracker** (research → contacted → visited →
+  offer), and matched recruiting **advisers**. Progress persists in your browser.
 - **Saved** (`/app/saved`) — a parent's shortlist (persists in your browser).
 - **Notifications** — a live bell in the app shell with per-role unread counts.
 - **Provider dashboard** (`/app/provider`) — toggle the three claim states (**Unclaimed →

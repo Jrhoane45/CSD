@@ -27,13 +27,61 @@ const PIN_COLOR: Record<Category, string> = {
   consultant: "#c8102e",
 };
 
-// Deterministic jitter so a county's pins fan out instead of stacking.
+// Approximate lat/lng for the SoCal cities in the dataset — projected onto the
+// stylized map so pins land in roughly the right place relative to each other.
+const BOUNDS = { latMin: 32.5, latMax: 34.7, lngMin: -119.5, lngMax: -116.7 };
+const CITY_LATLNG: Record<string, [number, number]> = {
+  Ventura: [34.27, -119.29],
+  Oxnard: [34.2, -119.18],
+  "Thousand Oaks": [34.17, -118.84],
+  "Santa Monica": [34.02, -118.49],
+  "Culver City": [34.02, -118.39],
+  "West Hollywood": [34.09, -118.36],
+  "El Segundo": [33.92, -118.42],
+  Torrance: [33.84, -118.34],
+  Carson: [33.83, -118.28],
+  "Long Beach": [33.77, -118.19],
+  Burbank: [34.18, -118.31],
+  Pasadena: [34.15, -118.14],
+  Anaheim: [33.84, -117.91],
+  Fullerton: [33.87, -117.92],
+  "Costa Mesa": [33.64, -117.92],
+  Irvine: [33.68, -117.83],
+  "Mission Viejo": [33.6, -117.67],
+  "San Diego": [32.72, -117.16],
+  Riverside: [33.95, -117.4],
+  Corona: [33.88, -117.57],
+  "San Bernardino": [34.11, -117.29],
+  "Rancho Cucamonga": [34.11, -117.59],
+  Ontario: [34.06, -117.65],
+  Victorville: [34.54, -117.29],
+  Hesperia: [34.43, -117.3],
+};
+
+function project(lat: number, lng: number) {
+  const x = 8 + ((lng - BOUNDS.lngMin) / (BOUNDS.lngMax - BOUNDS.lngMin)) * 84;
+  const y = 8 + ((BOUNDS.latMax - lat) / (BOUNDS.latMax - BOUNDS.latMin)) * 84;
+  return { x, y };
+}
+
+// Deterministic jitter so co-located pins fan out instead of stacking.
 function offset(id: string) {
   let h = 0;
   for (let i = 0; i < id.length; i++) h = (h * 31 + id.charCodeAt(i)) & 0xffff;
   const a = ((h % 1000) / 1000) * 2 - 1;
   const b = (((h >> 5) % 1000) / 1000) * 2 - 1;
-  return { dx: a * 8, dy: b * 7 };
+  return { dx: a, dy: b };
+}
+
+function position(city: string, county: County, id: string) {
+  const { dx, dy } = offset(id);
+  const ll = CITY_LATLNG[city];
+  if (ll) {
+    const p = project(ll[0], ll[1]);
+    return { x: p.x + dx * 2.6, y: p.y + dy * 2.4 };
+  }
+  const c = CENTROID[county];
+  return { x: c.x + dx * 8, y: c.y + dy * 7 };
 }
 
 export function MapView({ listings }: { listings: Listing[] }) {
@@ -68,8 +116,7 @@ export function MapView({ listings }: { listings: Listing[] }) {
 
         {/* pins */}
         {listings.map((l) => {
-          const c = CENTROID[l.county];
-          const { dx, dy } = offset(l.id);
+          const pos = position(l.city, l.county, l.id);
           const active = l.id === selectedId;
           const score = computeCsdScore(l).score;
           return (
@@ -81,7 +128,7 @@ export function MapView({ listings }: { listings: Listing[] }) {
               }}
               aria-label={l.name}
               className="absolute -translate-x-1/2 -translate-y-full transition-transform hover:z-20 hover:scale-125"
-              style={{ left: `${c.x + dx}%`, top: `${c.y + dy}%`, zIndex: active ? 30 : 10 }}
+              style={{ left: `${pos.x}%`, top: `${pos.y}%`, zIndex: active ? 30 : 10 }}
             >
               <MapPin
                 size={active ? 30 : 22}

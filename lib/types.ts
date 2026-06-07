@@ -190,6 +190,24 @@ export interface SavedSearch {
   createdAt: string;
 }
 
+export type SchoolDivision = "D1" | "D2" | "D3" | "NAIA" | "JUCO";
+export type SchoolStatus = "Researching" | "Contacted" | "Visited" | "Offer";
+
+/** A school on the athlete's recruiting target list. */
+export interface TargetSchool {
+  id: string;
+  name: string;
+  division: SchoolDivision;
+  status: SchoolStatus;
+  createdAt: string;
+}
+
+/** Recruiting Hub state — checklist progress + target schools. */
+export interface RecruitingState {
+  tasks: Record<string, boolean>;
+  schools: TargetSchool[];
+}
+
 export interface AthleteProfile {
   // --- Account / identity (optional; set during onboarding) ---
   parentName?: string;

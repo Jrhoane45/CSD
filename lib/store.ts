@@ -7,9 +7,12 @@ import type {
   ListingOverride,
   PlatformEvent,
   ProviderMedia,
+  RecruitingState,
   ReviewReply,
   Role,
   SavedSearch,
+  SchoolDivision,
+  SchoolStatus,
   Thread,
   ThreadKind,
   UserReview,
@@ -38,6 +41,8 @@ export interface StoreState {
   savedSearches: SavedSearch[];
   /** Provider-uploaded media, keyed by listingId. */
   media: Record<string, ProviderMedia>;
+  /** Recruiting Hub: checklist progress + target schools. */
+  recruiting: RecruitingState;
 }
 
 function seedState(): StoreState {
@@ -50,6 +55,7 @@ function seedState(): StoreState {
     overrides: {},
     savedSearches: [],
     media: {},
+    recruiting: { tasks: {}, schools: [] },
   };
 }
 
@@ -85,6 +91,7 @@ function hydrate() {
         overrides: saved.overrides ?? state.overrides,
         savedSearches: saved.savedSearches ?? state.savedSearches,
         media: saved.media ?? state.media,
+        recruiting: saved.recruiting ?? state.recruiting,
       };
       emit();
     }
@@ -365,6 +372,47 @@ export function removeSavedSearch(id: string) {
 export function setProviderMedia(listingId: string, patch: Partial<ProviderMedia>) {
   const current = state.media[listingId] ?? { photos: [], videos: [] };
   set({ media: { ...state.media, [listingId]: { ...current, ...patch } } });
+}
+
+export function toggleRecruitingTask(taskId: string) {
+  const tasks = { ...state.recruiting.tasks, [taskId]: !state.recruiting.tasks[taskId] };
+  set({ recruiting: { ...state.recruiting, tasks } });
+}
+
+export function addTargetSchool(name: string, division: SchoolDivision) {
+  const school = {
+    id: uid(),
+    name,
+    division,
+    status: "Researching" as SchoolStatus,
+    createdAt: now(),
+  };
+  set({ recruiting: { ...state.recruiting, schools: [school, ...state.recruiting.schools] } });
+}
+
+export function setSchoolStatus(id: string, status: SchoolStatus) {
+  set({
+    recruiting: {
+      ...state.recruiting,
+      schools: state.recruiting.schools.map((s) => (s.id === id ? { ...s, status } : s)),
+    },
+  });
+  if (status === "Offer")
+    notify({
+      role: "parent",
+      icon: "trophy",
+      text: "Congrats — a target school is now marked as an Offer!",
+      href: "/app/recruiting",
+    });
+}
+
+export function removeTargetSchool(id: string) {
+  set({
+    recruiting: {
+      ...state.recruiting,
+      schools: state.recruiting.schools.filter((s) => s.id !== id),
+    },
+  });
 }
 
 /** Wipe all demo state (activity, profile, saved, Prospect IQ, role) and reload. */
