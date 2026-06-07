@@ -27,6 +27,8 @@ import {
   AUDIENCE_MULT,
   PAYMENT_METHODS,
   estimateCampaign,
+  todayISO,
+  addDaysISO,
   type CampaignPlan,
 } from "@/lib/promotions";
 import { useStore, createCampaign } from "@/lib/store";
@@ -58,21 +60,25 @@ export function CampaignBuilder({
   onClose,
   listing,
   plan,
+  initialEventId,
 }: {
   open: boolean;
   onClose: () => void;
   listing: Listing;
   plan?: CampaignPlan | null;
+  /** Pre-target a specific event (e.g. "Promote" on the events panel). */
+  initialEventId?: string;
 }) {
   const { events } = useStore();
   const myEvents = events.filter((e) => e.listingId === listing.id);
 
   const [step, setStep] = useState(0);
   const [objective, setObjective] = useState<CampaignObjective>(plan?.objective ?? "Fill an event");
-  const [eventId, setEventId] = useState<string>(myEvents[0]?.id ?? "");
+  const [eventId, setEventId] = useState<string>(initialEventId ?? myEvents[0]?.id ?? "");
   const [placements, setPlacements] = useState<AdPlacement[]>(plan?.placements ?? ["events-featured"]);
   const [audience, setAudience] = useState<AudienceReach>(plan?.audience ?? "Local");
   const [duration, setDuration] = useState(plan?.durationDays ?? 7);
+  const [startDate, setStartDate] = useState(todayISO());
   const [payment, setPayment] = useState<PaymentMethod>("Card");
   const [stage, setStage] = useState<"build" | "processing" | "done">("build");
 
@@ -108,6 +114,7 @@ export function CampaignBuilder({
         placements,
         audience,
         durationDays: duration,
+        startDate,
         budget: est.budget,
         payment,
         headline,
@@ -235,6 +242,27 @@ export function CampaignBuilder({
                     onChange={(e) => setDuration(Number(e.target.value))}
                     className="mt-3 w-full accent-navy"
                   />
+                </div>
+              </div>
+
+              <div>
+                <p className="eyebrow text-ink/50">Start date</p>
+                <div className="mt-2 flex flex-wrap items-center gap-3">
+                  <input
+                    type="date"
+                    value={startDate}
+                    min={todayISO()}
+                    onChange={(e) => setStartDate(e.target.value || todayISO())}
+                    className="rounded-lg border border-ink/15 bg-white px-3 py-2 text-sm outline-none focus:border-navy"
+                  />
+                  <span className="text-xs text-ink/55">
+                    Flight: {startDate} → {addDaysISO(startDate, duration)}
+                    {startDate > todayISO() && (
+                      <span className="ml-1.5 rounded-full bg-cream px-2 py-0.5 font-semibold text-ink/60">
+                        scheduled
+                      </span>
+                    )}
+                  </span>
                 </div>
               </div>
 

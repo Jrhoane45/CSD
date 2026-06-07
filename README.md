@@ -48,11 +48,16 @@ parent's action shows up on the provider side in real time:
   and per-event views→RSVP analytics), an **editable profile** (name/philosophy/pricing that updates
   the public listing), **review responses**, and a **simulated subscription checkout** on upgrade.
 - **Promotions Studio** (`/app/promote`) — a paid event-advertising platform: build a campaign
-  (objective → placements → audience/duration), see a live reach estimate and ad preview, and pay
-  through a **simulated multi-method checkout** (Card/PayPal/Apple Pay/ACH). Ads serve as **native,
-  on-brand placements** labeled **"Promoted · Vetted provider"** — a Discover spotlight card, an
-  events banner, and an in-app pop-up — and the studio reports **impressions, clicks, CTR, RSVPs, and
-  spend** per campaign. Includes **recommended campaign playbooks** for providers who aren't sure.
+  (objective → target event → placements → audience → **flight dates / scheduling**), see a live
+  reach estimate and ad preview, and pay through a **simulated multi-method checkout**
+  (Card/PayPal/Apple Pay/ACH). Ads serve as **native, on-brand placements** labeled
+  **"Promoted · Vetted provider"** — a Discover spotlight card, an events banner, and an in-app
+  pop-up — and the studio reports **impressions, clicks, CTR, RSVPs, spend, and budget pacing** per
+  campaign (live/scheduled/ended). Providers can **promote any event in one click** from the events
+  panel, and **recommended campaign playbooks** help those who aren't sure where to start.
+- **Operator ad-revenue dashboard** (`/app/operator/promotions`) — the platform/operator view of the
+  promotions marketplace: recognized revenue, committed budget, projected monthly run-rate, revenue
+  by placement, top advertisers, and every campaign across all providers.
 - **Analytics** (`/app/provider/analytics`) — premium views, lead funnel, and lead fit quality that
   **update live** with the leads, bookings, and RSVPs generated in the session.
 

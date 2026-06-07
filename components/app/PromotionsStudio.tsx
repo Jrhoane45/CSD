@@ -17,7 +17,7 @@ import {
 import type { Campaign } from "@/lib/types";
 import { getListing } from "@/lib/data/listings";
 import { useStore, endCampaign } from "@/lib/store";
-import { CAMPAIGN_PLANS, PLACEMENT_LABEL, type CampaignPlan } from "@/lib/promotions";
+import { CAMPAIGN_PLANS, PLACEMENT_LABEL, daysUntil, type CampaignPlan } from "@/lib/promotions";
 import { Eyebrow } from "@/components/ui/Eyebrow";
 import { AdBadge } from "@/components/app/AdBadge";
 import { CampaignBuilder } from "@/components/app/CampaignBuilder";
@@ -25,6 +25,12 @@ import { CampaignBuilder } from "@/components/app/CampaignBuilder";
 const LISTING = getListing("hoop-prodigy")!;
 const fmt = (n: number) => n.toLocaleString();
 const ctr = (c: Campaign) => (c.metrics.impressions ? (c.metrics.clicks / c.metrics.impressions) * 100 : 0);
+
+const STATUS_BADGE: Record<Campaign["status"], string> = {
+  active: "bg-navy text-white",
+  scheduled: "bg-gold/30 text-ink",
+  ended: "bg-cream text-ink/55",
+};
 
 export function PromotionsStudio() {
   const { campaigns } = useStore();
@@ -146,10 +152,18 @@ export function PromotionsStudio() {
         </div>
       </section>
 
-      <p className="mt-8 flex items-center gap-1.5 text-xs text-ink/45">
-        <ShieldCheck size={13} /> Only CSD-vetted providers can advertise. Families always see the
-        &quot;Vetted provider&quot; label so they know promoted content is from a trusted program.
-      </p>
+      <div className="mt-8 flex flex-wrap items-center justify-between gap-3 border-t border-ink/10 pt-4">
+        <p className="flex items-center gap-1.5 text-xs text-ink/45">
+          <ShieldCheck size={13} /> Only CSD-vetted providers can advertise. Families always see the
+          &quot;Vetted provider&quot; label so they know promoted content is from a trusted program.
+        </p>
+        <Link
+          href="/app/operator/promotions"
+          className="inline-flex items-center gap-1.5 text-xs font-semibold text-ink/50 hover:text-navy"
+        >
+          CSD operator: ad revenue <ArrowRight size={13} />
+        </Link>
+      </div>
 
       <CampaignBuilder open={builder} onClose={() => setBuilder(false)} listing={LISTING} plan={plan} />
     </div>
@@ -174,25 +188,27 @@ function CampaignRow({ c }: { c: Campaign }) {
         <div>
           <div className="flex items-center gap-2">
             <AdBadge />
-            <span
-              className={`rounded-full px-2 py-0.5 text-[0.6rem] font-bold uppercase ${
-                c.status === "active" ? "bg-navy text-white" : "bg-cream text-ink/55"
-              }`}
-            >
+            <span className={`rounded-full px-2 py-0.5 text-[0.6rem] font-bold uppercase ${STATUS_BADGE[c.status]}`}>
               {c.status}
             </span>
           </div>
           <p className="mt-1.5 font-bold text-navy">{c.headline}</p>
           <p className="text-xs text-ink/55">
-            {c.objective} · {c.audience} · {c.durationDays} days · {c.payment}
+            {c.objective} · {c.audience} · {c.payment}
+          </p>
+          <p className="mt-0.5 text-xs text-ink/45">
+            {c.startDate} → {c.endDate}
+            {c.status === "scheduled" && daysUntil(c.startDate) >= 0 && (
+              <span className="ml-1.5 font-semibold text-ink/60">· starts in {daysUntil(c.startDate)}d</span>
+            )}
           </p>
         </div>
-        {c.status === "active" && (
+        {c.status !== "ended" && (
           <button
             onClick={() => endCampaign(c.id)}
             className="rounded-lg border border-ink/15 px-3 py-1.5 text-xs font-semibold text-ink/60 hover:text-red"
           >
-            End campaign
+            {c.status === "scheduled" ? "Cancel" : "End campaign"}
           </button>
         )}
       </div>

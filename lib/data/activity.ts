@@ -7,6 +7,8 @@ import type { AppNotification, Campaign, PlatformEvent, Thread } from "../types"
 */
 
 const daysAgo = (n: number) => new Date(Date.now() - n * 86400000).toISOString();
+/** Date-only ISO offset from today (+n future, -n past). */
+const dateISO = (n: number) => new Date(Date.now() + n * 86400000).toISOString().slice(0, 10);
 const inDays = (n: number) => {
   const d = new Date(Date.now() + n * 86400000);
   return d.toISOString().slice(0, 10);
@@ -248,10 +250,68 @@ export const SEED_CAMPAIGNS: Campaign[] = [
     budget: 1232,
     payment: "Card",
     status: "active",
+    startDate: dateISO(-5),
+    endDate: dateISO(9),
     headline: "Fall Tryouts — HP Select 14U & 16U",
     cta: "Reserve a tryout spot",
     createdAt: daysAgo(5),
     metrics: { impressions: 18420, clicks: 642, rsvps: 77, spend: 612 },
+  },
+  {
+    id: "seed-camp-2",
+    listingId: "westside-fc",
+    listingName: "Westside Football Club",
+    listingLogo: "/logos/westside-fc.svg",
+    objective: "Grow awareness",
+    placements: ["discover-spotlight", "in-app-banner"],
+    audience: "Regional",
+    durationDays: 10,
+    budget: 550,
+    payment: "PayPal",
+    status: "active",
+    startDate: dateISO(-3),
+    endDate: dateISO(7),
+    headline: "Winter ID Camp — College Showcase",
+    cta: "Learn more",
+    createdAt: daysAgo(3),
+    metrics: { impressions: 9120, clicks: 287, rsvps: 31, spend: 198 },
+  },
+  {
+    id: "seed-camp-3",
+    listingId: "gridiron-prep-academy",
+    listingName: "Gridiron Prep Academy",
+    listingLogo: "/logos/gridiron-prep-academy.svg",
+    objective: "Fill an event",
+    placements: ["events-featured"],
+    audience: "Local",
+    durationDays: 7,
+    budget: 280,
+    payment: "Card",
+    status: "ended",
+    startDate: dateISO(-16),
+    endDate: dateISO(-9),
+    headline: "7v7 Spring Tournament",
+    cta: "Register your team",
+    createdAt: daysAgo(16),
+    metrics: { impressions: 4200, clicks: 165, rsvps: 22, spend: 280 },
+  },
+  {
+    id: "seed-camp-4",
+    listingId: "harbor-city-fastpitch",
+    listingName: "Harbor City Fastpitch",
+    objective: "Drive profile visits",
+    placements: ["in-app-popup", "discover-spotlight"],
+    audience: "Statewide",
+    durationDays: 14,
+    budget: 1960,
+    payment: "Bank (ACH)",
+    status: "scheduled",
+    startDate: dateISO(4),
+    endDate: dateISO(18),
+    headline: "Elite Fastpitch Showcase — Recruiters Attending",
+    cta: "Reserve a spot",
+    createdAt: daysAgo(1),
+    metrics: { impressions: 0, clicks: 0, rsvps: 0, spend: 0 },
   },
 ];
 

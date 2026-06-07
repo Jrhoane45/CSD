@@ -23,6 +23,7 @@ import type {
   UserReview,
 } from "./types";
 import { SEED_THREADS, SEED_EVENTS, SEED_NOTIFICATIONS, SEED_CAMPAIGNS } from "./data/activity";
+import { addDaysISO, flightStatus } from "./promotions";
 
 /*
   A tiny reactive store (Zustand-lite) backing the demo's "live" platform
@@ -492,6 +493,7 @@ export interface CreateCampaignInput {
   placements: AdPlacement[];
   audience: AudienceReach;
   durationDays: number;
+  startDate: string;
   budget: number;
   payment: PaymentMethod;
   headline: string;
@@ -501,10 +503,18 @@ export interface CreateCampaignInput {
   estRsvps: number;
 }
 
+/** Whether a campaign should currently be serving ads. */
+export function isAdLive(c: Campaign): boolean {
+  return c.status === "active";
+}
+
 export function createCampaign(input: CreateCampaignInput): string {
   const id = uid();
-  // Just launched — seed a small early delivery so reporting isn't empty.
-  const f = 0.06;
+  const startDate = input.startDate;
+  const endDate = addDaysISO(startDate, input.durationDays);
+  const status = flightStatus(startDate, endDate);
+  // Scheduled campaigns haven't delivered yet; live ones seed a small early read.
+  const f = status === "active" ? 0.06 : 0;
   const campaign: Campaign = {
     id,
     listingId: input.listingId,
@@ -518,7 +528,9 @@ export function createCampaign(input: CreateCampaignInput): string {
     durationDays: input.durationDays,
     budget: input.budget,
     payment: input.payment,
-    status: "active",
+    status,
+    startDate,
+    endDate,
     headline: input.headline,
     cta: input.cta,
     createdAt: now(),
@@ -533,7 +545,10 @@ export function createCampaign(input: CreateCampaignInput): string {
   notify({
     role: "provider",
     icon: "trophy",
-    text: `Campaign live: "${input.headline}" — now serving to vetted-provider ad slots`,
+    text:
+      status === "scheduled"
+        ? `Campaign scheduled: "${input.headline}" — starts ${startDate}`
+        : `Campaign live: "${input.headline}" — now serving to vetted-provider ad slots`,
     href: "/app/promote",
   });
   persist();
