@@ -4,7 +4,9 @@ import { useSyncExternalStore } from "react";
 import type {
   AppNotification,
   EventBoost,
+  ListingOverride,
   PlatformEvent,
+  ReviewReply,
   Role,
   Thread,
   ThreadKind,
@@ -26,6 +28,10 @@ export interface StoreState {
   events: PlatformEvent[];
   reviews: UserReview[];
   notifications: AppNotification[];
+  /** Provider responses to reviews, keyed by `${listingId}::${reviewKey}`. */
+  replies: Record<string, ReviewReply>;
+  /** Provider-edited listing fields, keyed by listingId. */
+  overrides: Record<string, ListingOverride>;
 }
 
 function seedState(): StoreState {
@@ -34,6 +40,8 @@ function seedState(): StoreState {
     events: SEED_EVENTS.map((e) => ({ ...e })),
     reviews: [],
     notifications: SEED_NOTIFICATIONS.map((n) => ({ ...n })),
+    replies: {},
+    overrides: {},
   };
 }
 
@@ -65,6 +73,8 @@ function hydrate() {
         events: saved.events ?? state.events,
         reviews: saved.reviews ?? state.reviews,
         notifications: saved.notifications ?? state.notifications,
+        replies: saved.replies ?? state.replies,
+        overrides: saved.overrides ?? state.overrides,
       };
       emit();
     }
@@ -274,6 +284,33 @@ export function addReview(review: Omit<UserReview, "id">) {
   });
   persist();
   emit();
+}
+
+export const replyKey = (listingId: string, reviewKey: string) => `${listingId}::${reviewKey}`;
+
+export function addReviewReply(
+  listingId: string,
+  listingName: string,
+  reviewKey: string,
+  body: string,
+) {
+  state = {
+    ...state,
+    replies: { ...state.replies, [replyKey(listingId, reviewKey)]: { body, at: now() } },
+  };
+  notify({
+    role: "parent",
+    icon: "star",
+    text: `${listingName} responded to a review`,
+    href: `/app/listing/${listingId}`,
+  });
+  persist();
+  emit();
+}
+
+export function setOverride(listingId: string, patch: ListingOverride) {
+  const next = { ...(state.overrides[listingId] ?? {}), ...patch };
+  set({ overrides: { ...state.overrides, [listingId]: next } });
 }
 
 export function markAllNotificationsRead(role: Role) {

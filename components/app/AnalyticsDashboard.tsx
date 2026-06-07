@@ -14,38 +14,97 @@ import {
   Tooltip,
   CartesianGrid,
 } from "recharts";
+import { useMemo } from "react";
 import Link from "next/link";
-import { ArrowLeft, Eye, Inbox, TrendingUp, Crown } from "lucide-react";
+import { ArrowLeft, Eye, Inbox, TrendingUp, Crown, Activity } from "lucide-react";
 import { Eyebrow } from "@/components/ui/Eyebrow";
+import { useStore } from "@/lib/store";
 
 const NAVY = "#14264f";
 const GOLD = "#f5a800";
-const RED = "#c8102e";
+const MUTED = "#c9c3b4";
 
-const TREND = [
+const LISTING_ID = "hoop-prodigy";
+
+// Realistic baseline history; the current month and KPIs blend in live activity
+// generated in this session so the funnel and fit mix react to real leads.
+const BASE_TREND = [
   { m: "Jan", views: 1120, impressions: 3400, leads: 9 },
   { m: "Feb", views: 1480, impressions: 4100, leads: 12 },
   { m: "Mar", views: 1950, impressions: 5200, leads: 16 },
   { m: "Apr", views: 2600, impressions: 6800, leads: 21 },
   { m: "May", views: 3210, impressions: 8100, leads: 24 },
-  { m: "Jun", views: 3910, impressions: 9400, leads: 27 },
 ];
-
-const FUNNEL = [
-  { stage: "Impressions", v: 9400 },
-  { stage: "Profile views", v: 3910 },
-  { stage: "Leads", v: 27 },
-  { stage: "Conversations", v: 18 },
-  { stage: "Enrollments", v: 7 },
-];
-
-const FIT = [
-  { name: "Great fit (85+)", v: 58, c: GOLD },
-  { name: "Good fit (70–84)", v: 31, c: NAVY },
-  { name: "Fair fit (<70)", v: 11, c: "#c9c3b4" },
-];
+const BASE = {
+  views: 3910,
+  impressions: 9400,
+  leads: 23,
+  conversations: 15,
+  enrollments: 7,
+};
+const SEED_FIT = { great: 58, good: 31, fair: 11 };
 
 export function AnalyticsDashboard() {
+  const { threads, events, reviews } = useStore();
+
+  const live = useMemo(() => {
+    const leads = threads.filter((t) => t.listingId === LISTING_ID);
+    const conversations = leads.filter((t) => t.messages.length > 1).length;
+    const enrollments = leads.filter((t) => t.kind === "booking").length;
+    const rsvps = events
+      .filter((e) => e.listingId === LISTING_ID)
+      .reduce((s, e) => s + e.rsvps, 0);
+    const reviewCount = reviews.filter((r) => r.listingId === LISTING_ID).length;
+
+    const fitVals = leads.map((l) => l.fit).filter((f): f is number => f !== undefined);
+    return { count: leads.length, conversations, enrollments, rsvps, reviewCount, fitVals };
+  }, [threads, events, reviews]);
+
+  const views = BASE.views + live.rsvps * 6 + live.count * 5;
+  const impressions = BASE.impressions + live.rsvps * 20 + live.count * 12;
+  const leads = BASE.leads + live.count;
+  const conversations = BASE.conversations + live.conversations;
+  const enrollments = BASE.enrollments + live.enrollments;
+  const enrollRate = leads > 0 ? Math.round((enrollments / leads) * 100) : 0;
+
+  const TREND = [
+    ...BASE_TREND,
+    { m: "Jun", views, impressions, leads },
+  ];
+
+  const FUNNEL = [
+    { stage: "Impressions", v: impressions },
+    { stage: "Profile views", v: views },
+    { stage: "Leads", v: leads },
+    { stage: "Conversations", v: conversations },
+    { stage: "Enrollments", v: enrollments },
+  ];
+
+  const FIT = useMemo(() => {
+    let great = SEED_FIT.great;
+    let good = SEED_FIT.good;
+    let fair = SEED_FIT.fair;
+    if (live.fitVals.length) {
+      const total = live.fitVals.length;
+      const g = live.fitVals.filter((f) => f >= 85).length;
+      const m = live.fitVals.filter((f) => f >= 70 && f < 85).length;
+      great = Math.round((g / total) * 100);
+      good = Math.round((m / total) * 100);
+      fair = Math.max(0, 100 - great - good);
+    }
+    return [
+      { name: "Great fit (85+)", v: great, c: GOLD },
+      { name: "Good fit (70–84)", v: good, c: NAVY },
+      { name: "Fair fit (<70)", v: fair, c: MUTED },
+    ];
+  }, [live.fitVals]);
+
+  const KPIS = [
+    { icon: Eye, v: views.toLocaleString(), l: "Profile views (30d)", d: "+22% MoM" },
+    { icon: Inbox, v: String(leads), l: "Leads (30d)", d: live.count ? `+${live.count} live` : "+12% MoM" },
+    { icon: TrendingUp, v: `${enrollRate}%`, l: "Lead → enrollment", d: "+4 pts" },
+  ];
+
   return (
     <div className="mx-auto max-w-6xl px-6 py-10">
       <Link
@@ -67,11 +126,7 @@ export function AnalyticsDashboard() {
 
       {/* KPI row */}
       <div className="mt-6 grid gap-4 sm:grid-cols-3">
-        {[
-          { icon: Eye, v: "3,910", l: "Profile views (30d)", d: "+22% MoM" },
-          { icon: Inbox, v: "27", l: "Leads (30d)", d: "+12% MoM" },
-          { icon: TrendingUp, v: "38%", l: "Lead → enrollment", d: "+4 pts" },
-        ].map((k) => (
+        {KPIS.map((k) => (
           <div key={k.l} className="rounded-2xl border border-ink/10 bg-white p-5">
             <div className="flex items-center justify-between">
               <k.icon size={20} className="text-navy" />
@@ -162,8 +217,10 @@ export function AnalyticsDashboard() {
         </div>
       </div>
 
-      <p className="mt-6 text-xs text-ink/45">
-        Sample analytics for demonstration. In production these reflect real platform activity.
+      <p className="mt-6 flex items-center gap-1.5 text-xs text-ink/45">
+        <Activity size={13} className="text-navy/50" />
+        Baseline history is illustrative; KPIs, the funnel, and fit mix update live with the leads,
+        bookings, and event RSVPs generated in this demo session.
       </p>
     </div>
   );

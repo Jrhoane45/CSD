@@ -21,6 +21,7 @@ import { LogoAvatar } from "@/components/listing/LogoAvatar";
 import { ScoreBreakdown } from "@/components/listing/ScoreBreakdown";
 import { ListingReviews } from "@/components/listing/ListingReviews";
 import { ListingActions } from "@/components/app/ListingActions";
+import { OverridableText } from "@/components/app/OverridableText";
 
 export function generateStaticParams() {
   return LISTINGS.map((l) => ({ id: l.id }));
@@ -98,7 +99,13 @@ export default async function ListingPage({ params }: { params: Promise<{ id: st
               </span>
             )}
           </div>
-          <h1 className="display mt-2 text-4xl text-navy">{listing.name}</h1>
+          <OverridableText
+            as="h1"
+            listingId={listing.id}
+            field="name"
+            fallback={listing.name}
+            className="display mt-2 text-4xl text-navy"
+          />
           <div className="mt-3 flex flex-wrap items-center gap-x-4 gap-y-1.5 text-sm text-ink/65">
             <span className="font-semibold text-ink/85">{listing.sports.join(" · ")}</span>
             <span className="inline-flex items-center gap-1">
@@ -134,7 +141,13 @@ export default async function ListingPage({ params }: { params: Promise<{ id: st
           {/* overview */}
           <section className="rounded-2xl border border-ink/10 bg-white p-7">
             <h2 className="display text-2xl text-navy">OVERVIEW</h2>
-            <p className="mt-3 text-ink/70">{listing.philosophy}</p>
+            <OverridableText
+              as="p"
+              listingId={listing.id}
+              field="philosophy"
+              fallback={listing.philosophy}
+              className="mt-3 text-ink/70"
+            />
             <div className="mt-5 grid gap-3 sm:grid-cols-2">
               {listing.goals.map((g) => (
                 <div key={g} className="flex items-center gap-2 rounded-lg bg-cream/60 px-3 py-2 text-sm">
@@ -217,7 +230,8 @@ export default async function ListingPage({ params }: { params: Promise<{ id: st
                   <Clock size={16} className="text-navy" /> {listing.yearsInOperation} years operating
                 </li>
                 <li className="flex items-center gap-2.5 text-ink/75">
-                  <DollarSign size={16} className="text-navy" /> {listing.priceLabel}
+                  <DollarSign size={16} className="text-navy" />{" "}
+                  <OverridableText listingId={listing.id} field="priceLabel" fallback={listing.priceLabel} />
                 </li>
                 {listing.certifications.map((c) => (
                   <li key={c} className="flex items-center gap-2.5 text-ink/75">
