@@ -1,4 +1,4 @@
-import type { AppNotification, PlatformEvent, Thread } from "../types";
+import type { AppNotification, Campaign, PlatformEvent, Thread } from "../types";
 
 /*
   Seed activity so the "live" platform never looks empty on first load.
@@ -230,6 +230,28 @@ export const SEED_EVENTS: PlatformEvent[] = [
     registrants: [],
     createdBy: "seed",
     createdAt: daysAgo(4),
+  },
+];
+
+export const SEED_CAMPAIGNS: Campaign[] = [
+  {
+    id: "seed-camp-1",
+    listingId: "hoop-prodigy",
+    listingName: "Hoop Prodigy",
+    listingLogo: "/logos/hoop-prodigy.jpg",
+    eventId: "seed-evt-1",
+    eventTitle: "Fall Tryouts — 14U & 16U",
+    objective: "Fill an event",
+    placements: ["discover-spotlight", "in-app-popup", "events-featured"],
+    audience: "Statewide",
+    durationDays: 14,
+    budget: 1232,
+    payment: "Card",
+    status: "active",
+    headline: "Fall Tryouts — HP Select 14U & 16U",
+    cta: "Reserve a tryout spot",
+    createdAt: daysAgo(5),
+    metrics: { impressions: 18420, clicks: 642, rsvps: 77, spend: 612 },
   },
 ];
 

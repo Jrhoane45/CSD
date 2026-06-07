@@ -19,8 +19,9 @@ import { useRole } from "@/lib/useRole";
 import { useProfile } from "@/lib/useProfile";
 import { Eyebrow } from "@/components/ui/Eyebrow";
 import { EventFormModal } from "@/components/app/EventForm";
+import { PromoBanner } from "@/components/app/PromoBanner";
 
-const TYPES = ["All", "Tryout", "Camp", "Showcase", "Clinic", "Open House"] as const;
+const TYPES = ["All", "Tournament", "Showcase", "Camp", "Clinic", "Tryout", "Open House"] as const;
 
 const BOOST_LABEL: Record<PlatformEvent["boost"], string | null> = {
   none: null,
@@ -71,6 +72,10 @@ export function EventsBrowse() {
             <Plus size={16} /> Create event
           </button>
         )}
+      </div>
+
+      <div className="mt-5">
+        <PromoBanner />
       </div>
 
       {/* filters */}

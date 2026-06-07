@@ -7,7 +7,7 @@ import { SPORTS_LIST, COUNTIES_LIST } from "@/lib/data/listings";
 import { createEvent, updateEvent } from "@/lib/store";
 import { Modal } from "@/components/ui/Modal";
 
-const TYPES: EventType[] = ["Tryout", "Camp", "Showcase", "Clinic", "Open House"];
+const TYPES: EventType[] = ["Tournament", "Showcase", "Camp", "Clinic", "Tryout", "Open House"];
 
 export interface EventDefaults {
   listingId?: string;
