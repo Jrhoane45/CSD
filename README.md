@@ -43,8 +43,9 @@ parent's action shows up on the provider side in real time:
 - **Saved** (`/app/saved`) — a parent's shortlist (persists in your browser).
 - **Notifications** — a live bell in the app shell with per-role unread counts.
 - **Provider dashboard** (`/app/provider`) — toggle the three claim states (**Unclaimed →
-  Claimed-Free → Claimed-Paid**). The paid view shows **live leads** (from real inquiries), event
-  management with working **boosts**, an **editable profile** (name/philosophy/pricing that updates
+  Claimed-Free → Claimed-Paid**). The paid view shows **live leads** (from real inquiries), full
+  **event management** (create, edit, cancel, **boost**, a **registrant roster** with quick-message,
+  and per-event views→RSVP analytics), an **editable profile** (name/philosophy/pricing that updates
   the public listing), **review responses**, and a **simulated subscription checkout** on upgrade.
 - **Analytics** (`/app/provider/analytics`) — premium views, lead funnel, and lead fit quality that
   **update live** with the leads, bookings, and RSVPs generated in the session.
