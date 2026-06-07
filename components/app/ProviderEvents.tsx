@@ -20,6 +20,7 @@ import {
   messageRegistrant,
 } from "@/lib/store";
 import { EventFormModal } from "@/components/app/EventForm";
+import { CampaignBuilder } from "@/components/app/CampaignBuilder";
 import { Modal } from "@/components/ui/Modal";
 
 const BOOST_BADGE: Record<EventBoost, { label: string; cls: string }> = {
@@ -50,6 +51,7 @@ export function ProviderEvents({ listing }: { listing: Listing }) {
   const [creating, setCreating] = useState(false);
   const [editing, setEditing] = useState<PlatformEvent | null>(null);
   const [roster, setRoster] = useState<PlatformEvent | null>(null);
+  const [promoting, setPromoting] = useState<PlatformEvent | null>(null);
 
   // Keep the open roster modal in sync with live store updates.
   const rosterLive = roster ? events.find((e) => e.id === roster.id) ?? null : null;
@@ -113,6 +115,12 @@ export function ProviderEvents({ listing }: { listing: Listing }) {
               {/* management actions */}
               <div className="mt-2 flex flex-wrap items-center gap-2 border-t border-ink/10 pt-2">
                 <button
+                  onClick={() => setPromoting(e)}
+                  className="inline-flex items-center gap-1 rounded-md bg-gold px-2 py-1 text-xs font-bold text-ink hover:bg-gold-300"
+                >
+                  <Megaphone size={13} /> Promote
+                </button>
+                <button
                   onClick={() => setRoster(e)}
                   className="inline-flex items-center gap-1 text-xs font-semibold text-navy hover:underline"
                 >
@@ -166,6 +174,15 @@ export function ProviderEvents({ listing }: { listing: Listing }) {
       >
         {rosterLive && <Roster event={rosterLive} listing={listing} />}
       </Modal>
+
+      {promoting && (
+        <CampaignBuilder
+          open
+          onClose={() => setPromoting(null)}
+          listing={listing}
+          initialEventId={promoting.id}
+        />
+      )}
     </div>
   );
 }

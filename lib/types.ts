@@ -153,7 +153,9 @@ export interface Campaign {
   durationDays: number;
   budget: number;
   payment: PaymentMethod;
-  status: "active" | "ended";
+  status: "scheduled" | "active" | "ended";
+  startDate: string; // ISO date (YYYY-MM-DD)
+  endDate: string; // ISO date (YYYY-MM-DD)
   headline: string;
   cta: string;
   createdAt: string;

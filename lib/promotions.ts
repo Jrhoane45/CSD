@@ -90,6 +90,26 @@ export function estimateCampaign(
   return { budget, impressions, clicks, rsvps };
 }
 
+export const todayISO = () => new Date().toISOString().slice(0, 10);
+
+export function addDaysISO(dateISO: string, days: number): string {
+  const d = new Date(dateISO + "T00:00:00");
+  d.setDate(d.getDate() + days);
+  return d.toISOString().slice(0, 10);
+}
+
+/** Flight status from start/end dates relative to today. */
+export function flightStatus(startDate: string, endDate: string): "scheduled" | "active" | "ended" {
+  const t = todayISO();
+  if (t < startDate) return "scheduled";
+  if (t > endDate) return "ended";
+  return "active";
+}
+
+export function daysUntil(dateISO: string): number {
+  return Math.round((new Date(dateISO + "T00:00:00").getTime() - Date.now()) / 86400000);
+}
+
 export interface CampaignPlan {
   key: string;
   name: string;
