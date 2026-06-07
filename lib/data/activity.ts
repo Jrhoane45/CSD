@@ -4,6 +4,7 @@ import type {
   ModerationItem,
   PlatformEvent,
   Thread,
+  UserReview,
   VettingStatus,
 } from "../types";
 
@@ -327,6 +328,42 @@ export const SEED_VETTING: Record<string, VettingStatus> = {
   "metro-hoops-collective": "suspended",
 };
 
+/*
+  Flagged reviews are seeded as *real* reviews so they appear publicly on the
+  listing page — until an operator removes them via the moderation queue, which
+  makes them disappear. This closes the trust-&-safety loop visibly.
+*/
+export const SEED_REVIEWS: UserReview[] = [
+  {
+    id: "rev-flag-1",
+    listingId: "valley-elite-hoops",
+    author: "Anonymous",
+    rating: 5,
+    date: dateISO(-1),
+    title: "BEST PROGRAM EVER!!!",
+    body: "Best program ever!!! Coach gave us a discount to post this 5 star review so honestly everyone should join no questions asked!!!",
+    dimensions: [
+      { label: "Communication", value: 5 },
+      { label: "Professionalism", value: 5 },
+      { label: "Value", value: 5 },
+    ],
+  },
+  {
+    id: "rev-flag-2",
+    listingId: "inland-thunder-baseball",
+    author: "Frustrated Dad",
+    rating: 1,
+    date: dateISO(-2),
+    title: "Stay away",
+    body: "Coach is a complete fraud and an idiot who has no business being anywhere near kids. Absolute clown — someone should run him out of town.",
+    dimensions: [
+      { label: "Communication", value: 1 },
+      { label: "Professionalism", value: 1 },
+      { label: "Value", value: 1 },
+    ],
+  },
+];
+
 export const SEED_MODERATION: ModerationItem[] = [
   {
     id: "mod-1",
@@ -337,6 +374,7 @@ export const SEED_MODERATION: ModerationItem[] = [
     excerpt: "Best program ever!!! Coach gave us a discount to post this 5 star review…",
     reportedBy: "Parent report",
     reportedAt: daysAgo(1),
+    reviewId: "rev-flag-1",
   },
   {
     id: "mod-2",
@@ -354,9 +392,10 @@ export const SEED_MODERATION: ModerationItem[] = [
     listingId: "inland-thunder-baseball",
     listingName: "Inland Thunder Baseball",
     reason: "Abusive language",
-    excerpt: "This review contains personal attacks against a named coach.",
+    excerpt: "Personal attacks against a named coach (“complete fraud… clown… run him out of town”).",
     reportedBy: "Provider report",
     reportedAt: daysAgo(3),
+    reviewId: "rev-flag-2",
   },
   {
     id: "mod-4",

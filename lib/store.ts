@@ -30,6 +30,8 @@ import {
   SEED_NOTIFICATIONS,
   SEED_CAMPAIGNS,
   SEED_VETTING,
+  SEED_REVIEWS,
+  SEED_MODERATION,
 } from "./data/activity";
 import { addDaysISO, flightStatus } from "./promotions";
 
@@ -69,7 +71,7 @@ function seedState(): StoreState {
   return {
     threads: SEED_THREADS.map((t) => ({ ...t })),
     events: SEED_EVENTS.map((e) => ({ ...e })),
-    reviews: [],
+    reviews: SEED_REVIEWS.map((r) => ({ ...r })),
     notifications: SEED_NOTIFICATIONS.map((n) => ({ ...n })),
     replies: {},
     overrides: {},
@@ -604,12 +606,41 @@ export function vettingStatusFor(
   return vetting[listing.id] ?? (listing.verified ? "verified" : "pending");
 }
 
+/** Whether a provider is publicly listable (not suspended by an operator). */
+export function isPubliclyVisible(
+  listing: Pick<Listing, "id" | "verified">,
+  vetting: StoreState["vetting"],
+): boolean {
+  return vettingStatusFor(listing, vetting) !== "suspended";
+}
+
+/** IDs of reviews an operator has removed via moderation. */
+export function removedReviewIds(moderation: StoreState["moderation"]): Set<string> {
+  const ids = new Set<string>();
+  for (const item of SEED_MODERATION) {
+    if (item.reviewId && moderation[item.id] === "removed") ids.add(item.reviewId);
+  }
+  return ids;
+}
+
 export function setVetting(listingId: string, status: VettingStatus) {
   set({ vetting: { ...state.vetting, [listingId]: status } });
 }
 
 export function resolveModeration(itemId: string, action: "dismissed" | "removed") {
-  set({ moderation: { ...state.moderation, [itemId]: action } });
+  state = { ...state, moderation: { ...state.moderation, [itemId]: action } };
+  // Apply the real-world consequence of a removal.
+  if (action === "removed") {
+    const item = SEED_MODERATION.find((i) => i.id === itemId);
+    if (item?.type === "listing") {
+      state = { ...state, vetting: { ...state.vetting, [item.listingId]: "suspended" } };
+    } else if (item?.type === "event" && item.eventId) {
+      state = { ...state, events: state.events.filter((e) => e.id !== item.eventId) };
+    }
+    // "review" removals are applied where reviews render, via removedReviewIds().
+  }
+  persist();
+  emit();
 }
 
 /** Wipe all demo state (activity, profile, saved, Prospect IQ, role) and reload. */
