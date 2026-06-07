@@ -29,6 +29,7 @@ import { Eyebrow } from "@/components/ui/Eyebrow";
 import { AthleteAvatar } from "@/components/app/AthleteAvatar";
 import { LogoAvatar } from "@/components/listing/LogoAvatar";
 import { MediaUploader } from "@/components/app/MediaUploader";
+import { OverridableText } from "@/components/app/OverridableText";
 
 export default function ProfilePage() {
   const { profile, ready } = useProfile();
@@ -256,7 +257,13 @@ export default function ProfilePage() {
                 <span className="display w-6 text-xl text-ink/30">{i + 1}</span>
                 <LogoAvatar listing={m.listing} size="sm" />
                 <div className="flex-1">
-                  <p className="font-bold text-navy">{m.listing.name}</p>
+                  <OverridableText
+                    as="p"
+                    listingId={m.listing.id}
+                    field="name"
+                    fallback={m.listing.name}
+                    className="font-bold text-navy"
+                  />
                   <p className="text-xs text-ink/55">
                     {CATEGORY_LABEL[m.listing.category]} · {m.listing.city}, {m.listing.county} Co.
                   </p>

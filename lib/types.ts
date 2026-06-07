@@ -169,6 +169,13 @@ export interface ListingOverride {
   priceLabel?: string;
 }
 
+/** Provider-uploaded media that persists across reloads, keyed by listingId. */
+export interface ProviderMedia {
+  logo?: string;
+  photos: string[];
+  videos: ProfileVideo[];
+}
+
 /** A parent's saved Discover search, with the filter set to re-apply. */
 export interface SavedSearch {
   id: string;

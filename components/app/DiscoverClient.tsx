@@ -1,7 +1,7 @@
 "use client";
 
 import { useMemo, useState } from "react";
-import { Search, SlidersHorizontal, X, GitCompareArrows, Check, BookmarkPlus, Bell } from "lucide-react";
+import { Search, SlidersHorizontal, X, GitCompareArrows, Check, BookmarkPlus, Bell, LayoutGrid, Map } from "lucide-react";
 import type { Category, SavedSearch } from "@/lib/types";
 import { computeCsdScore, averageRating } from "@/lib/scoring";
 import {
@@ -13,6 +13,7 @@ import {
 } from "@/lib/data/listings";
 import { ListingCard } from "@/components/listing/ListingCard";
 import { CompareBar } from "@/components/app/CompareBar";
+import { MapView } from "@/components/app/MapView";
 import { useStore, addSavedSearch, removeSavedSearch } from "@/lib/store";
 import { Eyebrow } from "@/components/ui/Eyebrow";
 
@@ -33,6 +34,7 @@ export function DiscoverClient({ initialCategory }: { initialCategory?: Category
   const [minScore, setMinScore] = useState(0);
   const [sort, setSort] = useState<Sort>("score");
   const [showFilters, setShowFilters] = useState(false);
+  const [view, setView] = useState<"list" | "map">("list");
   const [compareIds, setCompareIds] = useState<string[]>([]);
 
   const toggleCompare = (id: string) =>
@@ -188,6 +190,23 @@ export function DiscoverClient({ initialCategory }: { initialCategory?: Category
         >
           <BookmarkPlus size={16} /> Save search
         </button>
+        <div className="flex rounded-xl border border-ink/15 bg-white p-1">
+          {([
+            { v: "list", icon: LayoutGrid, label: "List" },
+            { v: "map", icon: Map, label: "Map" },
+          ] as const).map((o) => (
+            <button
+              key={o.v}
+              onClick={() => setView(o.v)}
+              aria-label={o.label}
+              className={`inline-flex items-center gap-1.5 rounded-lg px-3 py-2 text-sm font-semibold transition-colors ${
+                view === o.v ? "bg-navy text-white" : "text-ink/55 hover:text-navy"
+              }`}
+            >
+              <o.icon size={16} /> <span className="hidden sm:inline">{o.label}</span>
+            </button>
+          ))}
+        </div>
       </div>
 
       {/* saved searches */}
@@ -235,6 +254,8 @@ export function DiscoverClient({ initialCategory }: { initialCategory?: Category
             <div className="rounded-2xl border border-dashed border-ink/20 p-12 text-center text-ink/50">
               No programs match those filters. Try widening your search.
             </div>
+          ) : view === "map" ? (
+            <MapView listings={results.map((r) => r.listing)} />
           ) : (
             <div className="grid gap-6 pb-20 sm:grid-cols-2 xl:grid-cols-3">
               {results.map(({ listing }) => {

@@ -28,7 +28,8 @@ parent's action shows up on the provider side in real time:
 - **Find a match** (`/app/match`) — an athlete-profile wizard that returns ranked, **Fit-scored**
   matches with the reasons behind each one. Badged *Intelligence Layer — coming next*.
 - **Discover** (`/app/discover`) — searchable, filterable directory with **CSD Score** badges, a
-  **side-by-side Compare** tray (pick up to 3 programs), and **saved searches with alerts**.
+  **List / Map** toggle (stylized SoCal map with program pins), a **side-by-side Compare** tray
+  (pick up to 3 programs), and **saved searches with alerts**.
 - **Listing profile** (`/app/listing/[id]`) — CSD Score breakdown, alumni outcomes, category-specific
   reviews, and a claim banner. **Request info** and **Book a visit** open real flows that start a
   conversation; **Write a review** posts live and recomputes the rating.

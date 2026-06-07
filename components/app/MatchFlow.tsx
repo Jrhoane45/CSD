@@ -23,6 +23,7 @@ import { CsdScoreBadge } from "@/components/ui/CsdScoreBadge";
 import { computeCsdScore } from "@/lib/scoring";
 import { SaveButton } from "@/components/app/SaveButton";
 import { LogoAvatar } from "@/components/listing/LogoAvatar";
+import { OverridableText } from "@/components/app/OverridableText";
 
 const LEVELS: { value: DevLevel; blurb: string }[] = [
   { value: "Recreational", blurb: "First exposure — fun and fundamentals." },
@@ -371,7 +372,8 @@ function MatchCard({
               href={`/app/listing/${listing.id}`}
               className="block text-lg font-bold text-navy hover:underline"
             >
-              {rank}. {listing.name}
+              {rank}.{" "}
+              <OverridableText as="span" listingId={listing.id} field="name" fallback={listing.name} />
             </Link>
             <div className="mt-1 flex flex-wrap items-center gap-x-3 gap-y-1 text-sm text-ink/60">
               <span className="font-medium text-ink/80">{CATEGORY_LABEL[listing.category]}</span>
