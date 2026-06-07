@@ -169,6 +169,20 @@ export interface ListingOverride {
   priceLabel?: string;
 }
 
+/** A parent's saved Discover search, with the filter set to re-apply. */
+export interface SavedSearch {
+  id: string;
+  name: string;
+  query: string;
+  category: string;
+  sport: string;
+  level: string;
+  county: string;
+  minScore: number;
+  sort: string;
+  createdAt: string;
+}
+
 export interface AthleteProfile {
   // --- Account / identity (optional; set during onboarding) ---
   parentName?: string;

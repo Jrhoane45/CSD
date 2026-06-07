@@ -27,8 +27,8 @@ parent's action shows up on the provider side in real time:
 
 - **Find a match** (`/app/match`) — an athlete-profile wizard that returns ranked, **Fit-scored**
   matches with the reasons behind each one. Badged *Intelligence Layer — coming next*.
-- **Discover** (`/app/discover`) — searchable, filterable directory with **CSD Score** badges and a
-  **side-by-side Compare** tray (pick up to 3 programs).
+- **Discover** (`/app/discover`) — searchable, filterable directory with **CSD Score** badges, a
+  **side-by-side Compare** tray (pick up to 3 programs), and **saved searches with alerts**.
 - **Listing profile** (`/app/listing/[id]`) — CSD Score breakdown, alumni outcomes, category-specific
   reviews, and a claim banner. **Request info** and **Book a visit** open real flows that start a
   conversation; **Write a review** posts live and recomputes the rating.
@@ -40,8 +40,12 @@ parent's action shows up on the provider side in real time:
 - **Notifications** — a live bell in the app shell with per-role unread counts.
 - **Provider dashboard** (`/app/provider`) — toggle the three claim states (**Unclaimed →
   Claimed-Free → Claimed-Paid**). The paid view shows **live leads** (from real inquiries), event
-  management with working **boosts**, and the upgrade path.
-- **Analytics** (`/app/provider/analytics`) — premium-tier views, lead funnel, and lead fit quality.
+  management with working **boosts**, an **editable profile** (name/philosophy/pricing that updates
+  the public listing), **review responses**, and a **simulated subscription checkout** on upgrade.
+- **Analytics** (`/app/provider/analytics`) — premium views, lead funnel, and lead fit quality that
+  **update live** with the leads, bookings, and RSVPs generated in the session.
+
+A **"Reset demo"** control in the demo banner clears all session state for a clean walkthrough.
 
 ### Demo logic (looks real, no ML/backend)
 - **CSD Score™** — a transparent, deterministic 0–100 credibility score over the documented inputs

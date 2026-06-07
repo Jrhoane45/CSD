@@ -29,6 +29,19 @@ import { ImagePlus, Images, MessageSquare, CalendarClock, Pencil } from "lucide-
 import type { EventBoost, ProfileVideo } from "@/lib/types";
 import { useStore, boostEvent, formatEventDate, setOverride } from "@/lib/store";
 import { EventFormModal } from "@/components/app/EventForm";
+import { CheckoutModal, type Plan } from "@/components/app/CheckoutModal";
+
+const PREMIUM_PLAN: Plan = {
+  name: "Premium",
+  price: "$149",
+  period: "/ mo",
+  perks: [
+    "Advanced lead inbox & management",
+    "Full analytics dashboard",
+    "4 included event boosts monthly",
+    "Featured placement & priority support",
+  ],
+};
 
 const LISTING = getListing("hoop-prodigy")!;
 const SCORE = computeCsdScore(LISTING).score;
@@ -267,6 +280,8 @@ function Unclaimed({ onClaim }: { onClaim: () => void }) {
 }
 
 function ClaimedFree({ onUpgrade }: { onUpgrade: () => void }) {
+  const [checkout, setCheckout] = useState(false);
+  const openCheckout = () => setCheckout(true);
   return (
     <div className="space-y-6">
       <div className="flex flex-wrap items-center justify-between gap-4 rounded-2xl border border-navy/20 bg-navy/[0.04] p-6">
@@ -281,12 +296,19 @@ function ClaimedFree({ onUpgrade }: { onUpgrade: () => void }) {
           </div>
         </div>
         <button
-          onClick={onUpgrade}
+          onClick={openCheckout}
           className="inline-flex items-center gap-2 rounded-lg bg-gold px-6 py-3 text-sm font-semibold text-ink hover:bg-gold-300"
         >
           <Crown size={16} /> Upgrade to Premium
         </button>
       </div>
+
+      <CheckoutModal
+        open={checkout}
+        plan={PREMIUM_PLAN}
+        onClose={() => setCheckout(false)}
+        onSuccess={onUpgrade}
+      />
 
       <div className="grid gap-4 sm:grid-cols-4">
         <Metric icon={Eye} value="1,284" label="Profile views (30d)" />
@@ -301,7 +323,7 @@ function ClaimedFree({ onUpgrade }: { onUpgrade: () => void }) {
 
       <ProviderMediaSlot />
 
-      <LockedFeatures onUpgrade={onUpgrade} />
+      <LockedFeatures onUpgrade={openCheckout} />
     </div>
   );
 }

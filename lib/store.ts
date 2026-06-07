@@ -8,6 +8,7 @@ import type {
   PlatformEvent,
   ReviewReply,
   Role,
+  SavedSearch,
   Thread,
   ThreadKind,
   UserReview,
@@ -32,6 +33,8 @@ export interface StoreState {
   replies: Record<string, ReviewReply>;
   /** Provider-edited listing fields, keyed by listingId. */
   overrides: Record<string, ListingOverride>;
+  /** Parent's saved Discover searches. */
+  savedSearches: SavedSearch[];
 }
 
 function seedState(): StoreState {
@@ -42,6 +45,7 @@ function seedState(): StoreState {
     notifications: SEED_NOTIFICATIONS.map((n) => ({ ...n })),
     replies: {},
     overrides: {},
+    savedSearches: [],
   };
 }
 
@@ -75,6 +79,7 @@ function hydrate() {
         notifications: saved.notifications ?? state.notifications,
         replies: saved.replies ?? state.replies,
         overrides: saved.overrides ?? state.overrides,
+        savedSearches: saved.savedSearches ?? state.savedSearches,
       };
       emit();
     }
@@ -311,6 +316,61 @@ export function addReviewReply(
 export function setOverride(listingId: string, patch: ListingOverride) {
   const next = { ...(state.overrides[listingId] ?? {}), ...patch };
   set({ overrides: { ...state.overrides, [listingId]: next } });
+}
+
+/** Push a one-off notification (used by checkout, onboarding, alerts). */
+export function addNotification(n: Omit<AppNotification, "id" | "at" | "read">) {
+  notify(n);
+  persist();
+  emit();
+}
+
+export function addSavedSearch(s: Omit<SavedSearch, "id" | "createdAt">): string {
+  const id = uid();
+  const search: SavedSearch = { ...s, id, createdAt: now() };
+  state = { ...state, savedSearches: [search, ...state.savedSearches] };
+  notify({
+    role: "parent",
+    icon: "trophy",
+    text: `Saved search "${s.name}" — we'll alert you to new matches`,
+    href: "/app/discover",
+  });
+  persist();
+  emit();
+  // Simulate a fresh match landing a moment later.
+  if (typeof window !== "undefined") {
+    window.setTimeout(() => {
+      if (state.savedSearches.some((x) => x.id === id)) {
+        addNotification({
+          role: "parent",
+          icon: "trophy",
+          text: `New program matches your saved search "${s.name}"`,
+          href: "/app/discover",
+        });
+      }
+    }, 4000);
+  }
+  return id;
+}
+
+export function removeSavedSearch(id: string) {
+  set({ savedSearches: state.savedSearches.filter((s) => s.id !== id) });
+}
+
+/** Wipe all demo state (activity, profile, saved, Prospect IQ, role) and reload. */
+export function resetDemo() {
+  if (typeof window === "undefined") return;
+  for (const k of [
+    KEY,
+    "csd-athlete-profile",
+    "csd-saved-listings",
+    "csd-piq-result",
+    "csd-role",
+  ]) {
+    localStorage.removeItem(k);
+  }
+  state = seedState();
+  window.location.href = "/app";
 }
 
 export function markAllNotificationsRead(role: Role) {
