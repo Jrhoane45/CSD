@@ -17,7 +17,9 @@ import { MediaUploader } from "@/components/app/MediaUploader";
 import { zipToCounty, HEIGHT_OPTIONS } from "@/lib/location";
 import { PRICE_LABEL } from "@/lib/scoring";
 import { useProfile } from "@/lib/useProfile";
-import { SPORTS_LIST, GOALS_LIST, CATEGORY_LABEL } from "@/lib/data/listings";
+import { rankMatches } from "@/lib/scoring";
+import { addNotification } from "@/lib/store";
+import { LISTINGS, SPORTS_LIST, GOALS_LIST, CATEGORY_LABEL } from "@/lib/data/listings";
 import { AthleteAvatar } from "@/components/app/AthleteAvatar";
 
 const STEPS = ["Account", "Athlete", "Stats", "Criteria", "Media", "Review"];
@@ -168,6 +170,15 @@ export function OnboardingFlow({ initial }: { initial?: AthleteProfile | null })
       videos: d.videos,
     };
     save(profile);
+    if (!initial) {
+      const count = rankMatches(profile, LISTINGS).length;
+      addNotification({
+        role: "parent",
+        icon: "trophy",
+        text: `Welcome, ${d.firstName || "athlete"}! ${count} programs match your athlete profile.`,
+        href: "/app/match",
+      });
+    }
     router.push("/app/profile");
   };
 

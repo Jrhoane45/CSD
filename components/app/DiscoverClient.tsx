@@ -1,8 +1,8 @@
 "use client";
 
 import { useMemo, useState } from "react";
-import { Search, SlidersHorizontal, X, GitCompareArrows, Check } from "lucide-react";
-import type { Category } from "@/lib/types";
+import { Search, SlidersHorizontal, X, GitCompareArrows, Check, BookmarkPlus, Bell } from "lucide-react";
+import type { Category, SavedSearch } from "@/lib/types";
 import { computeCsdScore, averageRating } from "@/lib/scoring";
 import {
   LISTINGS,
@@ -13,6 +13,7 @@ import {
 } from "@/lib/data/listings";
 import { ListingCard } from "@/components/listing/ListingCard";
 import { CompareBar } from "@/components/app/CompareBar";
+import { useStore, addSavedSearch, removeSavedSearch } from "@/lib/store";
 import { Eyebrow } from "@/components/ui/Eyebrow";
 
 type Sort = "score" | "rating" | "name";
@@ -39,6 +40,33 @@ export function DiscoverClient({ initialCategory }: { initialCategory?: Category
       ids.includes(id) ? ids.filter((x) => x !== id) : ids.length >= 3 ? ids : [...ids, id],
     );
   const compareListings = LISTINGS.filter((l) => compareIds.includes(l.id));
+
+  const { savedSearches } = useStore();
+
+  const searchName = () => {
+    const parts = [
+      sport !== "all" ? sport : null,
+      level !== "all" ? level : null,
+      county !== "all" ? `${county} Co.` : null,
+      category !== "all" ? CATEGORY_PLURAL[category as Category].split(" ")[0] : null,
+      minScore > 0 ? `${minScore}+ CSD` : null,
+      query ? `"${query}"` : null,
+    ].filter(Boolean);
+    return parts.length ? parts.join(" · ") : "All programs";
+  };
+
+  const saveCurrent = () =>
+    addSavedSearch({ name: searchName(), query, category, sport, level, county, minScore, sort });
+
+  const applySearch = (s: SavedSearch) => {
+    setQuery(s.query);
+    setCategory(s.category as Category | "all");
+    setSport(s.sport);
+    setLevel(s.level);
+    setCounty(s.county);
+    setMinScore(s.minScore);
+    setSort(s.sort as Sort);
+  };
 
   const results = useMemo(() => {
     return SCORED.filter(({ listing, score }) => {
@@ -154,7 +182,39 @@ export function DiscoverClient({ initialCategory }: { initialCategory?: Category
         >
           <SlidersHorizontal size={16} /> Filters
         </button>
+        <button
+          onClick={saveCurrent}
+          className="inline-flex items-center justify-center gap-2 rounded-xl border border-navy/30 bg-white px-4 py-3 text-sm font-semibold text-navy transition-colors hover:bg-navy hover:text-white"
+        >
+          <BookmarkPlus size={16} /> Save search
+        </button>
       </div>
+
+      {/* saved searches */}
+      {savedSearches.length > 0 && (
+        <div className="mt-4 flex flex-wrap items-center gap-2">
+          <span className="inline-flex items-center gap-1.5 text-xs font-semibold text-ink/55">
+            <Bell size={13} /> Saved &amp; alerting:
+          </span>
+          {savedSearches.map((s) => (
+            <span
+              key={s.id}
+              className="inline-flex items-center gap-1.5 rounded-full bg-cream px-3 py-1.5 text-xs font-medium text-navy"
+            >
+              <button onClick={() => applySearch(s)} className="hover:underline">
+                {s.name}
+              </button>
+              <button
+                onClick={() => removeSavedSearch(s.id)}
+                aria-label={`Remove saved search ${s.name}`}
+                className="text-ink/40 hover:text-red"
+              >
+                <X size={13} />
+              </button>
+            </span>
+          ))}
+        </div>
+      )}
 
       <div className="mt-8 grid gap-8 lg:grid-cols-[260px_1fr]">
         {/* sidebar filters (desktop) */}

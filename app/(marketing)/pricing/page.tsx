@@ -1,8 +1,8 @@
 import type { Metadata } from "next";
-import { Check, Minus, ArrowRight, Megaphone, Repeat, Building2, Database } from "lucide-react";
+import { Check, Minus, Megaphone, Repeat, Building2, Database } from "lucide-react";
 import { PageHero } from "@/components/site/PageHero";
 import { Eyebrow } from "@/components/ui/Eyebrow";
-import { ButtonLink } from "@/components/ui/Button";
+import { PlanButton } from "@/components/app/PlanButton";
 
 export const metadata: Metadata = {
   title: "Pricing",
@@ -85,13 +85,19 @@ export default function PricingPage() {
                   </li>
                 ))}
               </ul>
-              <ButtonLink
-                href="/app/provider"
-                variant={t.featured ? "gold" : "primary"}
-                className="mt-7"
-              >
-                {t.cta} <ArrowRight size={16} />
-              </ButtonLink>
+              <PlanButton
+                plan={{
+                  name: t.name,
+                  price: t.price,
+                  period: t.period,
+                  perks: ROWS.filter((r) => r.cells[ti] !== false)
+                    .slice(0, 4)
+                    .map((r) => r.label),
+                }}
+                cta={t.cta}
+                featured={t.featured}
+                free={t.price === "$0"}
+              />
             </div>
           ))}
         </div>
