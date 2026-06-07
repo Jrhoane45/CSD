@@ -192,12 +192,27 @@ function priceFactor(profile: AthleteProfile, listing: Listing): MatchFactor {
   return { label: "Price range", points: 1, max, detail: "Above your budget", strong: false };
 }
 
+/*
+  Some athlete-facing goals are broader than any single provider tag. We expand
+  them to the related provider tags so the goal still drives matching without
+  having to tag every listing individually.
+*/
+const GOAL_SYNONYMS: Record<string, string[]> = {
+  "Athletic Development": ["Strength & conditioning", "Speed & athleticism", "Injury prevention"],
+};
+
+function goalMatchesListing(goal: string, listing: Listing): boolean {
+  if (listing.goals.includes(goal)) return true;
+  const synonyms = GOAL_SYNONYMS[goal];
+  return synonyms ? synonyms.some((s) => listing.goals.includes(s)) : false;
+}
+
 function goalsFactor(profile: AthleteProfile, listing: Listing): MatchFactor {
   const max = 10;
   if (profile.goals.length === 0) {
     return { label: "Goal alignment", points: 6, max, detail: "No specific goals set", strong: false };
   }
-  const overlap = profile.goals.filter((g) => listing.goals.includes(g));
+  const overlap = profile.goals.filter((g) => goalMatchesListing(g, listing));
   const points = round((overlap.length / profile.goals.length) * max);
   return {
     label: "Goal alignment",
