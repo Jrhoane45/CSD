@@ -25,9 +25,8 @@ import { Eyebrow } from "@/components/ui/Eyebrow";
 import { LogoAvatar } from "@/components/listing/LogoAvatar";
 import { MediaUploader } from "@/components/app/MediaUploader";
 import { ImagePlus, Images, MessageSquare, CalendarClock, Pencil, Trash2 } from "lucide-react";
-import type { EventBoost } from "@/lib/types";
-import { useStore, boostEvent, formatEventDate, setOverride, setProviderMedia } from "@/lib/store";
-import { EventFormModal } from "@/components/app/EventForm";
+import { useStore, setOverride, setProviderMedia } from "@/lib/store";
+import { ProviderEvents } from "@/components/app/ProviderEvents";
 import { CheckoutModal, type Plan } from "@/components/app/CheckoutModal";
 
 const PREMIUM_PLAN: Plan = {
@@ -396,29 +395,12 @@ function LockedFeatures({ onUpgrade }: { onUpgrade: () => void }) {
   );
 }
 
-const BOOST_BADGE: Record<EventBoost, { label: string; cls: string }> = {
-  none: { label: "In-network", cls: "bg-cream text-ink/60" },
-  basic: { label: "Promoted", cls: "bg-gold/15 text-ink" },
-  standard: { label: "Featured", cls: "bg-gold/25 text-ink" },
-  premium: { label: "Featured+", cls: "bg-gold/40 text-ink" },
-};
-
-const BOOST_TIERS: { tier: EventBoost; label: string }[] = [
-  { tier: "basic", label: "Basic $19" },
-  { tier: "standard", label: "Standard $39" },
-  { tier: "premium", label: "Premium $79" },
-];
-
 function ClaimedPaid() {
-  const { threads, events } = useStore();
-  const [creating, setCreating] = useState(false);
+  const { threads } = useStore();
 
   const leads = threads
     .filter((t) => t.listingId === LISTING.id)
     .sort((a, b) => +new Date(b.updatedAt) - +new Date(a.updatedAt));
-  const myEvents = events
-    .filter((e) => e.listingId === LISTING.id)
-    .sort((a, b) => +new Date(a.date) - +new Date(b.date));
   const unread = leads.filter((l) => l.unreadFor === "provider").length;
 
   return (
@@ -511,66 +493,9 @@ function ClaimedPaid() {
           </Link>
         </div>
 
-        {/* events — live, with real boosts */}
-        <div className="rounded-2xl border border-ink/10 bg-white p-6">
-          <div className="flex items-center justify-between">
-            <div className="flex items-center gap-2">
-              <Calendar size={18} className="text-navy" />
-              <h3 className="font-semibold text-navy">Events &amp; promotions</h3>
-            </div>
-            <button
-              onClick={() => setCreating(true)}
-              className="inline-flex items-center gap-1.5 rounded-lg bg-navy px-3.5 py-2 text-sm font-semibold text-white hover:bg-navy-deep"
-            >
-              + New event
-            </button>
-          </div>
-          <div className="mt-4 space-y-2.5">
-            {myEvents.map((e) => (
-              <div key={e.id} className="rounded-xl border border-ink/10 p-3">
-                <div className="flex items-center justify-between gap-2">
-                  <p className="text-sm font-semibold text-navy">{e.title}</p>
-                  <span className={`rounded-full px-2.5 py-0.5 text-xs font-semibold ${BOOST_BADGE[e.boost].cls}`}>
-                    {BOOST_BADGE[e.boost].label}
-                  </span>
-                </div>
-                <div className="mt-1 flex items-center justify-between text-xs text-ink/55">
-                  <span>{formatEventDate(e.date)}</span>
-                  <span>Reach: {e.reach.toLocaleString()} · {e.rsvps} RSVPs</span>
-                </div>
-                <div className="mt-2 flex flex-wrap gap-1.5">
-                  {BOOST_TIERS.map((b) => (
-                    <button
-                      key={b.tier}
-                      onClick={() => boostEvent(e.id, b.tier)}
-                      disabled={e.boost === b.tier}
-                      className={`inline-flex items-center gap-1 rounded-md px-2.5 py-1 text-xs font-semibold transition-colors ${
-                        e.boost === b.tier
-                          ? "bg-navy text-white"
-                          : "bg-gold text-ink hover:bg-gold-300"
-                      }`}
-                    >
-                      <Megaphone size={11} /> {b.label}
-                    </button>
-                  ))}
-                </div>
-              </div>
-            ))}
-          </div>
-        </div>
+        {/* events — create, edit, boost, registrants & analytics */}
+        <ProviderEvents listing={LISTING} />
       </div>
-
-      <EventFormModal
-        open={creating}
-        onClose={() => setCreating(false)}
-        defaults={{
-          listingId: LISTING.id,
-          listingName: LISTING.name,
-          sport: "Basketball",
-          city: LISTING.city,
-          county: LISTING.county,
-        }}
-      />
     </div>
   );
 }

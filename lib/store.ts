@@ -229,7 +229,10 @@ export function markThreadRead(threadId: string, role: Role) {
 }
 
 export function createEvent(
-  e: Omit<PlatformEvent, "id" | "createdAt" | "rsvps" | "registered" | "reach" | "boost" | "createdBy"> &
+  e: Omit<
+    PlatformEvent,
+    "id" | "createdAt" | "rsvps" | "registered" | "registrants" | "reach" | "boost" | "createdBy"
+  > &
     Partial<Pick<PlatformEvent, "boost" | "reach">>,
 ): string {
   const id = uid();
@@ -241,6 +244,7 @@ export function createEvent(
     reach,
     rsvps: 0,
     registered: false,
+    registrants: [],
     createdBy: "provider",
     createdAt: now(),
   };
@@ -266,11 +270,18 @@ export function toggleRsvp(eventId: string, athlete: string) {
   const ev = state.events.find((e) => e.id === eventId);
   if (!ev) return;
   const registering = !ev.registered;
-  const events = state.events.map((e) =>
-    e.id === eventId
-      ? { ...e, registered: registering, rsvps: Math.max(0, e.rsvps + (registering ? 1 : -1)) }
-      : e,
-  );
+  const events = state.events.map((e) => {
+    if (e.id !== eventId) return e;
+    const registrants = registering
+      ? [{ id: uid(), name: "You", athlete, at: now(), self: true }, ...e.registrants]
+      : e.registrants.filter((r) => !r.self);
+    return {
+      ...e,
+      registered: registering,
+      rsvps: Math.max(0, e.rsvps + (registering ? 1 : -1)),
+      registrants,
+    };
+  });
   state = { ...state, events };
   if (registering) {
     notify({
@@ -288,6 +299,51 @@ export function toggleRsvp(eventId: string, athlete: string) {
   }
   persist();
   emit();
+}
+
+export function updateEvent(eventId: string, patch: Partial<PlatformEvent>) {
+  set({ events: state.events.map((e) => (e.id === eventId ? { ...e, ...patch } : e)) });
+}
+
+export function removeEvent(eventId: string) {
+  set({ events: state.events.filter((e) => e.id !== eventId) });
+}
+
+/** Provider-initiated message to a registrant — opens a thread in the inbox. */
+export function messageRegistrant(input: {
+  listingId: string;
+  listingName: string;
+  listingLogo?: string;
+  parentName: string;
+  athlete: string;
+  body: string;
+}): string {
+  const id = uid();
+  const ts = now();
+  const thread: Thread = {
+    id,
+    listingId: input.listingId,
+    listingName: input.listingName,
+    listingLogo: input.listingLogo,
+    kind: "inquiry",
+    parentName: input.parentName,
+    athlete: input.athlete,
+    status: "active",
+    messages: [{ id: uid(), from: "provider", body: input.body, at: ts }],
+    unreadFor: "parent",
+    createdAt: ts,
+    updatedAt: ts,
+  };
+  state = { ...state, threads: [thread, ...state.threads] };
+  notify({
+    role: "parent",
+    icon: "message",
+    text: `${input.listingName} messaged you`,
+    href: "/app/inbox",
+  });
+  persist();
+  emit();
+  return id;
 }
 
 export function addReview(review: Omit<UserReview, "id">) {

@@ -2,9 +2,9 @@
 
 import { useState } from "react";
 import { Check, ArrowRight } from "lucide-react";
-import type { County, EventType, Sport } from "@/lib/types";
+import type { County, EventType, PlatformEvent, Sport } from "@/lib/types";
 import { SPORTS_LIST, COUNTIES_LIST } from "@/lib/data/listings";
-import { createEvent } from "@/lib/store";
+import { createEvent, updateEvent } from "@/lib/store";
 import { Modal } from "@/components/ui/Modal";
 
 const TYPES: EventType[] = ["Tryout", "Camp", "Showcase", "Clinic", "Open House"];
@@ -21,28 +21,47 @@ export function EventFormModal({
   open,
   onClose,
   defaults,
+  event,
 }: {
   open: boolean;
   onClose: () => void;
   defaults: EventDefaults;
+  /** When provided, the form edits this event instead of creating a new one. */
+  event?: PlatformEvent;
 }) {
   return (
-    <Modal open={open} onClose={onClose} title="Create an event" subtitle="Post a tryout, camp, showcase, or clinic." maxWidth="max-w-xl">
-      <EventForm defaults={defaults} onClose={onClose} />
+    <Modal
+      open={open}
+      onClose={onClose}
+      title={event ? "Edit event" : "Create an event"}
+      subtitle={event ? "Update the details — changes are live immediately." : "Post a tryout, camp, showcase, or clinic."}
+      maxWidth="max-w-xl"
+    >
+      <EventForm defaults={defaults} onClose={onClose} event={event} />
     </Modal>
   );
 }
 
-function EventForm({ defaults, onClose }: { defaults: EventDefaults; onClose: () => void }) {
-  const [title, setTitle] = useState("");
-  const [type, setType] = useState<EventType>("Tryout");
-  const [sport, setSport] = useState<Sport>(defaults.sport ?? "Basketball");
-  const [date, setDate] = useState(() => new Date(Date.now() + 14 * 86400000).toISOString().slice(0, 10));
-  const [time, setTime] = useState("9:00 AM – 12:00 PM");
-  const [city, setCity] = useState(defaults.city ?? "");
-  const [county, setCounty] = useState<County>(defaults.county ?? "Los Angeles");
-  const [price, setPrice] = useState("Free");
-  const [description, setDescription] = useState("");
+function EventForm({
+  defaults,
+  onClose,
+  event,
+}: {
+  defaults: EventDefaults;
+  onClose: () => void;
+  event?: PlatformEvent;
+}) {
+  const [title, setTitle] = useState(event?.title ?? "");
+  const [type, setType] = useState<EventType>(event?.type ?? "Tryout");
+  const [sport, setSport] = useState<Sport>(event?.sport ?? defaults.sport ?? "Basketball");
+  const [date, setDate] = useState(
+    () => event?.date ?? new Date(Date.now() + 14 * 86400000).toISOString().slice(0, 10),
+  );
+  const [time, setTime] = useState(event?.time ?? "9:00 AM – 12:00 PM");
+  const [city, setCity] = useState(event?.city ?? defaults.city ?? "");
+  const [county, setCounty] = useState<County>(event?.county ?? defaults.county ?? "Los Angeles");
+  const [price, setPrice] = useState(event?.priceLabel ?? "Free");
+  const [description, setDescription] = useState(event?.description ?? "");
   const [sent, setSent] = useState(false);
 
   if (sent) {
@@ -51,9 +70,11 @@ function EventForm({ defaults, onClose }: { defaults: EventDefaults; onClose: ()
         <div className="mx-auto flex h-14 w-14 items-center justify-center rounded-full bg-navy text-white">
           <Check size={28} />
         </div>
-        <p className="mt-4 font-semibold text-navy">Event published</p>
+        <p className="mt-4 font-semibold text-navy">{event ? "Event updated" : "Event published"}</p>
         <p className="mt-1 text-sm text-ink/60">
-          It&apos;s live on the Events board (in-network reach). Boost it for wider distribution.
+          {event
+            ? "Your changes are live on the Events board."
+            : "It's live on the Events board (in-network reach). Boost it for wider distribution."}
         </p>
         <button onClick={onClose} className="mt-5 rounded-lg bg-navy px-5 py-2.5 text-sm font-semibold text-white hover:bg-navy-deep">
           Done
@@ -66,9 +87,7 @@ function EventForm({ defaults, onClose }: { defaults: EventDefaults; onClose: ()
     <form
       onSubmit={(e) => {
         e.preventDefault();
-        createEvent({
-          listingId: defaults.listingId,
-          listingName: defaults.listingName,
+        const fields = {
           title: title.trim() || `${sport} ${type}`,
           type,
           sport,
@@ -78,7 +97,12 @@ function EventForm({ defaults, onClose }: { defaults: EventDefaults; onClose: ()
           county,
           description: description.trim() || `${type} hosted by ${defaults.listingName}.`,
           priceLabel: price.trim() || "Free",
-        });
+        };
+        if (event) {
+          updateEvent(event.id, fields);
+        } else {
+          createEvent({ listingId: defaults.listingId, listingName: defaults.listingName, ...fields });
+        }
         setSent(true);
       }}
       className="space-y-4"
@@ -188,7 +212,7 @@ function EventForm({ defaults, onClose }: { defaults: EventDefaults; onClose: ()
         type="submit"
         className="inline-flex w-full items-center justify-center gap-2 rounded-lg bg-navy px-5 py-3 text-sm font-semibold text-white hover:bg-navy-deep"
       >
-        Publish event <ArrowRight size={16} />
+        {event ? "Save changes" : "Publish event"} <ArrowRight size={16} />
       </button>
     </form>
   );

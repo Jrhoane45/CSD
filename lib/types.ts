@@ -120,6 +120,15 @@ export interface Thread {
 export type EventType = "Tryout" | "Camp" | "Showcase" | "Clinic" | "Open House";
 export type EventBoost = "none" | "basic" | "standard" | "premium";
 
+/** A named registrant on an event's roster. */
+export interface EventRegistrant {
+  id: string;
+  name: string;
+  athlete?: string;
+  at: string;
+  self?: boolean;
+}
+
 export interface PlatformEvent {
   id: string;
   listingId?: string;
@@ -137,6 +146,7 @@ export interface PlatformEvent {
   reach: number;
   rsvps: number;
   registered: boolean;
+  registrants: EventRegistrant[];
   createdBy: "seed" | "provider";
   createdAt: string;
 }
