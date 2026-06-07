@@ -47,6 +47,12 @@ parent's action shows up on the provider side in real time:
   **event management** (create, edit, cancel, **boost**, a **registrant roster** with quick-message,
   and per-event views→RSVP analytics), an **editable profile** (name/philosophy/pricing that updates
   the public listing), **review responses**, and a **simulated subscription checkout** on upgrade.
+- **Promotions Studio** (`/app/promote`) — a paid event-advertising platform: build a campaign
+  (objective → placements → audience/duration), see a live reach estimate and ad preview, and pay
+  through a **simulated multi-method checkout** (Card/PayPal/Apple Pay/ACH). Ads serve as **native,
+  on-brand placements** labeled **"Promoted · Vetted provider"** — a Discover spotlight card, an
+  events banner, and an in-app pop-up — and the studio reports **impressions, clicks, CTR, RSVPs, and
+  spend** per campaign. Includes **recommended campaign playbooks** for providers who aren't sure.
 - **Analytics** (`/app/provider/analytics`) — premium views, lead funnel, and lead fit quality that
   **update live** with the leads, bookings, and RSVPs generated in the session.
 

@@ -2,8 +2,13 @@
 
 import { useSyncExternalStore } from "react";
 import type {
+  AdPlacement,
   AppNotification,
+  AudienceReach,
+  Campaign,
+  CampaignObjective,
   EventBoost,
+  PaymentMethod,
   ListingOverride,
   PlatformEvent,
   ProviderMedia,
@@ -17,7 +22,7 @@ import type {
   ThreadKind,
   UserReview,
 } from "./types";
-import { SEED_THREADS, SEED_EVENTS, SEED_NOTIFICATIONS } from "./data/activity";
+import { SEED_THREADS, SEED_EVENTS, SEED_NOTIFICATIONS, SEED_CAMPAIGNS } from "./data/activity";
 
 /*
   A tiny reactive store (Zustand-lite) backing the demo's "live" platform
@@ -43,6 +48,8 @@ export interface StoreState {
   media: Record<string, ProviderMedia>;
   /** Recruiting Hub: checklist progress + target schools. */
   recruiting: RecruitingState;
+  /** Paid promotion campaigns. */
+  campaigns: Campaign[];
 }
 
 function seedState(): StoreState {
@@ -56,6 +63,7 @@ function seedState(): StoreState {
     savedSearches: [],
     media: {},
     recruiting: { tasks: {}, schools: [] },
+    campaigns: SEED_CAMPAIGNS.map((c) => ({ ...c, metrics: { ...c.metrics } })),
   };
 }
 
@@ -92,6 +100,7 @@ function hydrate() {
         savedSearches: saved.savedSearches ?? state.savedSearches,
         media: saved.media ?? state.media,
         recruiting: saved.recruiting ?? state.recruiting,
+        campaigns: saved.campaigns ?? state.campaigns,
       };
       emit();
     }
@@ -469,6 +478,89 @@ export function removeTargetSchool(id: string) {
       schools: state.recruiting.schools.filter((s) => s.id !== id),
     },
   });
+}
+
+// --- Promotions / campaigns ------------------------------------------------
+
+export interface CreateCampaignInput {
+  listingId: string;
+  listingName: string;
+  listingLogo?: string;
+  eventId?: string;
+  eventTitle?: string;
+  objective: CampaignObjective;
+  placements: AdPlacement[];
+  audience: AudienceReach;
+  durationDays: number;
+  budget: number;
+  payment: PaymentMethod;
+  headline: string;
+  cta: string;
+  estImpressions: number;
+  estClicks: number;
+  estRsvps: number;
+}
+
+export function createCampaign(input: CreateCampaignInput): string {
+  const id = uid();
+  // Just launched — seed a small early delivery so reporting isn't empty.
+  const f = 0.06;
+  const campaign: Campaign = {
+    id,
+    listingId: input.listingId,
+    listingName: input.listingName,
+    listingLogo: input.listingLogo,
+    eventId: input.eventId,
+    eventTitle: input.eventTitle,
+    objective: input.objective,
+    placements: input.placements,
+    audience: input.audience,
+    durationDays: input.durationDays,
+    budget: input.budget,
+    payment: input.payment,
+    status: "active",
+    headline: input.headline,
+    cta: input.cta,
+    createdAt: now(),
+    metrics: {
+      impressions: Math.round(input.estImpressions * f),
+      clicks: Math.round(input.estClicks * f),
+      rsvps: Math.round(input.estRsvps * f),
+      spend: Math.round(input.budget * f),
+    },
+  };
+  state = { ...state, campaigns: [campaign, ...state.campaigns] };
+  notify({
+    role: "provider",
+    icon: "trophy",
+    text: `Campaign live: "${input.headline}" — now serving to vetted-provider ad slots`,
+    href: "/app/promote",
+  });
+  persist();
+  emit();
+  return id;
+}
+
+export function endCampaign(id: string) {
+  set({ campaigns: state.campaigns.map((c) => (c.id === id ? { ...c, status: "ended" as const } : c)) });
+}
+
+/** Count an interaction with a served ad (drives live campaign reporting). */
+export function recordAdClick(id: string) {
+  const campaigns = state.campaigns.map((c) =>
+    c.id === id
+      ? {
+          ...c,
+          metrics: {
+            ...c.metrics,
+            impressions: c.metrics.impressions + 1,
+            clicks: c.metrics.clicks + 1,
+            rsvps: c.metrics.rsvps + (c.metrics.clicks % 4 === 3 ? 1 : 0),
+          },
+        }
+      : c,
+  );
+  set({ campaigns });
 }
 
 /** Wipe all demo state (activity, profile, saved, Prospect IQ, role) and reload. */

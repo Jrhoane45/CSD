@@ -117,8 +117,48 @@ export interface Thread {
   seeded?: boolean;
 }
 
-export type EventType = "Tryout" | "Camp" | "Showcase" | "Clinic" | "Open House";
+export type EventType = "Tournament" | "Showcase" | "Camp" | "Clinic" | "Tryout" | "Open House";
 export type EventBoost = "none" | "basic" | "standard" | "premium";
+
+// --- Promotions / advertising ----------------------------------------------
+
+/** Where a paid campaign's ad is served across the platform. */
+export type AdPlacement =
+  | "events-featured"
+  | "discover-spotlight"
+  | "in-app-banner"
+  | "in-app-popup";
+
+export type CampaignObjective = "Fill an event" | "Grow awareness" | "Drive profile visits";
+export type AudienceReach = "Local" | "Regional" | "Statewide";
+export type PaymentMethod = "Card" | "PayPal" | "Apple Pay" | "Bank (ACH)";
+
+export interface CampaignMetrics {
+  impressions: number;
+  clicks: number;
+  rsvps: number;
+  spend: number;
+}
+
+export interface Campaign {
+  id: string;
+  listingId: string;
+  listingName: string;
+  listingLogo?: string;
+  eventId?: string;
+  eventTitle?: string;
+  objective: CampaignObjective;
+  placements: AdPlacement[];
+  audience: AudienceReach;
+  durationDays: number;
+  budget: number;
+  payment: PaymentMethod;
+  status: "active" | "ended";
+  headline: string;
+  cta: string;
+  createdAt: string;
+  metrics: CampaignMetrics;
+}
 
 /** A named registrant on an event's roster. */
 export interface EventRegistrant {

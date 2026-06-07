@@ -1,5 +1,5 @@
 import Link from "next/link";
-import { Target, Compass, LayoutDashboard, BarChart3, ArrowRight, UserRound, ScanLine, CalendarDays, Inbox, GraduationCap } from "lucide-react";
+import { Target, Compass, LayoutDashboard, BarChart3, ArrowRight, UserRound, ScanLine, CalendarDays, Inbox, GraduationCap, Megaphone } from "lucide-react";
 import { Eyebrow } from "@/components/ui/Eyebrow";
 import { LISTINGS } from "@/lib/data/listings";
 
@@ -143,6 +143,19 @@ export default function AppHome() {
                 <span>
                   <span className="block font-semibold text-white">Leads &amp; messages</span>
                   <span className="block text-xs text-cream/60">Respond to inbound families</span>
+                </span>
+              </span>
+              <ArrowRight size={18} className="text-cream/50 transition-transform group-hover:translate-x-1" />
+            </Link>
+            <Link
+              href="/app/promote"
+              className="group flex items-center justify-between rounded-xl border border-white/15 p-4 transition-colors hover:bg-white/[0.06]"
+            >
+              <span className="flex items-center gap-3">
+                <Megaphone size={20} className="text-gold" />
+                <span>
+                  <span className="block font-semibold text-white">Promote events</span>
+                  <span className="block text-xs text-cream/60">Paid campaigns across the app &amp; web</span>
                 </span>
               </span>
               <ArrowRight size={18} className="text-cream/50 transition-transform group-hover:translate-x-1" />

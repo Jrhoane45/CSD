@@ -14,6 +14,7 @@ import {
 import { ListingCard } from "@/components/listing/ListingCard";
 import { CompareBar } from "@/components/app/CompareBar";
 import { MapView } from "@/components/app/MapView";
+import { PromotedCard } from "@/components/app/PromotedCard";
 import { useStore, addSavedSearch, removeSavedSearch } from "@/lib/store";
 import { Eyebrow } from "@/components/ui/Eyebrow";
 
@@ -249,6 +250,7 @@ export function DiscoverClient({ initialCategory }: { initialCategory?: Category
         )}
 
         <div>
+          <PromotedCard />
           <p className="mb-4 text-sm text-ink/55">
             <span className="font-semibold text-navy">{results.length}</span> results
           </p>

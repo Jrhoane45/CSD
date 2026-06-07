@@ -15,6 +15,7 @@ import {
   Inbox,
   CalendarDays,
   GraduationCap,
+  Megaphone,
 } from "lucide-react";
 import { CsdBadge } from "@/components/brand/CsdBadge";
 import { NotificationBell } from "@/components/app/NotificationBell";
@@ -36,6 +37,7 @@ const NAV: Record<Role, { href: string; label: string; icon: typeof Compass; bad
   provider: [
     { href: "/app/provider", label: "Dashboard", icon: LayoutDashboard },
     { href: "/app/inbox", label: "Leads", icon: Inbox, badge: "inbox" },
+    { href: "/app/promote", label: "Promote", icon: Megaphone },
     { href: "/app/provider/analytics", label: "Analytics", icon: BarChart3 },
     { href: "/app/events", label: "Events", icon: CalendarDays },
     { href: "/app/prospect-iq", label: "Prospect IQ", icon: ScanLine },
