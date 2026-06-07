@@ -9,6 +9,7 @@ import { CATEGORY_LABEL } from "@/lib/data/listings";
 import { CsdScoreBadge } from "@/components/ui/CsdScoreBadge";
 import { StarRating } from "@/components/ui/StarRating";
 import { LogoAvatar } from "@/components/listing/LogoAvatar";
+import { OverridableText } from "@/components/app/OverridableText";
 import { Modal } from "@/components/ui/Modal";
 
 export function CompareBar({
@@ -96,7 +97,7 @@ function CompareTable({ listings }: { listings: Listing[] }) {
                 <div className="flex flex-col items-start gap-2">
                   <LogoAvatar listing={l} size="sm" />
                   <Link href={`/app/listing/${l.id}`} className="font-bold text-navy hover:underline">
-                    {l.name}
+                    <OverridableText as="span" listingId={l.id} field="name" fallback={l.name} />
                   </Link>
                 </div>
               </th>

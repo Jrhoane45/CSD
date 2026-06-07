@@ -6,6 +6,7 @@ import type {
   EventBoost,
   ListingOverride,
   PlatformEvent,
+  ProviderMedia,
   ReviewReply,
   Role,
   SavedSearch,
@@ -35,6 +36,8 @@ export interface StoreState {
   overrides: Record<string, ListingOverride>;
   /** Parent's saved Discover searches. */
   savedSearches: SavedSearch[];
+  /** Provider-uploaded media, keyed by listingId. */
+  media: Record<string, ProviderMedia>;
 }
 
 function seedState(): StoreState {
@@ -46,6 +49,7 @@ function seedState(): StoreState {
     replies: {},
     overrides: {},
     savedSearches: [],
+    media: {},
   };
 }
 
@@ -80,6 +84,7 @@ function hydrate() {
         replies: saved.replies ?? state.replies,
         overrides: saved.overrides ?? state.overrides,
         savedSearches: saved.savedSearches ?? state.savedSearches,
+        media: saved.media ?? state.media,
       };
       emit();
     }
@@ -355,6 +360,11 @@ export function addSavedSearch(s: Omit<SavedSearch, "id" | "createdAt">): string
 
 export function removeSavedSearch(id: string) {
   set({ savedSearches: state.savedSearches.filter((s) => s.id !== id) });
+}
+
+export function setProviderMedia(listingId: string, patch: Partial<ProviderMedia>) {
+  const current = state.media[listingId] ?? { photos: [], videos: [] };
+  set({ media: { ...state.media, [listingId]: { ...current, ...patch } } });
 }
 
 /** Wipe all demo state (activity, profile, saved, Prospect IQ, role) and reload. */

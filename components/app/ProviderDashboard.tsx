@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useRef } from "react";
 import Link from "next/link";
 import {
   Sparkles,
@@ -22,12 +22,11 @@ import { getListing, CATEGORY_LABEL } from "@/lib/data/listings";
 import { computeCsdScore } from "@/lib/scoring";
 import { CsdScoreBadge } from "@/components/ui/CsdScoreBadge";
 import { Eyebrow } from "@/components/ui/Eyebrow";
-import { DemoButton } from "@/components/app/DemoButton";
 import { LogoAvatar } from "@/components/listing/LogoAvatar";
 import { MediaUploader } from "@/components/app/MediaUploader";
-import { ImagePlus, Images, MessageSquare, CalendarClock, Pencil } from "lucide-react";
-import type { EventBoost, ProfileVideo } from "@/lib/types";
-import { useStore, boostEvent, formatEventDate, setOverride } from "@/lib/store";
+import { ImagePlus, Images, MessageSquare, CalendarClock, Pencil, Trash2 } from "lucide-react";
+import type { EventBoost } from "@/lib/types";
+import { useStore, boostEvent, formatEventDate, setOverride, setProviderMedia } from "@/lib/store";
 import { EventFormModal } from "@/components/app/EventForm";
 import { CheckoutModal, type Plan } from "@/components/app/CheckoutModal";
 
@@ -123,6 +122,18 @@ function Metric({
 }
 
 function LogoSlot() {
+  const { media } = useStore();
+  const logo = media[LISTING.id]?.logo;
+  const fileRef = useRef<HTMLInputElement>(null);
+
+  const onFile = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const f = e.target.files?.[0];
+    if (!f) return;
+    const reader = new FileReader();
+    reader.onload = () => setProviderMedia(LISTING.id, { logo: String(reader.result) });
+    reader.readAsDataURL(f);
+  };
+
   return (
     <div className="rounded-2xl border border-ink/10 bg-white p-6">
       <div className="flex items-center gap-2">
@@ -133,11 +144,30 @@ function LogoSlot() {
         Your thumbnail logo represents you across your profile, search results, and athlete matches.
       </p>
       <div className="mt-4 flex items-center gap-4">
-        <LogoAvatar listing={LISTING} size="lg" />
+        {logo ? (
+          // eslint-disable-next-line @next/next/no-img-element
+          <img src={logo} alt="Business logo" className="h-16 w-16 rounded-xl border border-ink/10 object-cover" />
+        ) : (
+          <LogoAvatar listing={LISTING} size="lg" />
+        )}
         <div>
-          <DemoButton variant="primary" done="Uploaded (demo)">
-            <ImagePlus size={15} /> Upload logo
-          </DemoButton>
+          <input ref={fileRef} type="file" accept="image/*" onChange={onFile} className="hidden" />
+          <div className="flex items-center gap-2">
+            <button
+              onClick={() => fileRef.current?.click()}
+              className="inline-flex items-center gap-2 rounded-lg bg-navy px-5 py-2.5 text-sm font-semibold text-white hover:bg-navy-deep"
+            >
+              <ImagePlus size={15} /> {logo ? "Replace logo" : "Upload logo"}
+            </button>
+            {logo && (
+              <button
+                onClick={() => setProviderMedia(LISTING.id, { logo: undefined })}
+                className="inline-flex items-center gap-1 rounded-lg border border-ink/15 px-3 py-2.5 text-sm font-semibold text-ink/60 hover:text-red"
+              >
+                <Trash2 size={14} /> Remove
+              </button>
+            )}
+          </div>
           <p className="mt-2 text-xs text-ink/45">PNG, JPG, or SVG · square · at least 200×200px</p>
         </div>
       </div>
@@ -146,8 +176,8 @@ function LogoSlot() {
 }
 
 function ProviderMediaSlot() {
-  const [photos, setPhotos] = useState<string[]>([]);
-  const [videos, setVideos] = useState<ProfileVideo[]>([]);
+  const { media } = useStore();
+  const m = media[LISTING.id] ?? { photos: [], videos: [] };
   return (
     <div className="rounded-2xl border border-ink/10 bg-white p-6">
       <div className="flex items-center gap-2">
@@ -158,7 +188,12 @@ function ProviderMediaSlot() {
         Showcase your facility, training, and highlights — up to 6 photos and 2 videos.
       </p>
       <div className="mt-4">
-        <MediaUploader photos={photos} videos={videos} onPhotos={setPhotos} onVideos={setVideos} />
+        <MediaUploader
+          photos={m.photos}
+          videos={m.videos}
+          onPhotos={(p) => setProviderMedia(LISTING.id, { photos: p })}
+          onVideos={(v) => setProviderMedia(LISTING.id, { videos: v })}
+        />
       </div>
     </div>
   );

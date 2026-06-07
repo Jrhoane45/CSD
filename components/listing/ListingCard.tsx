@@ -6,6 +6,7 @@ import { CATEGORY_LABEL } from "@/lib/data/listings";
 import { CsdScoreBadge } from "@/components/ui/CsdScoreBadge";
 import { StarRating } from "@/components/ui/StarRating";
 import { LogoAvatar } from "@/components/listing/LogoAvatar";
+import { OverridableText } from "@/components/app/OverridableText";
 
 const LEVEL_TONE: Record<string, string> = {
   Recreational: "bg-cream text-ink/70",
@@ -28,9 +29,13 @@ export function ListingCard({ listing }: { listing: Listing }) {
           <LogoAvatar listing={listing} size="sm" />
           <div>
             <p className="eyebrow text-red">{CATEGORY_LABEL[listing.category]}</p>
-            <h3 className="mt-1.5 text-lg font-bold leading-tight text-navy group-hover:text-navy-deep">
-              {listing.name}
-            </h3>
+            <OverridableText
+              as="h3"
+              listingId={listing.id}
+              field="name"
+              fallback={listing.name}
+              className="mt-1.5 text-lg font-bold leading-tight text-navy group-hover:text-navy-deep"
+            />
           </div>
         </div>
         <CsdScoreBadge score={score} size="sm" />
