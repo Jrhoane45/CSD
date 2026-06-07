@@ -1,5 +1,5 @@
 import Link from "next/link";
-import { Target, Compass, LayoutDashboard, BarChart3, ArrowRight, UserRound, ScanLine } from "lucide-react";
+import { Target, Compass, LayoutDashboard, BarChart3, ArrowRight, UserRound, ScanLine, CalendarDays, Inbox } from "lucide-react";
 import { Eyebrow } from "@/components/ui/Eyebrow";
 import { LISTINGS } from "@/lib/data/listings";
 
@@ -78,8 +78,21 @@ export default function AppHome() {
                 <span>
                   <span className="block font-semibold text-navy">Browse the directory</span>
                   <span className="block text-xs text-ink/55">
-                    {LISTINGS.length} listings across Southern California
+                    {LISTINGS.length} listings · search, filter &amp; compare
                   </span>
+                </span>
+              </span>
+              <ArrowRight size={18} className="text-ink/40 transition-transform group-hover:translate-x-1" />
+            </Link>
+            <Link
+              href="/app/events"
+              className="group flex items-center justify-between rounded-xl border border-ink/10 p-4 transition-colors hover:bg-cream"
+            >
+              <span className="flex items-center gap-3">
+                <CalendarDays size={20} className="text-navy" />
+                <span>
+                  <span className="block font-semibold text-navy">Events board</span>
+                  <span className="block text-xs text-ink/55">Tryouts, camps &amp; showcases — register in a tap</span>
                 </span>
               </span>
               <ArrowRight size={18} className="text-ink/40 transition-transform group-hover:translate-x-1" />
@@ -109,14 +122,27 @@ export default function AppHome() {
               <ArrowRight size={18} className="transition-transform group-hover:translate-x-1" />
             </Link>
             <Link
+              href="/app/inbox"
+              className="group flex items-center justify-between rounded-xl border border-white/15 p-4 transition-colors hover:bg-white/[0.06]"
+            >
+              <span className="flex items-center gap-3">
+                <Inbox size={20} className="text-gold" />
+                <span>
+                  <span className="block font-semibold text-white">Leads &amp; messages</span>
+                  <span className="block text-xs text-cream/60">Respond to inbound families</span>
+                </span>
+              </span>
+              <ArrowRight size={18} className="text-cream/50 transition-transform group-hover:translate-x-1" />
+            </Link>
+            <Link
               href="/app/provider/analytics"
               className="group flex items-center justify-between rounded-xl border border-white/15 p-4 transition-colors hover:bg-white/[0.06]"
             >
               <span className="flex items-center gap-3">
                 <BarChart3 size={20} className="text-gold" />
                 <span>
-                  <span className="block font-semibold text-white">Leads &amp; analytics</span>
-                  <span className="block text-xs text-cream/60">Paid-tier view</span>
+                  <span className="block font-semibold text-white">Analytics</span>
+                  <span className="block text-xs text-cream/60">Views, funnel &amp; lead quality</span>
                 </span>
               </span>
               <ArrowRight size={18} className="text-cream/50 transition-transform group-hover:translate-x-1" />

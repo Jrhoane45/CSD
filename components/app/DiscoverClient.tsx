@@ -1,7 +1,7 @@
 "use client";
 
 import { useMemo, useState } from "react";
-import { Search, SlidersHorizontal, X } from "lucide-react";
+import { Search, SlidersHorizontal, X, GitCompareArrows, Check } from "lucide-react";
 import type { Category } from "@/lib/types";
 import { computeCsdScore, averageRating } from "@/lib/scoring";
 import {
@@ -12,6 +12,7 @@ import {
   CATEGORY_PLURAL,
 } from "@/lib/data/listings";
 import { ListingCard } from "@/components/listing/ListingCard";
+import { CompareBar } from "@/components/app/CompareBar";
 import { Eyebrow } from "@/components/ui/Eyebrow";
 
 type Sort = "score" | "rating" | "name";
@@ -31,6 +32,13 @@ export function DiscoverClient({ initialCategory }: { initialCategory?: Category
   const [minScore, setMinScore] = useState(0);
   const [sort, setSort] = useState<Sort>("score");
   const [showFilters, setShowFilters] = useState(false);
+  const [compareIds, setCompareIds] = useState<string[]>([]);
+
+  const toggleCompare = (id: string) =>
+    setCompareIds((ids) =>
+      ids.includes(id) ? ids.filter((x) => x !== id) : ids.length >= 3 ? ids : [...ids, id],
+    );
+  const compareListings = LISTINGS.filter((l) => compareIds.includes(l.id));
 
   const results = useMemo(() => {
     return SCORED.filter(({ listing, score }) => {
@@ -168,14 +176,45 @@ export function DiscoverClient({ initialCategory }: { initialCategory?: Category
               No programs match those filters. Try widening your search.
             </div>
           ) : (
-            <div className="grid gap-6 sm:grid-cols-2 xl:grid-cols-3">
-              {results.map(({ listing }) => (
-                <ListingCard key={listing.id} listing={listing} />
-              ))}
+            <div className="grid gap-6 pb-20 sm:grid-cols-2 xl:grid-cols-3">
+              {results.map(({ listing }) => {
+                const selected = compareIds.includes(listing.id);
+                const disabled = !selected && compareIds.length >= 3;
+                return (
+                  <div key={listing.id} className="flex flex-col gap-2">
+                    <ListingCard listing={listing} />
+                    <button
+                      onClick={() => toggleCompare(listing.id)}
+                      disabled={disabled}
+                      className={`inline-flex items-center justify-center gap-1.5 rounded-lg border px-3 py-1.5 text-xs font-semibold transition-colors disabled:opacity-40 ${
+                        selected
+                          ? "border-navy bg-navy text-white"
+                          : "border-ink/15 text-ink/60 hover:border-navy/40 hover:text-navy"
+                      }`}
+                    >
+                      {selected ? (
+                        <>
+                          <Check size={13} /> Comparing
+                        </>
+                      ) : (
+                        <>
+                          <GitCompareArrows size={13} /> Compare
+                        </>
+                      )}
+                    </button>
+                  </div>
+                );
+              })}
             </div>
           )}
         </div>
       </div>
+
+      <CompareBar
+        listings={compareListings}
+        onRemove={toggleCompare}
+        onClear={() => setCompareIds([])}
+      />
     </div>
   );
 }

@@ -25,8 +25,10 @@ import { Eyebrow } from "@/components/ui/Eyebrow";
 import { DemoButton } from "@/components/app/DemoButton";
 import { LogoAvatar } from "@/components/listing/LogoAvatar";
 import { MediaUploader } from "@/components/app/MediaUploader";
-import { ImagePlus, Images } from "lucide-react";
-import type { ProfileVideo } from "@/lib/types";
+import { ImagePlus, Images, MessageSquare, CalendarClock } from "lucide-react";
+import type { EventBoost, ProfileVideo } from "@/lib/types";
+import { useStore, boostEvent, formatEventDate } from "@/lib/store";
+import { EventFormModal } from "@/components/app/EventForm";
 
 const LISTING = getListing("hoop-prodigy")!;
 const SCORE = computeCsdScore(LISTING).score;
@@ -35,18 +37,6 @@ const STATES: { value: ClaimState; label: string }[] = [
   { value: "unclaimed", label: "Unclaimed" },
   { value: "claimed-free", label: "Claimed-Free" },
   { value: "claimed-paid", label: "Claimed-Paid" },
-];
-
-const LEADS = [
-  { parent: "Maria G.", athlete: "Diego, 14", note: "Competitive · Fullerton", fit: 94, when: "2h ago" },
-  { parent: "James T.", athlete: "Aaliyah, 16", note: "Elite · recruiting", fit: 91, when: "Yesterday" },
-  { parent: "Priya S.", athlete: "Rohan, 13", note: "Competitive · guard", fit: 88, when: "2 days ago" },
-  { parent: "Tom W.", athlete: "Ella, 15", note: "Skills Academy · Brea", fit: 84, when: "3 days ago" },
-];
-
-const EVENTS = [
-  { title: "Fall Tryouts — 14U & 16U", date: "Sep 7, 2026", status: "Boosted", reach: "4,200" },
-  { title: "Holiday Skills Clinic", date: "Dec 20, 2026", status: "In-network", reach: "320" },
 ];
 
 export function ProviderDashboard() {
@@ -268,7 +258,31 @@ function LockedFeatures({ onUpgrade }: { onUpgrade: () => void }) {
   );
 }
 
+const BOOST_BADGE: Record<EventBoost, { label: string; cls: string }> = {
+  none: { label: "In-network", cls: "bg-cream text-ink/60" },
+  basic: { label: "Promoted", cls: "bg-gold/15 text-ink" },
+  standard: { label: "Featured", cls: "bg-gold/25 text-ink" },
+  premium: { label: "Featured+", cls: "bg-gold/40 text-ink" },
+};
+
+const BOOST_TIERS: { tier: EventBoost; label: string }[] = [
+  { tier: "basic", label: "Basic $19" },
+  { tier: "standard", label: "Standard $39" },
+  { tier: "premium", label: "Premium $79" },
+];
+
 function ClaimedPaid() {
+  const { threads, events } = useStore();
+  const [creating, setCreating] = useState(false);
+
+  const leads = threads
+    .filter((t) => t.listingId === LISTING.id)
+    .sort((a, b) => +new Date(b.updatedAt) - +new Date(a.updatedAt));
+  const myEvents = events
+    .filter((e) => e.listingId === LISTING.id)
+    .sort((a, b) => +new Date(a.date) - +new Date(b.date));
+  const unread = leads.filter((l) => l.unreadFor === "provider").length;
+
   return (
     <div className="space-y-6">
       <div className="flex flex-wrap items-center justify-between gap-3 rounded-2xl border border-gold bg-gold/[0.1] p-5">
@@ -289,7 +303,7 @@ function ClaimedPaid() {
 
       <div className="grid gap-4 sm:grid-cols-4">
         <Metric icon={Eye} value="3,910" label="Profile views (30d)" />
-        <Metric icon={Inbox} value="27" label="New leads (30d)" />
+        <Metric icon={Inbox} value={String(leads.length)} label="Active leads" />
         <Metric icon={TrendingUp} value="38%" label="Lead conversion" />
         <Metric icon={Star} value="4.6" label="Avg rating" />
       </div>
@@ -299,82 +313,124 @@ function ClaimedPaid() {
       <ProviderMediaSlot />
 
       <div className="grid gap-6 lg:grid-cols-2">
-        {/* leads */}
+        {/* leads — live from the inbox */}
         <div className="rounded-2xl border border-ink/10 bg-white p-6">
-          <div className="flex items-center gap-2">
-            <Inbox size={18} className="text-navy" />
-            <h3 className="font-semibold text-navy">Recent leads</h3>
+          <div className="flex items-center justify-between">
+            <div className="flex items-center gap-2">
+              <Inbox size={18} className="text-navy" />
+              <h3 className="font-semibold text-navy">Recent leads</h3>
+            </div>
+            {unread > 0 && (
+              <span className="rounded-full bg-red px-2 py-0.5 text-xs font-bold text-white">
+                {unread} new
+              </span>
+            )}
           </div>
           <div className="mt-4 space-y-2.5">
-            {LEADS.map((l) => (
-              <div
-                key={l.parent}
-                className="flex items-center justify-between rounded-xl border border-ink/10 p-3"
-              >
-                <div>
-                  <p className="text-sm font-semibold text-navy">
-                    {l.parent} · <span className="font-normal text-ink/60">{l.athlete}</span>
-                  </p>
-                  <p className="text-xs text-ink/50">{l.note} · {l.when}</p>
-                </div>
-                <span className="rounded-full bg-gold/20 px-2.5 py-1 text-xs font-bold text-ink">
-                  {l.fit}% fit
-                </span>
-              </div>
-            ))}
+            {leads.length === 0 ? (
+              <p className="rounded-xl border border-dashed border-ink/15 p-4 text-center text-sm text-ink/45">
+                No leads yet.
+              </p>
+            ) : (
+              leads.slice(0, 5).map((l) => (
+                <Link
+                  key={l.id}
+                  href={`/app/inbox?thread=${l.id}`}
+                  className="flex items-center justify-between gap-3 rounded-xl border border-ink/10 p-3 transition-colors hover:border-navy/30"
+                >
+                  <div className="min-w-0">
+                    <p className="flex items-center gap-1.5 text-sm font-semibold text-navy">
+                      {l.kind === "booking" ? (
+                        <CalendarClock size={13} className="text-gold" />
+                      ) : (
+                        <MessageSquare size={13} className="text-ink/40" />
+                      )}
+                      {l.parentName} · <span className="font-normal text-ink/60">{l.athlete}</span>
+                    </p>
+                    <p className="mt-0.5 truncate text-xs text-ink/50">
+                      {l.messages[l.messages.length - 1].body}
+                    </p>
+                  </div>
+                  <div className="flex shrink-0 items-center gap-2">
+                    {l.unreadFor === "provider" && <span className="h-2 w-2 rounded-full bg-red" />}
+                    {l.fit !== undefined && (
+                      <span className="rounded-full bg-gold/20 px-2.5 py-1 text-xs font-bold text-ink">
+                        {l.fit}%
+                      </span>
+                    )}
+                  </div>
+                </Link>
+              ))
+            )}
           </div>
-          <DemoButton variant="outline" className="mt-4" done="Replied (demo)">
-            Respond to leads
-          </DemoButton>
+          <Link
+            href="/app/inbox"
+            className="mt-4 inline-flex items-center gap-1.5 rounded-lg border border-navy/30 px-4 py-2 text-sm font-semibold text-navy transition-colors hover:bg-navy hover:text-white"
+          >
+            <Inbox size={15} /> Open inbox
+          </Link>
         </div>
 
-        {/* events */}
+        {/* events — live, with real boosts */}
         <div className="rounded-2xl border border-ink/10 bg-white p-6">
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-2">
               <Calendar size={18} className="text-navy" />
               <h3 className="font-semibold text-navy">Events &amp; promotions</h3>
             </div>
-            <DemoButton variant="primary" done="Created (demo)">
+            <button
+              onClick={() => setCreating(true)}
+              className="inline-flex items-center gap-1.5 rounded-lg bg-navy px-3.5 py-2 text-sm font-semibold text-white hover:bg-navy-deep"
+            >
               + New event
-            </DemoButton>
+            </button>
           </div>
           <div className="mt-4 space-y-2.5">
-            {EVENTS.map((e) => (
-              <div key={e.title} className="rounded-xl border border-ink/10 p-3">
-                <div className="flex items-center justify-between">
+            {myEvents.map((e) => (
+              <div key={e.id} className="rounded-xl border border-ink/10 p-3">
+                <div className="flex items-center justify-between gap-2">
                   <p className="text-sm font-semibold text-navy">{e.title}</p>
-                  <span
-                    className={`rounded-full px-2.5 py-0.5 text-xs font-semibold ${
-                      e.status === "Boosted" ? "bg-gold/25 text-ink" : "bg-cream text-ink/60"
-                    }`}
-                  >
-                    {e.status}
+                  <span className={`rounded-full px-2.5 py-0.5 text-xs font-semibold ${BOOST_BADGE[e.boost].cls}`}>
+                    {BOOST_BADGE[e.boost].label}
                   </span>
                 </div>
                 <div className="mt-1 flex items-center justify-between text-xs text-ink/55">
-                  <span>{e.date}</span>
-                  <span>Reach: {e.reach}</span>
+                  <span>{formatEventDate(e.date)}</span>
+                  <span>Reach: {e.reach.toLocaleString()} · {e.rsvps} RSVPs</span>
+                </div>
+                <div className="mt-2 flex flex-wrap gap-1.5">
+                  {BOOST_TIERS.map((b) => (
+                    <button
+                      key={b.tier}
+                      onClick={() => boostEvent(e.id, b.tier)}
+                      disabled={e.boost === b.tier}
+                      className={`inline-flex items-center gap-1 rounded-md px-2.5 py-1 text-xs font-semibold transition-colors ${
+                        e.boost === b.tier
+                          ? "bg-navy text-white"
+                          : "bg-gold text-ink hover:bg-gold-300"
+                      }`}
+                    >
+                      <Megaphone size={11} /> {b.label}
+                    </button>
+                  ))}
                 </div>
               </div>
             ))}
           </div>
-          <div className="mt-4 rounded-xl bg-cream/60 p-3">
-            <p className="text-xs font-semibold text-navy">Boost an event</p>
-            <div className="mt-2 flex flex-wrap gap-2">
-              <DemoButton variant="gold" done="Boosted!" className="!px-3 !py-1.5 !text-xs">
-                <Megaphone size={13} /> Basic $19
-              </DemoButton>
-              <DemoButton variant="gold" done="Boosted!" className="!px-3 !py-1.5 !text-xs">
-                <Megaphone size={13} /> Standard $39
-              </DemoButton>
-              <DemoButton variant="gold" done="Boosted!" className="!px-3 !py-1.5 !text-xs">
-                <Megaphone size={13} /> Premium $79
-              </DemoButton>
-            </div>
-          </div>
         </div>
       </div>
+
+      <EventFormModal
+        open={creating}
+        onClose={() => setCreating(false)}
+        defaults={{
+          listingId: LISTING.id,
+          listingName: LISTING.name,
+          sport: "Basketball",
+          city: LISTING.city,
+          county: LISTING.county,
+        }}
+      />
     </div>
   );
 }

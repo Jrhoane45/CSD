@@ -21,15 +21,26 @@ experience feels real without anything going live.
 - **About** (`/about`) — mission, founder, positioning, market opportunity, the ask.
 
 ### The product (`/app`)
-A role toggle (**Parent ⇄ Provider**) switches the experience:
+A role toggle (**Parent ⇄ Provider**) switches the experience. The two sides are
+**wired together** by a live, client-side activity layer (persisted in your browser), so a
+parent's action shows up on the provider side in real time:
+
 - **Find a match** (`/app/match`) — an athlete-profile wizard that returns ranked, **Fit-scored**
   matches with the reasons behind each one. Badged *Intelligence Layer — coming next*.
-- **Discover** (`/app/discover`) — searchable, filterable directory with **CSD Score** badges.
+- **Discover** (`/app/discover`) — searchable, filterable directory with **CSD Score** badges and a
+  **side-by-side Compare** tray (pick up to 3 programs).
 - **Listing profile** (`/app/listing/[id]`) — CSD Score breakdown, alumni outcomes, category-specific
-  reviews, and a claim banner for unclaimed (auto-built) profiles.
+  reviews, and a claim banner. **Request info** and **Book a visit** open real flows that start a
+  conversation; **Write a review** posts live and recomputes the rating.
+- **Inbox** (`/app/inbox`) — two-way **messaging** between families and programs, role-aware, with a
+  simulated provider reply so threads feel alive. Bookings carry their requested date/time.
+- **Events** (`/app/events`) — a board of tryouts, camps, showcases, and clinics with **one-tap RSVP**;
+  providers can **create** and **boost** events that appear here instantly.
 - **Saved** (`/app/saved`) — a parent's shortlist (persists in your browser).
+- **Notifications** — a live bell in the app shell with per-role unread counts.
 - **Provider dashboard** (`/app/provider`) — toggle the three claim states (**Unclaimed →
-  Claimed-Free → Claimed-Paid**) to see leads, events with paid boosts, and the upgrade path.
+  Claimed-Free → Claimed-Paid**). The paid view shows **live leads** (from real inquiries), event
+  management with working **boosts**, and the upgrade path.
 - **Analytics** (`/app/provider/analytics`) — premium-tier views, lead funnel, and lead fit quality.
 
 ### Demo logic (looks real, no ML/backend)
@@ -37,6 +48,9 @@ A role toggle (**Parent ⇄ Provider**) switches the experience:
   (certifications, experience, alumni outcomes, notable athletes, review quality). See `lib/scoring.ts`.
 - **Match Fit %** — deterministic scoring of an athlete profile vs. each listing, weighting
   development-level match most heavily (a hard filter), then distance, goals, CSD Score, and sport.
+- **Live activity store** (`lib/store.ts`) — a tiny reactive store (localStorage-backed, with seed
+  data) that powers messaging, bookings, events, reviews, and notifications across both roles. No
+  backend, but it behaves like one; reset it any time by clearing site data.
 
 ---
 
