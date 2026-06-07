@@ -1548,6 +1548,7 @@ export const LEVELS_LIST = ["Recreational", "Intermediate", "Competitive", "Elit
 
 export const GOALS_LIST = [
   "College recruiting",
+  "Athletic Development",
   "Skill development",
   "High-level competition",
   "Fun & fundamentals",
