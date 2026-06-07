@@ -55,9 +55,12 @@ parent's action shows up on the provider side in real time:
   pop-up — and the studio reports **impressions, clicks, CTR, RSVPs, spend, and budget pacing** per
   campaign (live/scheduled/ended). Providers can **promote any event in one click** from the events
   panel, and **recommended campaign playbooks** help those who aren't sure where to start.
-- **Operator ad-revenue dashboard** (`/app/operator/promotions`) — the platform/operator view of the
-  promotions marketplace: recognized revenue, committed budget, projected monthly run-rate, revenue
-  by placement, top advertisers, and every campaign across all providers.
+- **Operator console** (`/app/operator`) — a third **Operator** role (toggle in the app header) for
+  platform trust & safety: a console home with platform KPIs and action queues, **provider vetting**
+  (`/app/operator/providers` — verify / suspend / reinstate, filterable by status), **content
+  moderation** (`/app/operator/moderation` — resolve reports on reviews, listings, and events), and
+  the **ad-revenue dashboard** (`/app/operator/promotions` — recognized revenue, committed budget,
+  projected run-rate, revenue by placement, top advertisers, and every campaign across providers).
 - **Analytics** (`/app/provider/analytics`) — premium views, lead funnel, and lead fit quality that
   **update live** with the leads, bookings, and RSVPs generated in the session.
 

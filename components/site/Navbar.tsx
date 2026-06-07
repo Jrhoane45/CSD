@@ -1,6 +1,7 @@
 "use client";
 
 import Link from "next/link";
+import { usePathname } from "next/navigation";
 import { useState } from "react";
 import { Menu, X, ArrowRight } from "lucide-react";
 import { Logo } from "../brand/Logo";
@@ -16,6 +17,8 @@ const LINKS = [
 
 export function Navbar() {
   const [open, setOpen] = useState(false);
+  const pathname = usePathname();
+  const isActive = (href: string) => pathname === href || pathname.startsWith(href + "/");
 
   return (
     <header className="sticky top-0 z-40 border-b border-ink/10 bg-white/85 backdrop-blur">
@@ -23,15 +26,24 @@ export function Navbar() {
         <Logo tagline />
 
         <div className="hidden items-center gap-7 lg:flex">
-          {LINKS.map((l) => (
-            <Link
-              key={l.href}
-              href={l.href}
-              className="text-sm font-medium text-ink/70 transition-colors hover:text-navy"
-            >
-              {l.label}
-            </Link>
-          ))}
+          {LINKS.map((l) => {
+            const active = isActive(l.href);
+            return (
+              <Link
+                key={l.href}
+                href={l.href}
+                aria-current={active ? "page" : undefined}
+                className={`relative text-sm font-medium transition-colors ${
+                  active ? "text-navy" : "text-ink/70 hover:text-navy"
+                }`}
+              >
+                {l.label}
+                {active && (
+                  <span className="absolute inset-x-0 -bottom-2 h-[3px] rounded-full bg-red" />
+                )}
+              </Link>
+            );
+          })}
         </div>
 
         <div className="hidden items-center gap-3 lg:flex">
@@ -55,16 +67,22 @@ export function Navbar() {
       {open && (
         <div className="border-t border-ink/10 bg-white lg:hidden">
           <div className="mx-auto flex max-w-7xl flex-col gap-1 px-4 py-3">
-            {LINKS.map((l) => (
-              <Link
-                key={l.href}
-                href={l.href}
-                onClick={() => setOpen(false)}
-                className="rounded-lg px-3 py-2.5 text-sm font-medium text-ink/80 hover:bg-cream"
-              >
-                {l.label}
-              </Link>
-            ))}
+            {LINKS.map((l) => {
+              const active = isActive(l.href);
+              return (
+                <Link
+                  key={l.href}
+                  href={l.href}
+                  onClick={() => setOpen(false)}
+                  aria-current={active ? "page" : undefined}
+                  className={`rounded-lg px-3 py-2.5 text-sm font-medium ${
+                    active ? "bg-cream text-navy" : "text-ink/80 hover:bg-cream"
+                  }`}
+                >
+                  {l.label}
+                </Link>
+              );
+            })}
             <Link
               href="/app"
               onClick={() => setOpen(false)}

@@ -1,4 +1,11 @@
-import type { AppNotification, Campaign, PlatformEvent, Thread } from "../types";
+import type {
+  AppNotification,
+  Campaign,
+  ModerationItem,
+  PlatformEvent,
+  Thread,
+  VettingStatus,
+} from "../types";
 
 /*
   Seed activity so the "live" platform never looks empty on first load.
@@ -312,6 +319,54 @@ export const SEED_CAMPAIGNS: Campaign[] = [
     cta: "Reserve a spot",
     createdAt: daysAgo(1),
     metrics: { impressions: 0, clicks: 0, rsvps: 0, spend: 0 },
+  },
+];
+
+/** Operator overrides for provider vetting status (beyond each listing's default). */
+export const SEED_VETTING: Record<string, VettingStatus> = {
+  "metro-hoops-collective": "suspended",
+};
+
+export const SEED_MODERATION: ModerationItem[] = [
+  {
+    id: "mod-1",
+    type: "review",
+    listingId: "valley-elite-hoops",
+    listingName: "Valley Elite Hoops",
+    reason: "Suspected fake / incentivized review",
+    excerpt: "Best program ever!!! Coach gave us a discount to post this 5 star review…",
+    reportedBy: "Parent report",
+    reportedAt: daysAgo(1),
+  },
+  {
+    id: "mod-2",
+    type: "listing",
+    listingId: "metro-hoops-collective",
+    listingName: "Metro Hoops Collective",
+    reason: "Unverified credentials claim",
+    excerpt: "Profile claims “USA Basketball certified staff” — certification could not be confirmed.",
+    reportedBy: "Automated check",
+    reportedAt: daysAgo(2),
+  },
+  {
+    id: "mod-3",
+    type: "review",
+    listingId: "inland-thunder-baseball",
+    listingName: "Inland Thunder Baseball",
+    reason: "Abusive language",
+    excerpt: "This review contains personal attacks against a named coach.",
+    reportedBy: "Provider report",
+    reportedAt: daysAgo(3),
+  },
+  {
+    id: "mod-4",
+    type: "event",
+    listingId: "coast-united-soccer",
+    listingName: "Coast United Soccer",
+    reason: "Possible duplicate / spam event",
+    excerpt: "Same “Winter Showcase” event posted 4 times in 24 hours.",
+    reportedBy: "Automated check",
+    reportedAt: daysAgo(0),
   },
 ];
 

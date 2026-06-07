@@ -16,6 +16,10 @@ import {
   CalendarDays,
   GraduationCap,
   Megaphone,
+  ShieldCheck,
+  BadgeCheck,
+  Flag,
+  DollarSign,
 } from "lucide-react";
 import { CsdBadge } from "@/components/brand/CsdBadge";
 import { NotificationBell } from "@/components/app/NotificationBell";
@@ -42,6 +46,12 @@ const NAV: Record<Role, { href: string; label: string; icon: typeof Compass; bad
     { href: "/app/events", label: "Events", icon: CalendarDays },
     { href: "/app/prospect-iq", label: "Prospect IQ", icon: ScanLine },
   ],
+  operator: [
+    { href: "/app/operator", label: "Console", icon: ShieldCheck },
+    { href: "/app/operator/providers", label: "Vetting", icon: BadgeCheck },
+    { href: "/app/operator/moderation", label: "Moderation", icon: Flag },
+    { href: "/app/operator/promotions", label: "Ad revenue", icon: DollarSign },
+  ],
 };
 
 export function AppShell({ children }: { children: React.ReactNode }) {
@@ -56,7 +66,8 @@ export function AppShell({ children }: { children: React.ReactNode }) {
 
   useEffect(() => {
     // Keep the toggle in sync with where the user actually is.
-    if (pathname.startsWith("/app/provider")) setRole("provider");
+    if (pathname.startsWith("/app/operator")) setRole("operator");
+    else if (pathname.startsWith("/app/provider")) setRole("provider");
   }, [pathname]);
 
   const links = NAV[role];
@@ -73,11 +84,11 @@ export function AppShell({ children }: { children: React.ReactNode }) {
 
             {/* Role toggle */}
             <div className="ml-2 flex rounded-lg bg-cream p-1 text-sm">
-              {(["parent", "provider"] as Role[]).map((r) => (
+              {(["parent", "provider", "operator"] as Role[]).map((r) => (
                 <button
                   key={r}
                   onClick={() => setRole(r)}
-                  className={`rounded-md px-3 py-1.5 font-semibold capitalize transition-colors ${
+                  className={`rounded-md px-2.5 py-1.5 font-semibold capitalize transition-colors sm:px-3 ${
                     role === r ? "bg-navy text-white" : "text-ink/55 hover:text-navy"
                   }`}
                 >
@@ -95,6 +106,7 @@ export function AppShell({ children }: { children: React.ReactNode }) {
                 <Link
                   key={l.href}
                   href={l.href}
+                  aria-current={active ? "page" : undefined}
                   className={`relative inline-flex items-center gap-1.5 rounded-lg px-3 py-2 text-sm font-medium transition-colors ${
                     active ? "bg-navy/[0.07] text-navy" : "text-ink/60 hover:bg-cream hover:text-navy"
                   }`}
@@ -104,6 +116,9 @@ export function AppShell({ children }: { children: React.ReactNode }) {
                     <span className="flex h-4 min-w-4 items-center justify-center rounded-full bg-red px-1 text-[0.6rem] font-bold text-white">
                       {unread}
                     </span>
+                  )}
+                  {active && (
+                    <span className="absolute inset-x-3 -bottom-[11px] h-[3px] rounded-full bg-red" />
                   )}
                 </Link>
               );
