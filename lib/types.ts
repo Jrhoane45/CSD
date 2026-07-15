@@ -278,6 +278,63 @@ export interface RecruitingState {
   schools: TargetSchool[];
 }
 
+// --- Session booking & scheduling ------------------------------------------
+
+export type BookingStatus = "upcoming" | "completed" | "canceled";
+
+/** A booked training session / visit against a provider's published availability. */
+export interface SessionBooking {
+  id: string;
+  listingId: string;
+  listingName: string;
+  listingLogo?: string;
+  /** Deterministic slot id `${listingId}:${date}:${time}` — lets a booked slot disappear. */
+  slotId: string;
+  sessionTypeId: string;
+  sessionTypeName: string;
+  date: string; // ISO date (YYYY-MM-DD)
+  time: string; // e.g. "4:30 PM"
+  durationMin: number;
+  price: number; // dollars, 0 = free
+  athlete: string;
+  parentName: string;
+  fit?: number;
+  status: BookingStatus;
+  /** Links to the inbox thread opened alongside the booking. */
+  threadId?: string;
+  createdAt: string;
+}
+
+// --- Provider billing & subscription ---------------------------------------
+
+export type PlanTier = "free" | "pro" | "elite";
+
+export interface PaymentCard {
+  brand: string; // e.g. "Visa"
+  last4: string;
+  exp: string; // "12 / 28"
+}
+
+export interface Invoice {
+  id: string;
+  date: string; // ISO date
+  description: string;
+  amount: number; // dollars
+  status: "paid" | "due";
+}
+
+export interface ProviderSubscription {
+  plan: PlanTier;
+  status: "active" | "canceled";
+  /** ISO date the plan next renews. */
+  renewsOn: string;
+  card?: PaymentCard;
+  /** Included monthly event boosts and how many have been used. */
+  boostsIncluded: number;
+  boostsUsed: number;
+  since: string; // ISO date the provider first subscribed
+}
+
 export interface AthleteProfile {
   // --- Account / identity (optional; set during onboarding) ---
   parentName?: string;

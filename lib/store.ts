@@ -8,8 +8,13 @@ import type {
   Campaign,
   CampaignObjective,
   EventBoost,
+  Invoice,
   Listing,
+  PaymentCard,
   PaymentMethod,
+  PlanTier,
+  ProviderSubscription,
+  SessionBooking,
   VettingStatus,
   ListingOverride,
   PlatformEvent,
@@ -32,8 +37,13 @@ import {
   SEED_VETTING,
   SEED_REVIEWS,
   SEED_MODERATION,
+  SEED_BOOKINGS,
+  SEED_SUBSCRIPTION,
+  SEED_INVOICES,
 } from "./data/activity";
 import { addDaysISO, flightStatus } from "./promotions";
+import { addMonthsISO, planDef } from "./billing";
+import { localISODate } from "./scheduling";
 
 /*
   A tiny reactive store (Zustand-lite) backing the demo's "live" platform
@@ -65,6 +75,12 @@ export interface StoreState {
   vetting: Record<string, VettingStatus>;
   /** Operator moderation resolutions, keyed by moderation item id. */
   moderation: Record<string, "dismissed" | "removed">;
+  /** Booked training sessions across families & providers. */
+  bookings: SessionBooking[];
+  /** The current provider's subscription. */
+  subscription: ProviderSubscription;
+  /** The current provider's billing history. */
+  invoices: Invoice[];
 }
 
 function seedState(): StoreState {
@@ -81,6 +97,9 @@ function seedState(): StoreState {
     campaigns: SEED_CAMPAIGNS.map((c) => ({ ...c, metrics: { ...c.metrics } })),
     vetting: { ...SEED_VETTING },
     moderation: {},
+    bookings: SEED_BOOKINGS.map((b) => ({ ...b })),
+    subscription: { ...SEED_SUBSCRIPTION, card: { ...SEED_SUBSCRIPTION.card! } },
+    invoices: SEED_INVOICES.map((i) => ({ ...i })),
   };
 }
 
@@ -120,6 +139,9 @@ function hydrate() {
         campaigns: saved.campaigns ?? state.campaigns,
         vetting: saved.vetting ?? state.vetting,
         moderation: saved.moderation ?? state.moderation,
+        bookings: saved.bookings ?? state.bookings,
+        subscription: saved.subscription ?? state.subscription,
+        invoices: saved.invoices ?? state.invoices,
       };
       emit();
     }
@@ -596,6 +618,204 @@ export function recordAdClick(id: string) {
   set({ campaigns });
 }
 
+// --- Session bookings ------------------------------------------------------
+
+export interface BookSessionInput {
+  listingId: string;
+  listingName: string;
+  listingLogo?: string;
+  slotId: string;
+  sessionTypeId: string;
+  sessionTypeName: string;
+  date: string;
+  time: string;
+  durationMin: number;
+  price: number;
+  athlete: string;
+  parentName: string;
+  fit?: number;
+  message?: string;
+}
+
+/** Book a session — creates the booking and opens a linked inbox thread. */
+export function bookSession(input: BookSessionInput): string {
+  const id = uid();
+  const ts = now();
+  const threadId = uid();
+  const booking: SessionBooking = {
+    id,
+    listingId: input.listingId,
+    listingName: input.listingName,
+    listingLogo: input.listingLogo,
+    slotId: input.slotId,
+    sessionTypeId: input.sessionTypeId,
+    sessionTypeName: input.sessionTypeName,
+    date: input.date,
+    time: input.time,
+    durationMin: input.durationMin,
+    price: input.price,
+    athlete: input.athlete,
+    parentName: input.parentName,
+    fit: input.fit,
+    status: "upcoming",
+    threadId,
+    createdAt: ts,
+  };
+  const priceLabel = input.price === 0 ? "Free" : `$${input.price}`;
+  const thread: Thread = {
+    id: threadId,
+    listingId: input.listingId,
+    listingName: input.listingName,
+    listingLogo: input.listingLogo,
+    kind: "booking",
+    parentName: input.parentName,
+    athlete: input.athlete,
+    fit: input.fit,
+    bookingDate: input.date,
+    bookingTime: input.time,
+    status: "scheduled",
+    messages: [
+      {
+        id: uid(),
+        from: "parent",
+        body:
+          input.message?.trim() ||
+          `Booked a ${input.sessionTypeName} (${priceLabel}) on ${formatEventDate(input.date)} at ${input.time}. Looking forward to it!`,
+        at: ts,
+      },
+    ],
+    unreadFor: "provider",
+    createdAt: ts,
+    updatedAt: ts,
+  };
+  state = { ...state, bookings: [booking, ...state.bookings], threads: [thread, ...state.threads] };
+  notify({
+    role: "provider",
+    icon: "calendar",
+    text: `${input.parentName} booked a ${input.sessionTypeName} — ${input.athlete}`,
+    href: "/app/provider",
+  });
+  notify({
+    role: "parent",
+    icon: "calendar",
+    text: `Session booked with ${input.listingName} — ${formatEventDate(input.date)}, ${input.time}`,
+    href: "/app/sessions",
+  });
+  persist();
+  emit();
+  scheduleAutoReply(threadId, input.parentName, input.listingName);
+  return id;
+}
+
+export function cancelBooking(id: string) {
+  const b = state.bookings.find((x) => x.id === id);
+  set({ bookings: state.bookings.map((x) => (x.id === id ? { ...x, status: "canceled" as const } : x)) });
+  if (b)
+    addNotification({
+      role: b.parentName === "You" ? "parent" : "provider",
+      icon: "calendar",
+      text: `Session canceled — ${b.sessionTypeName} with ${b.listingName}`,
+      href: b.parentName === "You" ? "/app/sessions" : "/app/provider",
+    });
+}
+
+export function rescheduleBooking(id: string, slotId: string, date: string, time: string) {
+  set({
+    bookings: state.bookings.map((x) =>
+      x.id === id ? { ...x, slotId, date, time, status: "upcoming" as const } : x,
+    ),
+  });
+  const b = state.bookings.find((x) => x.id === id);
+  if (b)
+    addNotification({
+      role: "parent",
+      icon: "calendar",
+      text: `Session rescheduled to ${formatEventDate(date)}, ${time}`,
+      href: "/app/sessions",
+    });
+}
+
+export function completeBooking(id: string) {
+  set({ bookings: state.bookings.map((x) => (x.id === id ? { ...x, status: "completed" as const } : x)) });
+}
+
+/** Slot ids already taken by an active booking for a listing (to hide from availability). */
+export function takenSlotIds(bookings: SessionBooking[], listingId: string): Set<string> {
+  return new Set(
+    bookings.filter((b) => b.listingId === listingId && b.status !== "canceled").map((b) => b.slotId),
+  );
+}
+
+// --- Provider billing & subscription ---------------------------------------
+
+export function setPlan(plan: PlanTier) {
+  const def = planDef(plan);
+  const today = localISODate(new Date());
+  const prev = state.subscription;
+  const subscription: ProviderSubscription = {
+    ...prev,
+    plan,
+    status: "active",
+    boostsIncluded: def.boostsIncluded,
+    renewsOn: addMonthsISO(today, 1),
+  };
+  const invoices =
+    def.price > 0
+      ? [
+          {
+            id: uid(),
+            date: today,
+            description: `${def.name} plan — monthly subscription`,
+            amount: def.price,
+            status: "paid" as const,
+          },
+          ...state.invoices,
+        ]
+      : state.invoices;
+  set({ subscription, invoices });
+  notify({
+    role: "provider",
+    icon: "trophy",
+    text:
+      def.price > 0
+        ? `${def.name} plan is active — $${def.price}/mo`
+        : `Switched to the ${def.name} plan`,
+    href: "/app/provider/billing",
+  });
+  persist();
+  emit();
+}
+
+export function cancelSubscription() {
+  set({ subscription: { ...state.subscription, status: "canceled" } });
+  addNotification({
+    role: "provider",
+    icon: "user",
+    text: "Subscription canceled — access continues until the period ends",
+    href: "/app/provider/billing",
+  });
+}
+
+export function reactivateSubscription() {
+  set({ subscription: { ...state.subscription, status: "active" } });
+}
+
+export function updatePaymentCard(card: PaymentCard) {
+  set({ subscription: { ...state.subscription, card } });
+}
+
+/** Record a one-off charge (e.g. an event boost) on the provider's invoices. */
+export function addInvoice(description: string, amount: number) {
+  const invoice: Invoice = {
+    id: uid(),
+    date: localISODate(new Date()),
+    description,
+    amount,
+    status: "paid",
+  };
+  set({ invoices: [invoice, ...state.invoices] });
+}
+
 // --- Operator: vetting & moderation ----------------------------------------
 
 /** A listing's effective vetting status (operator override, else its default). */
@@ -651,6 +871,7 @@ export function resetDemo() {
     "csd-athlete-profile",
     "csd-saved-listings",
     "csd-piq-result",
+    "csd-piq-history",
     "csd-role",
   ]) {
     localStorage.removeItem(k);

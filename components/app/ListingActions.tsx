@@ -8,6 +8,7 @@ import { useProfile } from "@/lib/useProfile";
 import { matchListing } from "@/lib/scoring";
 import { startThread } from "@/lib/store";
 import { SaveButton } from "@/components/app/SaveButton";
+import { BookingFlow } from "@/components/app/BookingFlow";
 import { Modal } from "@/components/ui/Modal";
 
 function athleteLabel(p: ReturnType<typeof useProfile>["profile"]): string {
@@ -21,7 +22,8 @@ const TIMES = ["3:30 PM", "4:30 PM", "5:30 PM", "6:30 PM", "Weekend AM"];
 
 export function ListingActions({ listing }: { listing: Listing }) {
   const { profile } = useProfile();
-  const [mode, setMode] = useState<"inquiry" | "booking" | null>(null);
+  const [mode, setMode] = useState<"inquiry" | null>(null);
+  const [booking, setBooking] = useState(false);
   const [sentId, setSentId] = useState<string | null>(null);
 
   const fit = useMemo(() => {
@@ -39,18 +41,16 @@ export function ListingActions({ listing }: { listing: Listing }) {
     setSentId(null);
   };
 
-  const submit = (message: string, bookingDate?: string, bookingTime?: string) => {
+  const submit = (message: string) => {
     const id = startThread({
       listingId: listing.id,
       listingName: listing.name,
       listingLogo: listing.logo,
-      kind: mode === "booking" ? "booking" : "inquiry",
+      kind: "inquiry",
       parentName,
       athlete,
       fit,
       message,
-      bookingDate,
-      bookingTime,
     });
     setSentId(id);
   };
@@ -59,43 +59,41 @@ export function ListingActions({ listing }: { listing: Listing }) {
     <>
       <div className="mt-6 flex flex-wrap gap-3">
         <button
-          onClick={() => setMode("inquiry")}
+          onClick={() => setBooking(true)}
           className="inline-flex items-center justify-center gap-2 rounded-lg bg-red px-5 py-2.5 text-sm font-semibold text-white transition-colors hover:bg-red-600"
         >
-          <Mail size={16} /> Request info
+          <CalendarPlus size={16} /> Book a session
         </button>
         <button
-          onClick={() => setMode("booking")}
+          onClick={() => setMode("inquiry")}
           className="inline-flex items-center justify-center gap-2 rounded-lg border border-navy/30 px-5 py-2.5 text-sm font-semibold text-navy transition-colors hover:bg-navy hover:text-white"
         >
-          <CalendarPlus size={16} /> Book a visit
+          <Mail size={16} /> Request info
         </button>
         <SaveButton id={listing.id} />
       </div>
 
+      <BookingFlow
+        open={booking}
+        onClose={() => setBooking(false)}
+        listing={listing}
+        athlete={athlete}
+        parentName={parentName}
+        fit={fit}
+        hasProfile={!!profile?.firstName}
+      />
+
       <Modal
         open={mode !== null}
         onClose={close}
-        title={
-          sentId
-            ? "Message sent"
-            : mode === "booking"
-              ? `Book a visit · ${listing.name}`
-              : `Contact ${listing.name}`
-        }
-        subtitle={
-          sentId
-            ? undefined
-            : mode === "booking"
-              ? "Request a time to see a session in person."
-              : "Send a question — they typically reply within a day."
-        }
+        title={sentId ? "Message sent" : `Contact ${listing.name}`}
+        subtitle={sentId ? undefined : "Send a question — they typically reply within a day."}
       >
         {sentId ? (
-          <Sent listingName={listing.name} threadId={sentId} booking={mode === "booking"} onClose={close} />
+          <Sent listingName={listing.name} threadId={sentId} booking={false} onClose={close} />
         ) : (
           <ContactForm
-            mode={mode === "booking" ? "booking" : "inquiry"}
+            mode="inquiry"
             listing={listing}
             hasProfile={!!profile?.firstName}
             athlete={athlete}

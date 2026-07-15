@@ -1,12 +1,17 @@
 import type {
   AppNotification,
   Campaign,
+  Invoice,
   ModerationItem,
   PlatformEvent,
+  ProviderSubscription,
+  SessionBooking,
   Thread,
   UserReview,
   VettingStatus,
 } from "../types";
+import { defaultSubscription, seedInvoices } from "../billing";
+import { localISODate, slotId } from "../scheduling";
 
 /*
   Seed activity so the "live" platform never looks empty on first load.
@@ -408,6 +413,89 @@ export const SEED_MODERATION: ModerationItem[] = [
     reportedAt: daysAgo(0),
   },
 ];
+
+// --- Session bookings ------------------------------------------------------
+// Both sides seeded: a family's own booked sessions ("You"), plus inbound
+// bookings on the current provider (Hoop Prodigy) so the schedule isn't empty.
+
+export const SEED_BOOKINGS: SessionBooking[] = [
+  {
+    id: "seed-bk-1",
+    listingId: "skill-at-will-hoops",
+    listingName: "Skill At Will Hoops",
+    listingLogo: "/logos/skill-at-will-hoops.svg",
+    slotId: slotId("skill-at-will-hoops", inDays(3), "4:30 PM"),
+    sessionTypeId: "1on1",
+    sessionTypeName: "1-on-1 Skills Session",
+    date: inDays(3),
+    time: "4:30 PM",
+    durationMin: 60,
+    price: 90,
+    athlete: "You",
+    parentName: "You",
+    status: "upcoming",
+    createdAt: daysAgo(2),
+  },
+  {
+    id: "seed-bk-2",
+    listingId: "skill-at-will-hoops",
+    listingName: "Skill At Will Hoops",
+    listingLogo: "/logos/skill-at-will-hoops.svg",
+    slotId: slotId("skill-at-will-hoops", inDays(-6), "5:30 PM"),
+    sessionTypeId: "assessment",
+    sessionTypeName: "Skills Assessment",
+    date: inDays(-6),
+    time: "5:30 PM",
+    durationMin: 45,
+    price: 60,
+    athlete: "You",
+    parentName: "You",
+    status: "completed",
+    createdAt: daysAgo(13),
+  },
+  {
+    id: "seed-bk-3",
+    listingId: "hoop-prodigy",
+    listingName: "Hoop Prodigy",
+    listingLogo: "/logos/hoop-prodigy.jpg",
+    slotId: slotId("hoop-prodigy", inDays(2), "4:30 PM"),
+    sessionTypeId: "tryout",
+    sessionTypeName: "Tryout / Evaluation",
+    date: inDays(2),
+    time: "4:30 PM",
+    durationMin: 90,
+    price: 0,
+    athlete: "Jordan, 15 · Competitive",
+    parentName: "Marcus B.",
+    fit: 90,
+    status: "upcoming",
+    createdAt: daysAgo(1),
+  },
+  {
+    id: "seed-bk-4",
+    listingId: "hoop-prodigy",
+    listingName: "Hoop Prodigy",
+    listingLogo: "/logos/hoop-prodigy.jpg",
+    slotId: slotId("hoop-prodigy", inDays(5), "5:30 PM"),
+    sessionTypeId: "practice",
+    sessionTypeName: "Practice Visit",
+    date: inDays(5),
+    time: "5:30 PM",
+    durationMin: 60,
+    price: 0,
+    athlete: "Sofia, 13 · Intermediate",
+    parentName: "Elena V.",
+    fit: 82,
+    status: "upcoming",
+    createdAt: daysAgo(0),
+  },
+];
+
+// --- Provider subscription & billing ---------------------------------------
+
+const TODAY_ISO = localISODate(new Date());
+export const SEED_SUBSCRIPTION: ProviderSubscription = defaultSubscription(TODAY_ISO);
+export const SEED_INVOICES: Invoice[] = seedInvoices(TODAY_ISO);
 
 export const SEED_NOTIFICATIONS: AppNotification[] = [
   {
