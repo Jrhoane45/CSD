@@ -34,10 +34,16 @@ parent's action shows up on the provider side in real time:
 - **Discover** (`/app/discover`) — searchable, filterable directory with **CSD Score** badges, a
   **List / Map** toggle (stylized SoCal map with program pins), a **side-by-side Compare** tray
   (pick up to 3 programs), and **saved searches with alerts**.
-- **Listing profile** (`/app/listing/[id]`) — CSD Score breakdown, alumni outcomes, category-specific
-  reviews, and a claim banner. **Book a session** opens a real scheduler (pick a session type → an
-  open time slot from the provider's live availability → confirm & pay), **Request info** starts a
-  conversation, and **Write a review** posts live and recomputes the rating.
+- **Global search** — a **⌘K / Ctrl+K command palette** in the app header (on every screen) that
+  searches **programs, events, and pages** at once, with ranked, grouped results and full keyboard
+  navigation. Suspended providers are excluded, consistent with the public surfaces.
+- **Listing profile** (`/app/listing/[id]`) — CSD Score breakdown, alumni outcomes, and a claim
+  banner. **Book a session** opens a real scheduler (pick a session type → an open time slot from
+  the provider's live availability → confirm & pay), **Request info** starts a conversation, and a
+  full **reviews** section: a rating **summary with star distribution** (click a bar to filter),
+  dimension averages, **verified-customer** badges, **helpful votes**, reviewer **photos**, and
+  sort by recent / most-helpful / highest / lowest. **Write a review** posts live (auto-marked
+  verified if you've booked or messaged the program), attaches photos, and recomputes the rating.
 - **Session booking & scheduling** — providers publish a menu of session types and open availability;
   families book a **real time slot**, which lands on the parent's **My Sessions** (`/app/sessions` —
   reschedule / cancel / message) and the provider's **schedule** panel (mark complete / cancel), and

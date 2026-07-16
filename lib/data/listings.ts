@@ -69,6 +69,8 @@ function makeReviews(category: Category, count: number, avg: number): Review[] {
       title: snip.title,
       body: snip.body,
       dimensions: dims(category, avg),
+      // Most reviewers are confirmed customers; a minority are unverified.
+      verified: i % 3 !== 2,
     });
   }
   return out;
