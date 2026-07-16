@@ -144,7 +144,7 @@ export default function HomePage() {
             },
           ].map((s) => (
             <div key={s.step} className="relative rounded-2xl border border-ink/10 bg-white p-8">
-              <span className="display absolute right-6 top-5 text-5xl text-cream">{s.step}</span>
+              <span className="display absolute right-6 top-5 text-5xl text-navy-deep">{s.step}</span>
               <div className="flex h-12 w-12 items-center justify-center rounded-xl bg-navy text-white">
                 <s.icon size={22} />
               </div>
