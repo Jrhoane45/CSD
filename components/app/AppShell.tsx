@@ -25,6 +25,7 @@ import {
 } from "lucide-react";
 import { CsdBadge } from "@/components/brand/CsdBadge";
 import { NotificationBell } from "@/components/app/NotificationBell";
+import { GlobalSearch } from "@/components/app/GlobalSearch";
 import { useRole, setRole } from "@/lib/useRole";
 import { useStore } from "@/lib/store";
 import type { Role } from "@/lib/types";
@@ -128,7 +129,8 @@ export function AppShell({ children }: { children: React.ReactNode }) {
             })}
           </nav>
 
-          <div className="flex items-center gap-1">
+          <div className="flex items-center gap-1.5">
+            <GlobalSearch />
             <NotificationBell />
             {role !== "operator" && (
               <Link
