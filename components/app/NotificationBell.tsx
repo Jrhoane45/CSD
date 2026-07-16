@@ -2,7 +2,7 @@
 
 import { useEffect, useMemo, useRef, useState } from "react";
 import Link from "next/link";
-import { Bell, MessageSquare, CalendarDays, Star, Trophy, UserRound } from "lucide-react";
+import { Bell, MessageSquare, CalendarDays, Star, Trophy, UserRound, ArrowRight } from "lucide-react";
 import type { AppNotification } from "@/lib/types";
 import { useStore, markAllNotificationsRead } from "@/lib/store";
 import { useRole } from "@/lib/useRole";
@@ -73,7 +73,7 @@ export function NotificationBell() {
             <p className="text-sm font-bold text-navy">Notifications</p>
             <span className="eyebrow text-ink/45 capitalize">{role}</span>
           </div>
-          <div className="max-h-96 overflow-y-auto">
+          <div className="max-h-80 overflow-y-auto">
             {mine.length === 0 ? (
               <p className="px-4 py-8 text-center text-sm text-ink/50">You&apos;re all caught up.</p>
             ) : (
@@ -105,6 +105,13 @@ export function NotificationBell() {
               })
             )}
           </div>
+          <Link
+            href="/app/notifications"
+            onClick={() => setOpen(false)}
+            className="flex items-center justify-center gap-1.5 border-t border-ink/10 px-4 py-2.5 text-sm font-semibold text-navy hover:bg-cream"
+          >
+            See all notifications <ArrowRight size={14} />
+          </Link>
         </div>
       )}
     </div>

@@ -10,16 +10,18 @@ import {
   LayoutDashboard,
   BarChart3,
   ArrowUpRight,
-  UserRound,
   ScanLine,
   Inbox,
   CalendarDays,
+  CalendarCheck,
   GraduationCap,
   Megaphone,
   ShieldCheck,
   BadgeCheck,
   Flag,
   DollarSign,
+  CreditCard,
+  Settings,
 } from "lucide-react";
 import { CsdBadge } from "@/components/brand/CsdBadge";
 import { NotificationBell } from "@/components/app/NotificationBell";
@@ -29,12 +31,12 @@ import type { Role } from "@/lib/types";
 
 const NAV: Record<Role, { href: string; label: string; icon: typeof Compass; badge?: "inbox" }[]> = {
   parent: [
-    { href: "/app/profile", label: "Profile", icon: UserRound },
     { href: "/app/match", label: "Find a match", icon: Target },
     { href: "/app/prospect-iq", label: "Prospect IQ", icon: ScanLine },
     { href: "/app/discover", label: "Discover", icon: Compass },
     { href: "/app/recruiting", label: "Recruiting", icon: GraduationCap },
     { href: "/app/events", label: "Events", icon: CalendarDays },
+    { href: "/app/sessions", label: "Sessions", icon: CalendarCheck },
     { href: "/app/inbox", label: "Inbox", icon: Inbox, badge: "inbox" },
     { href: "/app/saved", label: "Saved", icon: Bookmark },
   ],
@@ -43,6 +45,7 @@ const NAV: Record<Role, { href: string; label: string; icon: typeof Compass; bad
     { href: "/app/inbox", label: "Leads", icon: Inbox, badge: "inbox" },
     { href: "/app/promote", label: "Promote", icon: Megaphone },
     { href: "/app/provider/analytics", label: "Analytics", icon: BarChart3 },
+    { href: "/app/provider/billing", label: "Billing", icon: CreditCard },
     { href: "/app/events", label: "Events", icon: CalendarDays },
     { href: "/app/prospect-iq", label: "Prospect IQ", icon: ScanLine },
   ],
@@ -127,6 +130,18 @@ export function AppShell({ children }: { children: React.ReactNode }) {
 
           <div className="flex items-center gap-1">
             <NotificationBell />
+            {role !== "operator" && (
+              <Link
+                href="/app/settings"
+                aria-label="Settings"
+                aria-current={pathname === "/app/settings" ? "page" : undefined}
+                className={`hidden rounded-lg p-2 transition-colors sm:inline-flex ${
+                  pathname === "/app/settings" ? "bg-navy/[0.07] text-navy" : "text-ink/50 hover:bg-cream hover:text-navy"
+                }`}
+              >
+                <Settings size={18} />
+              </Link>
+            )}
             <Link
               href="/"
               className="ml-1 hidden items-center gap-1 text-sm font-medium text-ink/55 hover:text-navy sm:inline-flex"

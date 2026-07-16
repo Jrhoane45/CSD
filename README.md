@@ -25,14 +25,28 @@ A role toggle (**Parent ⇄ Provider**) switches the experience. The two sides a
 **wired together** by a live, client-side activity layer (persisted in your browser), so a
 parent's action shows up on the provider side in real time:
 
+- **Athlete dashboard** (`/app`) — once a family has a profile, the app home becomes a
+  **personalized dashboard**: next booked session, Prospect IQ progress, upcoming events,
+  active conversations, recruiting snapshot, and recommended programs — all live. Before a
+  profile exists, the same route shows the "where to start" hub.
 - **Find a match** (`/app/match`) — an athlete-profile wizard that returns ranked, **Fit-scored**
   matches with the reasons behind each one. Badged *Intelligence Layer — coming next*.
 - **Discover** (`/app/discover`) — searchable, filterable directory with **CSD Score** badges, a
   **List / Map** toggle (stylized SoCal map with program pins), a **side-by-side Compare** tray
   (pick up to 3 programs), and **saved searches with alerts**.
 - **Listing profile** (`/app/listing/[id]`) — CSD Score breakdown, alumni outcomes, category-specific
-  reviews, and a claim banner. **Request info** and **Book a visit** open real flows that start a
-  conversation; **Write a review** posts live and recomputes the rating.
+  reviews, and a claim banner. **Book a session** opens a real scheduler (pick a session type → an
+  open time slot from the provider's live availability → confirm & pay), **Request info** starts a
+  conversation, and **Write a review** posts live and recomputes the rating.
+- **Session booking & scheduling** — providers publish a menu of session types and open availability;
+  families book a **real time slot**, which lands on the parent's **My Sessions** (`/app/sessions` —
+  reschedule / cancel / message) and the provider's **schedule** panel (mark complete / cancel), and
+  flows into the inbox, orders, and analytics. Booked slots disappear from availability.
+- **Prospect IQ progress** (`/app/prospect-iq`) — re-evaluations are kept as a **history**, so the
+  Combine charts a composite/percentile trend over time with per-pillar movement (▲/▼ deltas).
+- **Rankings** (`/app/rankings`) — a **Prospect IQ regional leaderboard** with a podium and ranked
+  table, filterable by sport, age band, and county. Your own evaluation is **slotted in live** so you
+  can see exactly where you stand.
 - **Inbox** (`/app/inbox`) — two-way **messaging** between families and programs, role-aware, with a
   simulated provider reply so threads feel alive. Bookings carry their requested date/time.
 - **Events** (`/app/events`) — a board of tryouts, camps, showcases, and clinics with **one-tap RSVP**;
@@ -41,12 +55,26 @@ parent's action shows up on the provider side in real time:
   (with your current phase highlighted), a **target-school tracker** (research → contacted → visited →
   offer), and matched recruiting **advisers**. Progress persists in your browser.
 - **Saved** (`/app/saved`) — a parent's shortlist (persists in your browser).
-- **Notifications** — a live bell in the app shell with per-role unread counts.
+- **Orders & receipts** (`/app/orders`) — every booked session and event registration as a receipt
+  history with totals.
+- **Settings** (`/app/settings`) — account, notification preferences (with delivery channels), a
+  privacy/data panel with a reset control, and links to help & billing.
+- **Help & support** (`/app/help`) — a searchable, categorized **FAQ** plus a contact form that
+  confirms via a simulated support notification.
+- **Notifications** — a live bell in the app shell with per-role unread counts, plus a full
+  **notifications page** (`/app/notifications`) with all/unread filtering and mark-all-read.
 - **Provider dashboard** (`/app/provider`) — toggle the three claim states (**Unclaimed →
   Claimed-Free → Claimed-Paid**). The paid view shows **live leads** (from real inquiries), full
   **event management** (create, edit, cancel, **boost**, a **registrant roster** with quick-message,
   and per-event views→RSVP analytics), an **editable profile** (name/philosophy/pricing that updates
-  the public listing), **review responses**, and a **simulated subscription checkout** on upgrade.
+  the public listing), **review responses**, a **session schedule** of inbound bookings (mark
+  complete / cancel), and a **simulated subscription checkout** on upgrade.
+- **Billing & subscription** (`/app/provider/billing`) — plan tiers (**Free / Pro / Elite**) with
+  upgrade/downgrade, a current-plan summary, **usage meters** (event boosts, leads, booked sessions),
+  a saved **payment method**, cancel/reactivate, and a downloadable-style **invoice history**.
+- **Roster & teams** (`/app/provider/roster`) — an Elite-tier tool to manage **teams** and a
+  **roster**: create/delete teams, assign athletes between teams and a **prospect pool**, add players
+  manually, and **import prospects** straight from real bookings and event registrants.
 - **Promotions Studio** (`/app/promote`) — a paid event-advertising platform: build a campaign
   (objective → target event → placements → audience → **flight dates / scheduling**), see a live
   reach estimate and ad preview, and pay through a **simulated multi-method checkout**
@@ -75,8 +103,12 @@ A **"Reset demo"** control in the demo banner clears all session state for a cle
 - **Match Fit %** — deterministic scoring of an athlete profile vs. each listing, weighting
   development-level match most heavily (a hard filter), then distance, goals, CSD Score, and sport.
 - **Live activity store** (`lib/store.ts`) — a tiny reactive store (localStorage-backed, with seed
-  data) that powers messaging, bookings, events, reviews, and notifications across both roles. No
-  backend, but it behaves like one; reset it any time by clearing site data.
+  data) that powers messaging, session bookings, events, reviews, provider billing/subscription, and
+  notifications across all roles. No backend, but it behaves like one; reset it any time from
+  **Settings** or by clearing site data.
+- **Scheduling** (`lib/scheduling.ts`) — deterministic per-provider session menus and open-slot
+  generation; a booked slot is removed from availability. **Billing** (`lib/billing.ts`) — plan
+  definitions and invoice history.
 
 ---
 

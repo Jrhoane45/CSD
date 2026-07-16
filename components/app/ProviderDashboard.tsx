@@ -27,7 +27,9 @@ import { MediaUploader } from "@/components/app/MediaUploader";
 import { ImagePlus, Images, MessageSquare, CalendarClock, Pencil, Trash2 } from "lucide-react";
 import { useStore, setOverride, setProviderMedia } from "@/lib/store";
 import { ProviderEvents } from "@/components/app/ProviderEvents";
+import { ProviderSchedule } from "@/components/app/ProviderSchedule";
 import { CheckoutModal, type Plan } from "@/components/app/CheckoutModal";
+import { CreditCard, Users } from "lucide-react";
 
 const PREMIUM_PLAN: Plan = {
   name: "Premium",
@@ -413,12 +415,26 @@ function ClaimedPaid() {
             <p className="text-sm text-ink/65">Full access to leads, events, and analytics.</p>
           </div>
         </div>
-        <Link
-          href="/app/provider/analytics"
-          className="inline-flex items-center gap-1.5 rounded-lg bg-navy px-5 py-2.5 text-sm font-semibold text-white hover:bg-navy-deep"
-        >
-          <BarChart3 size={15} /> Full analytics
-        </Link>
+        <div className="flex flex-wrap items-center gap-2">
+          <Link
+            href="/app/provider/roster"
+            className="inline-flex items-center gap-1.5 rounded-lg border border-navy/25 px-4 py-2.5 text-sm font-semibold text-navy hover:bg-navy hover:text-white"
+          >
+            <Users size={15} /> Roster
+          </Link>
+          <Link
+            href="/app/provider/billing"
+            className="inline-flex items-center gap-1.5 rounded-lg border border-navy/25 px-4 py-2.5 text-sm font-semibold text-navy hover:bg-navy hover:text-white"
+          >
+            <CreditCard size={15} /> Billing
+          </Link>
+          <Link
+            href="/app/provider/analytics"
+            className="inline-flex items-center gap-1.5 rounded-lg bg-navy px-5 py-2.5 text-sm font-semibold text-white hover:bg-navy-deep"
+          >
+            <BarChart3 size={15} /> Full analytics
+          </Link>
+        </div>
       </div>
 
       <div className="grid gap-4 sm:grid-cols-4">
@@ -496,6 +512,9 @@ function ClaimedPaid() {
         {/* events — create, edit, boost, registrants & analytics */}
         <ProviderEvents listing={LISTING} />
       </div>
+
+      {/* session schedule — live bookings from families */}
+      <ProviderSchedule listing={LISTING} />
     </div>
   );
 }
