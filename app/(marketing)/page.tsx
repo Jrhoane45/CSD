@@ -14,6 +14,8 @@ import {
   MapPin,
   ScanLine,
   Crown,
+  Quote,
+  Star,
 } from "lucide-react";
 import { ButtonLink } from "@/components/ui/Button";
 import { Eyebrow } from "@/components/ui/Eyebrow";
@@ -416,6 +418,57 @@ export default function HomePage() {
               ))}
             </div>
           </div>
+        </div>
+      </section>
+
+      {/* ---------------- TESTIMONIALS ---------------- */}
+      <section className="bg-cream">
+        <div className="mx-auto max-w-7xl px-6 py-20">
+          <div className="text-center">
+            <Eyebrow className="justify-center">What families &amp; programs say</Eyebrow>
+            <h2 className="display mt-4 text-4xl text-navy sm:text-5xl">BUILT ON REAL FIT.</h2>
+          </div>
+          <div className="mt-12 grid gap-6 md:grid-cols-3">
+            {[
+              {
+                quote:
+                  "We stopped guessing from Facebook groups. The fit score pointed us to a club at exactly our daughter's level — she's thriving instead of riding the bench.",
+                name: "Maria G.",
+                role: "Parent · Fullerton",
+              },
+              {
+                quote:
+                  "Claiming our profile and answering leads on the platform filled two age groups this season. The lead fit scores mean we spend time on the right families.",
+                name: "Coach D.",
+                role: "Director · Hoop Prodigy",
+              },
+              {
+                quote:
+                  "The recruiting roadmap kept us organized through junior year. We tracked every school and knew what to do each step — and it paid off with an offer.",
+                name: "James T.",
+                role: "Parent · Santa Monica",
+              },
+            ].map((t) => (
+              <figure key={t.name} className="flex flex-col rounded-2xl border border-ink/10 bg-white p-7">
+                <Quote size={26} className="text-gold" />
+                <blockquote className="mt-4 flex-1 text-ink/75">“{t.quote}”</blockquote>
+                <div className="mt-5 flex items-center justify-between">
+                  <figcaption>
+                    <p className="font-semibold text-navy">{t.name}</p>
+                    <p className="text-xs text-ink/55">{t.role}</p>
+                  </figcaption>
+                  <div className="flex gap-0.5">
+                    {[0, 1, 2, 3, 4].map((i) => (
+                      <Star key={i} size={14} className="text-gold" fill="currentColor" />
+                    ))}
+                  </div>
+                </div>
+              </figure>
+            ))}
+          </div>
+          <p className="mt-6 text-center text-xs text-ink/45">
+            Illustrative testimonials for the demo.
+          </p>
         </div>
       </section>
 
