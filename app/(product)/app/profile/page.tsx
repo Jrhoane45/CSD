@@ -16,6 +16,7 @@ import {
   Images,
   ScanLine,
   ShieldCheck,
+  Share2,
 } from "lucide-react";
 import { MessageSquare, CalendarCheck, Ticket } from "lucide-react";
 import { useProfile } from "@/lib/useProfile";
@@ -75,12 +76,20 @@ export default function ProfilePage() {
     <div className="mx-auto max-w-5xl px-6 py-10">
       <div className="flex items-center justify-between">
         <Eyebrow>Athlete profile</Eyebrow>
-        <Link
-          href="/app/profile/create"
-          className="inline-flex items-center gap-1.5 rounded-lg border border-navy/30 px-4 py-2 text-sm font-semibold text-navy hover:bg-navy hover:text-white"
-        >
-          <Pencil size={14} /> Edit profile
-        </Link>
+        <div className="flex items-center gap-2">
+          <Link
+            href="/athlete"
+            className="inline-flex items-center gap-1.5 rounded-lg border border-navy/30 px-4 py-2 text-sm font-semibold text-navy hover:bg-navy hover:text-white"
+          >
+            <Share2 size={14} /> Share profile
+          </Link>
+          <Link
+            href="/app/profile/create"
+            className="inline-flex items-center gap-1.5 rounded-lg border border-navy/30 px-4 py-2 text-sm font-semibold text-navy hover:bg-navy hover:text-white"
+          >
+            <Pencil size={14} /> Edit profile
+          </Link>
+        </div>
       </div>
 
       {/* identity card */}

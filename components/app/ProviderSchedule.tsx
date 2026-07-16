@@ -1,7 +1,8 @@
 "use client";
 
 import { useMemo, useState } from "react";
-import { CalendarClock, Check, X, Clock, DollarSign } from "lucide-react";
+import Link from "next/link";
+import { CalendarClock, Check, X, Clock, DollarSign, SlidersHorizontal } from "lucide-react";
 import type { Listing } from "@/lib/types";
 import { useStore, cancelBooking, completeBooking } from "@/lib/store";
 import { formatMoney, bookingStatusTone } from "@/lib/scheduling";
@@ -30,9 +31,17 @@ export function ProviderSchedule({ listing }: { listing: Pick<Listing, "id" | "n
   return (
     <div className="rounded-2xl border border-ink/10 bg-white p-6">
       <div className="flex flex-wrap items-center justify-between gap-3">
-        <div className="flex items-center gap-2">
-          <CalendarClock size={18} className="text-navy" />
-          <h3 className="font-semibold text-navy">Session schedule</h3>
+        <div className="flex items-center gap-3">
+          <div className="flex items-center gap-2">
+            <CalendarClock size={18} className="text-navy" />
+            <h3 className="font-semibold text-navy">Session schedule</h3>
+          </div>
+          <Link
+            href="/app/provider/availability"
+            className="inline-flex items-center gap-1 rounded-lg border border-ink/15 px-2.5 py-1 text-xs font-semibold text-navy hover:bg-navy hover:text-white"
+          >
+            <SlidersHorizontal size={12} /> Availability
+          </Link>
         </div>
         <div className="flex rounded-lg bg-cream p-1 text-xs font-semibold">
           {(["upcoming", "past"] as const).map((t) => (

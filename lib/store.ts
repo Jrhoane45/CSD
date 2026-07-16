@@ -13,6 +13,7 @@ import type {
   PaymentCard,
   PaymentMethod,
   PlanTier,
+  ProviderAvailability,
   ProviderSubscription,
   RosterMember,
   RosterStatus,
@@ -46,10 +47,11 @@ import {
   SEED_INVOICES,
   SEED_TEAMS,
   SEED_ROSTER,
+  SEED_AVAILABILITY,
 } from "./data/activity";
 import { addDaysISO, flightStatus } from "./promotions";
 import { addMonthsISO, planDef } from "./billing";
-import { localISODate } from "./scheduling";
+import { localISODate, sortTimes } from "./scheduling";
 
 /*
   A tiny reactive store (Zustand-lite) backing the demo's "live" platform
@@ -93,6 +95,8 @@ export interface StoreState {
   roster: RosterMember[];
   /** Reviews the viewer has marked helpful, keyed by `${listingId}::${reviewKey}`. */
   reviewHelpful: Record<string, boolean>;
+  /** Provider-published booking availability, keyed by listingId. */
+  availability: Record<string, ProviderAvailability>;
 }
 
 function seedState(): StoreState {
@@ -115,6 +119,12 @@ function seedState(): StoreState {
     teams: SEED_TEAMS.map((t) => ({ ...t })),
     roster: SEED_ROSTER.map((m) => ({ ...m })),
     reviewHelpful: {},
+    availability: Object.fromEntries(
+      Object.entries(SEED_AVAILABILITY).map(([k, v]) => [
+        k,
+        { weekly: { ...v.weekly }, blockedDates: [...v.blockedDates] },
+      ]),
+    ),
   };
 }
 
@@ -160,6 +170,7 @@ function hydrate() {
         teams: saved.teams ?? state.teams,
         roster: saved.roster ?? state.roster,
         reviewHelpful: saved.reviewHelpful ?? state.reviewHelpful,
+        availability: saved.availability ?? state.availability,
       };
       emit();
     }
@@ -780,6 +791,46 @@ export function takenSlotIds(bookings: SessionBooking[], listingId: string): Set
   return new Set(
     bookings.filter((b) => b.listingId === listingId && b.status !== "canceled").map((b) => b.slotId),
   );
+}
+
+// --- Provider availability -------------------------------------------------
+
+const EMPTY_AVAIL: ProviderAvailability = { weekly: {}, blockedDates: [] };
+
+/** Toggle a single open time on a weekday for a provider. */
+export function toggleAvailabilityTime(listingId: string, weekday: number, time: string) {
+  const cur = state.availability[listingId] ?? EMPTY_AVAIL;
+  const day = cur.weekly[weekday] ?? [];
+  const nextDay = day.includes(time)
+    ? day.filter((t) => t !== time)
+    : sortTimes([...day, time]);
+  set({
+    availability: {
+      ...state.availability,
+      [listingId]: { ...cur, weekly: { ...cur.weekly, [weekday]: nextDay } },
+    },
+  });
+}
+
+/** Set (replace) all open times for a weekday. */
+export function setAvailabilityDay(listingId: string, weekday: number, times: string[]) {
+  const cur = state.availability[listingId] ?? EMPTY_AVAIL;
+  set({
+    availability: {
+      ...state.availability,
+      [listingId]: { ...cur, weekly: { ...cur.weekly, [weekday]: sortTimes(times) } },
+    },
+  });
+}
+
+/** Block or unblock a specific date. */
+export function toggleBlockedDate(listingId: string, date: string) {
+  const cur = state.availability[listingId] ?? EMPTY_AVAIL;
+  const has = cur.blockedDates.includes(date);
+  const blockedDates = has
+    ? cur.blockedDates.filter((d) => d !== date)
+    : [...cur.blockedDates, date].sort();
+  set({ availability: { ...state.availability, [listingId]: { ...cur, blockedDates } } });
 }
 
 // --- Provider billing & subscription ---------------------------------------

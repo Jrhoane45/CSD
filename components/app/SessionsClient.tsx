@@ -15,7 +15,7 @@ import {
 } from "lucide-react";
 import type { SessionBooking } from "@/lib/types";
 import { useStore, cancelBooking, rescheduleBooking, takenSlotIds, formatEventDate } from "@/lib/store";
-import { openSlotsFor, groupSlotsByDate, formatMoney, bookingStatusTone } from "@/lib/scheduling";
+import { effectiveOpenSlots, groupSlotsByDate, formatMoney, bookingStatusTone } from "@/lib/scheduling";
 import { getListing } from "@/lib/data/listings";
 import { Eyebrow } from "@/components/ui/Eyebrow";
 import { LogoAvatar } from "@/components/listing/LogoAvatar";
@@ -203,14 +203,14 @@ function BookingCard({
 }
 
 function RescheduleModal({ booking, onClose }: { booking: SessionBooking | null; onClose: () => void }) {
-  const { bookings } = useStore();
+  const { bookings, availability } = useStore();
   const days = useMemo(() => {
     if (!booking) return [];
     const taken = takenSlotIds(bookings, booking.listingId);
     // Allow keeping the current slot as an option too.
     taken.delete(booking.slotId);
-    return groupSlotsByDate(openSlotsFor(booking.listingId, taken)).slice(0, 8);
-  }, [booking, bookings]);
+    return groupSlotsByDate(effectiveOpenSlots(booking.listingId, availability, taken)).slice(0, 8);
+  }, [booking, bookings, availability]);
 
   if (!booking) return null;
 

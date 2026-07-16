@@ -29,6 +29,10 @@ parent's action shows up on the provider side in real time:
   **personalized dashboard**: next booked session, Prospect IQ progress, upcoming events,
   active conversations, recruiting snapshot, and recommended programs — all live. Before a
   profile exists, the same route shows the "where to start" hub.
+- **Shareable athlete profile** (`/athlete`) — a clean, coach-facing **recruiting page** (its own
+  minimal chrome, no app nav) with the athlete's stats, Prospect IQ evaluation, highlights, and a
+  contact CTA, plus a **copy-link** share control. Reachable via "Share profile" from the profile
+  page and dashboard.
 - **Find a match** (`/app/match`) — an athlete-profile wizard that returns ranked, **Fit-scored**
   matches with the reasons behind each one. Badged *Intelligence Layer — coming next*.
 - **Discover** (`/app/discover`) — searchable, filterable directory with **CSD Score** badges, a
@@ -48,6 +52,10 @@ parent's action shows up on the provider side in real time:
   families book a **real time slot**, which lands on the parent's **My Sessions** (`/app/sessions` —
   reschedule / cancel / message) and the provider's **schedule** panel (mark complete / cancel), and
   flows into the inbox, orders, and analytics. Booked slots disappear from availability.
+- **Availability editor** (`/app/provider/availability`) — providers set the times families can book
+  each week (toggle open times per weekday) and **block specific dates**; a live preview shows exactly
+  what families will see, and the booking flow serves those slots (falling back to auto-generated
+  availability for programs that haven't set one).
 - **Prospect IQ progress** (`/app/prospect-iq`) — re-evaluations are kept as a **history**, so the
   Combine charts a composite/percentile trend over time with per-pillar movement (▲/▼ deltas).
 - **Rankings** (`/app/rankings`) — a **Prospect IQ regional leaderboard** with a podium and ranked
