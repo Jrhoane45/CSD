@@ -1,5 +1,5 @@
 import Link from "next/link";
-import { Target, Compass, LayoutDashboard, BarChart3, ArrowRight, UserRound, ScanLine, CalendarDays, Inbox, GraduationCap, Megaphone, ShieldCheck } from "lucide-react";
+import { Target, Compass, LayoutDashboard, BarChart3, ArrowRight, UserRound, ScanLine, CalendarDays, Inbox, GraduationCap, Megaphone, ShieldCheck, Trophy } from "lucide-react";
 import { Eyebrow } from "@/components/ui/Eyebrow";
 import { LISTINGS } from "@/lib/data/listings";
 
@@ -107,6 +107,19 @@ export function StartHub() {
                 <span>
                   <span className="block font-semibold text-navy">Recruiting Hub</span>
                   <span className="block text-xs text-ink/55">College-pathway roadmap, target schools &amp; advisers</span>
+                </span>
+              </span>
+              <ArrowRight size={18} className="text-ink/40 transition-transform group-hover:translate-x-1" />
+            </Link>
+            <Link
+              href="/app/rankings"
+              className="group flex items-center justify-between rounded-xl border border-ink/10 p-4 transition-colors hover:bg-cream"
+            >
+              <span className="flex items-center gap-3">
+                <Trophy size={20} className="text-gold" />
+                <span>
+                  <span className="block font-semibold text-navy">Prospect IQ Rankings</span>
+                  <span className="block text-xs text-ink/55">Regional leaderboard — see where athletes stand</span>
                 </span>
               </span>
               <ArrowRight size={18} className="text-ink/40 transition-transform group-hover:translate-x-1" />

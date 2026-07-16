@@ -18,6 +18,7 @@ import {
   Sparkles,
   MapPin,
   Clock,
+  Trophy,
 } from "lucide-react";
 import type { AthleteProfile } from "@/lib/types";
 import { useStore, formatEventDate } from "@/lib/store";
@@ -33,7 +34,7 @@ import { PiqProgress } from "@/components/app/PiqProgress";
 import { OverridableText } from "@/components/app/OverridableText";
 
 export function AthleteHome({ profile }: { profile: AthleteProfile }) {
-  const { threads, events, bookings, savedSearches, recruiting } = useStore();
+  const { threads, events, bookings, recruiting } = useStore();
   const { result: piq } = useProspectIQ();
   const { history } = usePiqHistory();
 
@@ -99,10 +100,11 @@ export function AthleteHome({ profile }: { profile: AthleteProfile }) {
       </div>
 
       {/* quick actions */}
-      <div className="mt-6 grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
+      <div className="mt-6 grid gap-3 sm:grid-cols-2 lg:grid-cols-5">
         <QuickAction href="/app/match" icon={Target} title="Find a match" tone="navy" />
-        <QuickAction href="/app/discover" icon={Compass} title="Discover programs" />
+        <QuickAction href="/app/discover" icon={Compass} title="Discover" />
         <QuickAction href="/app/prospect-iq" icon={ScanLine} title="Prospect IQ" tone="gold" />
+        <QuickAction href="/app/rankings" icon={Trophy} title="Rankings" />
         <QuickAction href="/app/sessions" icon={CalendarClock} title="My sessions" />
       </div>
 
@@ -309,9 +311,10 @@ export function AthleteHome({ profile }: { profile: AthleteProfile }) {
             </div>
             <div className="mt-3 space-y-1.5 text-sm">
               <Shortcut href="/app/saved" label="Saved programs" />
-              <Shortcut href="/app/discover" label={`Saved searches (${savedSearches.length})`} />
+              <Shortcut href="/app/rankings" label="Prospect IQ rankings" />
               <Shortcut href="/app/profile" label="Edit athlete profile" />
               <Shortcut href="/app/orders" label="Orders & receipts" />
+              <Shortcut href="/app/help" label="Help & support" />
             </div>
           </div>
         </div>

@@ -14,7 +14,11 @@ import type {
   PaymentMethod,
   PlanTier,
   ProviderSubscription,
+  RosterMember,
+  RosterStatus,
   SessionBooking,
+  Team,
+  DevLevel,
   VettingStatus,
   ListingOverride,
   PlatformEvent,
@@ -40,6 +44,8 @@ import {
   SEED_BOOKINGS,
   SEED_SUBSCRIPTION,
   SEED_INVOICES,
+  SEED_TEAMS,
+  SEED_ROSTER,
 } from "./data/activity";
 import { addDaysISO, flightStatus } from "./promotions";
 import { addMonthsISO, planDef } from "./billing";
@@ -81,6 +87,10 @@ export interface StoreState {
   subscription: ProviderSubscription;
   /** The current provider's billing history. */
   invoices: Invoice[];
+  /** The current provider's teams. */
+  teams: Team[];
+  /** The current provider's roster (assigned members + prospect pool). */
+  roster: RosterMember[];
 }
 
 function seedState(): StoreState {
@@ -100,6 +110,8 @@ function seedState(): StoreState {
     bookings: SEED_BOOKINGS.map((b) => ({ ...b })),
     subscription: { ...SEED_SUBSCRIPTION, card: { ...SEED_SUBSCRIPTION.card! } },
     invoices: SEED_INVOICES.map((i) => ({ ...i })),
+    teams: SEED_TEAMS.map((t) => ({ ...t })),
+    roster: SEED_ROSTER.map((m) => ({ ...m })),
   };
 }
 
@@ -142,6 +154,8 @@ function hydrate() {
         bookings: saved.bookings ?? state.bookings,
         subscription: saved.subscription ?? state.subscription,
         invoices: saved.invoices ?? state.invoices,
+        teams: saved.teams ?? state.teams,
+        roster: saved.roster ?? state.roster,
       };
       emit();
     }
@@ -816,6 +830,83 @@ export function addInvoice(description: string, amount: number) {
   set({ invoices: [invoice, ...state.invoices] });
 }
 
+// --- Provider roster & teams -----------------------------------------------
+
+export function createTeam(name: string, level: DevLevel): string {
+  const id = uid();
+  const team: Team = { id, name, level, sport: "Basketball" };
+  set({ teams: [...state.teams, team] });
+  return id;
+}
+
+export function removeTeam(id: string) {
+  set({
+    teams: state.teams.filter((t) => t.id !== id),
+    // Members on a deleted team fall back to the prospect pool.
+    roster: state.roster.map((m) =>
+      m.teamId === id ? { ...m, teamId: null, status: "prospect" as RosterStatus } : m,
+    ),
+  });
+}
+
+export function addRosterMember(name: string, parent: string, teamId: string | null = null) {
+  const member: RosterMember = {
+    id: uid(),
+    name,
+    parent,
+    teamId,
+    status: teamId ? "active" : "prospect",
+    addedAt: now(),
+  };
+  set({ roster: [member, ...state.roster] });
+}
+
+export function assignMember(memberId: string, teamId: string | null) {
+  set({
+    roster: state.roster.map((m) =>
+      m.id === memberId
+        ? { ...m, teamId, status: (teamId ? "active" : "prospect") as RosterStatus }
+        : m,
+    ),
+  });
+}
+
+export function removeRosterMember(id: string) {
+  set({ roster: state.roster.filter((m) => m.id !== id) });
+}
+
+/** Pull athletes from real bookings & event registrants into the prospect pool. */
+export function importProspects(listingId: string): number {
+  const existing = new Set(state.roster.map((m) => m.name));
+  const found: { name: string; parent: string }[] = [];
+  for (const b of state.bookings) {
+    if (b.listingId === listingId && b.parentName !== "You" && !existing.has(b.athlete)) {
+      existing.add(b.athlete);
+      found.push({ name: b.athlete, parent: b.parentName });
+    }
+  }
+  for (const e of state.events) {
+    if (e.listingId !== listingId) continue;
+    for (const r of e.registrants) {
+      if (!r.self && r.athlete && !existing.has(r.athlete)) {
+        existing.add(r.athlete);
+        found.push({ name: r.athlete, parent: r.name });
+      }
+    }
+  }
+  if (found.length === 0) return 0;
+  const members: RosterMember[] = found.map((f) => ({
+    id: uid(),
+    name: f.name,
+    parent: f.parent,
+    teamId: null,
+    status: "prospect",
+    addedAt: now(),
+  }));
+  set({ roster: [...members, ...state.roster] });
+  return found.length;
+}
+
 // --- Operator: vetting & moderation ----------------------------------------
 
 /** A listing's effective vetting status (operator override, else its default). */
@@ -872,6 +963,7 @@ export function resetDemo() {
     "csd-saved-listings",
     "csd-piq-result",
     "csd-piq-history",
+    "csd-settings",
     "csd-role",
   ]) {
     localStorage.removeItem(k);

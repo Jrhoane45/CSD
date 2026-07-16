@@ -13,6 +13,7 @@ import {
   RefreshCw,
   Mail,
   Smartphone,
+  LifeBuoy,
 } from "lucide-react";
 import { useProfile } from "@/lib/useProfile";
 import { useRole } from "@/lib/useRole";
@@ -176,6 +177,18 @@ export function SettingsClient() {
             <span>
               <span className="block text-sm font-semibold text-navy">Plan &amp; billing</span>
               <span className="block text-xs text-ink/55">For providers — subscription &amp; invoices</span>
+            </span>
+          </span>
+        </Link>
+        <Link
+          href="/app/help"
+          className="flex items-center justify-between rounded-2xl border border-ink/10 bg-white p-5 transition-colors hover:border-navy/30 sm:col-span-2"
+        >
+          <span className="flex items-center gap-3">
+            <LifeBuoy size={18} className="text-navy" />
+            <span>
+              <span className="block text-sm font-semibold text-navy">Help &amp; support</span>
+              <span className="block text-xs text-ink/55">FAQ and contact the team</span>
             </span>
           </span>
         </Link>

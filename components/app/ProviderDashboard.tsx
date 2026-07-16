@@ -29,7 +29,7 @@ import { useStore, setOverride, setProviderMedia } from "@/lib/store";
 import { ProviderEvents } from "@/components/app/ProviderEvents";
 import { ProviderSchedule } from "@/components/app/ProviderSchedule";
 import { CheckoutModal, type Plan } from "@/components/app/CheckoutModal";
-import { CreditCard } from "lucide-react";
+import { CreditCard, Users } from "lucide-react";
 
 const PREMIUM_PLAN: Plan = {
   name: "Premium",
@@ -415,7 +415,13 @@ function ClaimedPaid() {
             <p className="text-sm text-ink/65">Full access to leads, events, and analytics.</p>
           </div>
         </div>
-        <div className="flex items-center gap-2">
+        <div className="flex flex-wrap items-center gap-2">
+          <Link
+            href="/app/provider/roster"
+            className="inline-flex items-center gap-1.5 rounded-lg border border-navy/25 px-4 py-2.5 text-sm font-semibold text-navy hover:bg-navy hover:text-white"
+          >
+            <Users size={15} /> Roster
+          </Link>
           <Link
             href="/app/provider/billing"
             className="inline-flex items-center gap-1.5 rounded-lg border border-navy/25 px-4 py-2.5 text-sm font-semibold text-navy hover:bg-navy hover:text-white"

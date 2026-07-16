@@ -305,6 +305,27 @@ export interface SessionBooking {
   createdAt: string;
 }
 
+// --- Provider roster & team management --------------------------------------
+
+export interface Team {
+  id: string;
+  name: string;
+  level: DevLevel;
+  sport: Sport;
+}
+
+export type RosterStatus = "prospect" | "active";
+
+/** An athlete on a provider's roster (assigned to a team, or an unassigned prospect). */
+export interface RosterMember {
+  id: string;
+  name: string; // athlete label, e.g. "Diego, 14 · Competitive"
+  parent: string;
+  teamId: string | null; // null = prospect pool
+  status: RosterStatus;
+  addedAt: string;
+}
+
 // --- Provider billing & subscription ---------------------------------------
 
 export type PlanTier = "free" | "pro" | "elite";

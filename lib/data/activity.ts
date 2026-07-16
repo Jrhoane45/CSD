@@ -5,7 +5,9 @@ import type {
   ModerationItem,
   PlatformEvent,
   ProviderSubscription,
+  RosterMember,
   SessionBooking,
+  Team,
   Thread,
   UserReview,
   VettingStatus,
@@ -489,6 +491,24 @@ export const SEED_BOOKINGS: SessionBooking[] = [
     status: "upcoming",
     createdAt: daysAgo(0),
   },
+];
+
+// --- Provider roster & teams (current provider: Hoop Prodigy) ---------------
+
+export const SEED_TEAMS: Team[] = [
+  { id: "team-14u", name: "HP Select 14U", level: "Competitive", sport: "Basketball" },
+  { id: "team-16u", name: "HP Select 16U", level: "Elite", sport: "Basketball" },
+  { id: "team-academy", name: "Skills Academy", level: "Intermediate", sport: "Basketball" },
+];
+
+export const SEED_ROSTER: RosterMember[] = [
+  { id: "rm-1", name: "Diego, 14 · Competitive", parent: "Maria G.", teamId: "team-14u", status: "active", addedAt: daysAgo(40) },
+  { id: "rm-2", name: "Marcus, 14 · Competitive", parent: "Andre M.", teamId: "team-14u", status: "active", addedAt: daysAgo(35) },
+  { id: "rm-3", name: "Aaliyah, 16 · Elite", parent: "James T.", teamId: "team-16u", status: "active", addedAt: daysAgo(60) },
+  { id: "rm-4", name: "Jordan, 15 · Competitive", parent: "Marcus B.", teamId: "team-16u", status: "active", addedAt: daysAgo(20) },
+  { id: "rm-5", name: "Rohan, 13 · Competitive", parent: "Priya S.", teamId: "team-academy", status: "active", addedAt: daysAgo(15) },
+  { id: "rm-6", name: "Ella, 15 · Intermediate", parent: "Tom W.", teamId: null, status: "prospect", addedAt: daysAgo(3) },
+  { id: "rm-7", name: "Sofia, 13 · Intermediate", parent: "Elena V.", teamId: null, status: "prospect", addedAt: daysAgo(1) },
 ];
 
 // --- Provider subscription & billing ---------------------------------------

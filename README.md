@@ -44,6 +44,9 @@ parent's action shows up on the provider side in real time:
   flows into the inbox, orders, and analytics. Booked slots disappear from availability.
 - **Prospect IQ progress** (`/app/prospect-iq`) — re-evaluations are kept as a **history**, so the
   Combine charts a composite/percentile trend over time with per-pillar movement (▲/▼ deltas).
+- **Rankings** (`/app/rankings`) — a **Prospect IQ regional leaderboard** with a podium and ranked
+  table, filterable by sport, age band, and county. Your own evaluation is **slotted in live** so you
+  can see exactly where you stand.
 - **Inbox** (`/app/inbox`) — two-way **messaging** between families and programs, role-aware, with a
   simulated provider reply so threads feel alive. Bookings carry their requested date/time.
 - **Events** (`/app/events`) — a board of tryouts, camps, showcases, and clinics with **one-tap RSVP**;
@@ -54,9 +57,12 @@ parent's action shows up on the provider side in real time:
 - **Saved** (`/app/saved`) — a parent's shortlist (persists in your browser).
 - **Orders & receipts** (`/app/orders`) — every booked session and event registration as a receipt
   history with totals.
-- **Settings** (`/app/settings`) — account, notification preferences (with delivery channels), and a
-  privacy/data panel with a reset control.
-- **Notifications** — a live bell in the app shell with per-role unread counts.
+- **Settings** (`/app/settings`) — account, notification preferences (with delivery channels), a
+  privacy/data panel with a reset control, and links to help & billing.
+- **Help & support** (`/app/help`) — a searchable, categorized **FAQ** plus a contact form that
+  confirms via a simulated support notification.
+- **Notifications** — a live bell in the app shell with per-role unread counts, plus a full
+  **notifications page** (`/app/notifications`) with all/unread filtering and mark-all-read.
 - **Provider dashboard** (`/app/provider`) — toggle the three claim states (**Unclaimed →
   Claimed-Free → Claimed-Paid**). The paid view shows **live leads** (from real inquiries), full
   **event management** (create, edit, cancel, **boost**, a **registrant roster** with quick-message,
@@ -66,6 +72,9 @@ parent's action shows up on the provider side in real time:
 - **Billing & subscription** (`/app/provider/billing`) — plan tiers (**Free / Pro / Elite**) with
   upgrade/downgrade, a current-plan summary, **usage meters** (event boosts, leads, booked sessions),
   a saved **payment method**, cancel/reactivate, and a downloadable-style **invoice history**.
+- **Roster & teams** (`/app/provider/roster`) — an Elite-tier tool to manage **teams** and a
+  **roster**: create/delete teams, assign athletes between teams and a **prospect pool**, add players
+  manually, and **import prospects** straight from real bookings and event registrants.
 - **Promotions Studio** (`/app/promote`) — a paid event-advertising platform: build a campaign
   (objective → target event → placements → audience → **flight dates / scheduling**), see a live
   reach estimate and ad preview, and pay through a **simulated multi-method checkout**
