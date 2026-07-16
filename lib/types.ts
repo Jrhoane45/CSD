@@ -40,6 +40,10 @@ export interface Review {
   body: string;
   /** Category-specific dimensions, e.g. "Depth of Playing Schedule". */
   dimensions: ReviewDimension[];
+  /** Reviewer is a confirmed customer (booked / attended). */
+  verified?: boolean;
+  /** Optional reviewer-attached photos (data URLs). */
+  photos?: string[];
 }
 
 export interface AlumniOutcomes {

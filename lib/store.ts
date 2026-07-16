@@ -91,6 +91,8 @@ export interface StoreState {
   teams: Team[];
   /** The current provider's roster (assigned members + prospect pool). */
   roster: RosterMember[];
+  /** Reviews the viewer has marked helpful, keyed by `${listingId}::${reviewKey}`. */
+  reviewHelpful: Record<string, boolean>;
 }
 
 function seedState(): StoreState {
@@ -112,6 +114,7 @@ function seedState(): StoreState {
     invoices: SEED_INVOICES.map((i) => ({ ...i })),
     teams: SEED_TEAMS.map((t) => ({ ...t })),
     roster: SEED_ROSTER.map((m) => ({ ...m })),
+    reviewHelpful: {},
   };
 }
 
@@ -156,6 +159,7 @@ function hydrate() {
         invoices: saved.invoices ?? state.invoices,
         teams: saved.teams ?? state.teams,
         roster: saved.roster ?? state.roster,
+        reviewHelpful: saved.reviewHelpful ?? state.reviewHelpful,
       };
       emit();
     }
@@ -424,6 +428,24 @@ export function addReview(review: Omit<UserReview, "id">) {
 }
 
 export const replyKey = (listingId: string, reviewKey: string) => `${listingId}::${reviewKey}`;
+
+/** A deterministic baseline "found helpful" count for a review (demo depth). */
+export function helpfulBase(fullKey: string): number {
+  let h = 2166136261;
+  for (let i = 0; i < fullKey.length; i++) {
+    h ^= fullKey.charCodeAt(i);
+    h = Math.imul(h, 16777619);
+  }
+  return (h >>> 0) % 19; // 0–18
+}
+
+/** Toggle the viewer's "helpful" vote on a review. */
+export function toggleHelpful(fullKey: string) {
+  const next = { ...state.reviewHelpful };
+  if (next[fullKey]) delete next[fullKey];
+  else next[fullKey] = true;
+  set({ reviewHelpful: next });
+}
 
 export function addReviewReply(
   listingId: string,

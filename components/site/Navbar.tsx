@@ -7,6 +7,7 @@ import { Menu, X, ArrowRight } from "lucide-react";
 import { Logo } from "../brand/Logo";
 
 const LINKS = [
+  { href: "/features", label: "Features" },
   { href: "/how-it-works/parents", label: "For Parents" },
   { href: "/how-it-works/providers", label: "For Providers" },
   { href: "/csd-score", label: "CSD Score" },
