@@ -19,6 +19,7 @@ import {
   MapPin,
   Clock,
   Trophy,
+  Share2,
 } from "lucide-react";
 import type { AthleteProfile } from "@/lib/types";
 import { useStore, formatEventDate } from "@/lib/store";
@@ -84,6 +85,12 @@ export function AthleteHome({ profile }: { profile: AthleteProfile }) {
           </div>
         </div>
         <div className="flex items-center gap-2">
+          <Link
+            href="/athlete"
+            className="inline-flex items-center gap-1.5 rounded-lg border border-navy/25 px-3 py-2 text-sm font-semibold text-navy hover:bg-navy hover:text-white"
+          >
+            <Share2 size={15} /> Share
+          </Link>
           <Link
             href="/app/orders"
             className="inline-flex items-center gap-1.5 rounded-lg border border-ink/15 px-3 py-2 text-sm font-semibold text-ink/70 hover:text-navy"

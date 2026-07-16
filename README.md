@@ -29,6 +29,10 @@ parent's action shows up on the provider side in real time:
   **personalized dashboard**: next booked session, Prospect IQ progress, upcoming events,
   active conversations, recruiting snapshot, and recommended programs — all live. Before a
   profile exists, the same route shows the "where to start" hub.
+- **Shareable athlete profile** (`/athlete`) — a clean, coach-facing **recruiting page** (its own
+  minimal chrome, no app nav) with the athlete's stats, Prospect IQ evaluation, highlights, and a
+  contact CTA, plus a **copy-link** share control. Reachable via "Share profile" from the profile
+  page and dashboard.
 - **Find a match** (`/app/match`) — an athlete-profile wizard that returns ranked, **Fit-scored**
   matches with the reasons behind each one. Badged *Intelligence Layer — coming next*.
 - **Discover** (`/app/discover`) — searchable, filterable directory with **CSD Score** badges, a
