@@ -330,6 +330,14 @@ export interface RosterMember {
   addedAt: string;
 }
 
+/** A provider's editable booking availability (overrides auto-generated slots). */
+export interface ProviderAvailability {
+  /** Open time strings per weekday (0 = Sun … 6 = Sat). */
+  weekly: Record<number, string[]>;
+  /** Specific ISO dates blocked off (e.g. holidays, travel). */
+  blockedDates: string[];
+}
+
 // --- Provider billing & subscription ---------------------------------------
 
 export type PlanTier = "free" | "pro" | "elite";

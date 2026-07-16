@@ -48,6 +48,10 @@ parent's action shows up on the provider side in real time:
   families book a **real time slot**, which lands on the parent's **My Sessions** (`/app/sessions` —
   reschedule / cancel / message) and the provider's **schedule** panel (mark complete / cancel), and
   flows into the inbox, orders, and analytics. Booked slots disappear from availability.
+- **Availability editor** (`/app/provider/availability`) — providers set the times families can book
+  each week (toggle open times per weekday) and **block specific dates**; a live preview shows exactly
+  what families will see, and the booking flow serves those slots (falling back to auto-generated
+  availability for programs that haven't set one).
 - **Prospect IQ progress** (`/app/prospect-iq`) — re-evaluations are kept as a **history**, so the
   Combine charts a composite/percentile trend over time with per-pillar movement (▲/▼ deltas).
 - **Rankings** (`/app/rankings`) — a **Prospect IQ regional leaderboard** with a podium and ranked

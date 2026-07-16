@@ -4,6 +4,7 @@ import type {
   Invoice,
   ModerationItem,
   PlatformEvent,
+  ProviderAvailability,
   ProviderSubscription,
   RosterMember,
   SessionBooking,
@@ -516,6 +517,22 @@ export const SEED_ROSTER: RosterMember[] = [
 const TODAY_ISO = localISODate(new Date());
 export const SEED_SUBSCRIPTION: ProviderSubscription = defaultSubscription(TODAY_ISO);
 export const SEED_INVOICES: Invoice[] = seedInvoices(TODAY_ISO);
+
+// Current provider's published weekly availability (0 = Sun … 6 = Sat).
+export const SEED_AVAILABILITY: Record<string, ProviderAvailability> = {
+  "hoop-prodigy": {
+    weekly: {
+      0: [], // Sunday closed
+      1: ["4:30 PM", "5:30 PM", "6:30 PM"],
+      2: ["3:30 PM", "4:30 PM", "5:30 PM", "6:30 PM"],
+      3: ["4:30 PM", "5:30 PM", "6:30 PM", "7:30 PM"],
+      4: ["3:30 PM", "4:30 PM", "5:30 PM"],
+      5: ["3:30 PM", "4:30 PM"],
+      6: ["9:00 AM", "10:30 AM", "12:00 PM", "1:30 PM"],
+    },
+    blockedDates: [],
+  },
+};
 
 export const SEED_NOTIFICATIONS: AppNotification[] = [
   {

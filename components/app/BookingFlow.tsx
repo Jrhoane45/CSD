@@ -18,7 +18,7 @@ import { Modal } from "@/components/ui/Modal";
 import { useStore, bookSession, takenSlotIds } from "@/lib/store";
 import {
   sessionMenu,
-  openSlotsFor,
+  effectiveOpenSlots,
   groupSlotsByDate,
   formatMoney,
   type SessionType,
@@ -44,7 +44,7 @@ export function BookingFlow({
   fit?: number;
   hasProfile: boolean;
 }) {
-  const { bookings } = useStore();
+  const { bookings, availability } = useStore();
   const menu = sessionMenu(listing);
 
   const [step, setStep] = useState<Step>("type");
@@ -55,8 +55,8 @@ export function BookingFlow({
 
   const days = useMemo(() => {
     const taken = takenSlotIds(bookings, listing.id);
-    return groupSlotsByDate(openSlotsFor(listing.id, taken)).slice(0, 8);
-  }, [bookings, listing.id]);
+    return groupSlotsByDate(effectiveOpenSlots(listing.id, availability, taken)).slice(0, 8);
+  }, [bookings, availability, listing.id]);
 
   const reset = () => {
     setStep("type");
