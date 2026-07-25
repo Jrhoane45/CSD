@@ -90,7 +90,7 @@ export default function ProspectIQMarketing() {
                 <div className="flex h-11 w-11 items-center justify-center rounded-xl bg-navy text-white">
                   <s.icon size={20} />
                 </div>
-                <span className="display text-3xl text-cream">{i + 1}</span>
+                <span className="display text-3xl text-navy-deep">{i + 1}</span>
               </div>
               <h3 className="mt-4 text-lg font-bold text-navy">{s.t}</h3>
               <p className="mt-1.5 text-sm text-ink/65">{s.b}</p>

@@ -5,6 +5,7 @@ const COLUMNS = [
   {
     title: "Platform",
     links: [
+      { href: "/features", label: "Features" },
       { href: "/how-it-works/parents", label: "For Parents" },
       { href: "/how-it-works/providers", label: "For Providers" },
       { href: "/csd-score", label: "CSD Score™" },
@@ -18,6 +19,7 @@ const COLUMNS = [
       { href: "/app", label: "Launch the app" },
       { href: "/app/discover", label: "Discover" },
       { href: "/app/match", label: "Find your match" },
+      { href: "/app/rankings", label: "Rankings" },
       { href: "/app/provider", label: "List your program" },
     ],
   },
@@ -25,7 +27,9 @@ const COLUMNS = [
     title: "Company",
     links: [
       { href: "/about", label: "About & Founder" },
-      { href: "mailto:info@clubsportsdirect.com", label: "Contact" },
+      { href: "/resources", label: "Resources" },
+      { href: "/contact", label: "Contact" },
+      { href: "/app/help", label: "Help center" },
     ],
   },
 ];

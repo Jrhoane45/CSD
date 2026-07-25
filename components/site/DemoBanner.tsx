@@ -1,7 +1,8 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { Info, X } from "lucide-react";
+import { Info, X, RotateCcw } from "lucide-react";
+import { resetDemo } from "@/lib/store";
 
 export function DemoBanner() {
   const [hidden, setHidden] = useState(true);
@@ -20,6 +21,16 @@ export function DemoBanner() {
           <span className="font-semibold text-gold">Interactive demo</span> — sample data for
           illustration. Not a live product, no real bookings or payments.
         </p>
+        <button
+          onClick={() => {
+            if (confirm("Reset the demo? This clears your profile, messages, reviews, and saved items.")) {
+              resetDemo();
+            }
+          }}
+          className="ml-1 inline-flex items-center gap-1 rounded px-1.5 py-0.5 font-semibold text-cream/80 hover:bg-white/10 hover:text-gold"
+        >
+          <RotateCcw size={12} /> Reset
+        </button>
         <button
           aria-label="Dismiss demo notice"
           onClick={() => {

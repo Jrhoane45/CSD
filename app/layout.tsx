@@ -1,4 +1,4 @@
-import type { Metadata } from "next";
+import type { Metadata, Viewport } from "next";
 import { Anton, Inter, JetBrains_Mono } from "next/font/google";
 import "./globals.css";
 
@@ -43,6 +43,12 @@ export const metadata: Metadata = {
       "Find the right club, trainer, or adviser for your athlete — matched on development level, not word-of-mouth.",
     type: "website",
   },
+};
+
+export const viewport: Viewport = {
+  width: "device-width",
+  initialScale: 1,
+  themeColor: "#14264f",
 };
 
 export default function RootLayout({

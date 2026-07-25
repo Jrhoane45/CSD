@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useRef } from "react";
 import Link from "next/link";
 import {
   Sparkles,
@@ -22,11 +22,26 @@ import { getListing, CATEGORY_LABEL } from "@/lib/data/listings";
 import { computeCsdScore } from "@/lib/scoring";
 import { CsdScoreBadge } from "@/components/ui/CsdScoreBadge";
 import { Eyebrow } from "@/components/ui/Eyebrow";
-import { DemoButton } from "@/components/app/DemoButton";
 import { LogoAvatar } from "@/components/listing/LogoAvatar";
 import { MediaUploader } from "@/components/app/MediaUploader";
-import { ImagePlus, Images } from "lucide-react";
-import type { ProfileVideo } from "@/lib/types";
+import { ImagePlus, Images, MessageSquare, CalendarClock, Pencil, Trash2 } from "lucide-react";
+import { useStore, setOverride, setProviderMedia } from "@/lib/store";
+import { ProviderEvents } from "@/components/app/ProviderEvents";
+import { ProviderSchedule } from "@/components/app/ProviderSchedule";
+import { CheckoutModal, type Plan } from "@/components/app/CheckoutModal";
+import { CreditCard, Users } from "lucide-react";
+
+const PREMIUM_PLAN: Plan = {
+  name: "Premium",
+  price: "$149",
+  period: "/ mo",
+  perks: [
+    "Advanced lead inbox & management",
+    "Full analytics dashboard",
+    "4 included event boosts monthly",
+    "Featured placement & priority support",
+  ],
+};
 
 const LISTING = getListing("hoop-prodigy")!;
 const SCORE = computeCsdScore(LISTING).score;
@@ -37,20 +52,10 @@ const STATES: { value: ClaimState; label: string }[] = [
   { value: "claimed-paid", label: "Claimed-Paid" },
 ];
 
-const LEADS = [
-  { parent: "Maria G.", athlete: "Diego, 14", note: "Competitive · Fullerton", fit: 94, when: "2h ago" },
-  { parent: "James T.", athlete: "Aaliyah, 16", note: "Elite · recruiting", fit: 91, when: "Yesterday" },
-  { parent: "Priya S.", athlete: "Rohan, 13", note: "Competitive · guard", fit: 88, when: "2 days ago" },
-  { parent: "Tom W.", athlete: "Ella, 15", note: "Skills Academy · Brea", fit: 84, when: "3 days ago" },
-];
-
-const EVENTS = [
-  { title: "Fall Tryouts — 14U & 16U", date: "Sep 7, 2026", status: "Boosted", reach: "4,200" },
-  { title: "Holiday Skills Clinic", date: "Dec 20, 2026", status: "In-network", reach: "320" },
-];
-
 export function ProviderDashboard() {
   const [state, setState] = useState<ClaimState>("unclaimed");
+  const { overrides } = useStore();
+  const displayName = overrides[LISTING.id]?.name ?? LISTING.name;
 
   return (
     <div className="mx-auto max-w-6xl px-6 py-10">
@@ -59,7 +64,7 @@ export function ProviderDashboard() {
         <div className="flex items-center gap-4">
           <LogoAvatar listing={LISTING} size="lg" />
           <div>
-            <h1 className="display text-4xl text-navy">{LISTING.name}</h1>
+            <h1 className="display text-4xl text-navy">{displayName}</h1>
             <p className="mt-1 text-sm text-ink/60">
               {CATEGORY_LABEL[LISTING.category]} · {LISTING.city}, {LISTING.county} County
             </p>
@@ -118,6 +123,18 @@ function Metric({
 }
 
 function LogoSlot() {
+  const { media } = useStore();
+  const logo = media[LISTING.id]?.logo;
+  const fileRef = useRef<HTMLInputElement>(null);
+
+  const onFile = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const f = e.target.files?.[0];
+    if (!f) return;
+    const reader = new FileReader();
+    reader.onload = () => setProviderMedia(LISTING.id, { logo: String(reader.result) });
+    reader.readAsDataURL(f);
+  };
+
   return (
     <div className="rounded-2xl border border-ink/10 bg-white p-6">
       <div className="flex items-center gap-2">
@@ -128,11 +145,30 @@ function LogoSlot() {
         Your thumbnail logo represents you across your profile, search results, and athlete matches.
       </p>
       <div className="mt-4 flex items-center gap-4">
-        <LogoAvatar listing={LISTING} size="lg" />
+        {logo ? (
+          // eslint-disable-next-line @next/next/no-img-element
+          <img src={logo} alt="Business logo" className="h-16 w-16 rounded-xl border border-ink/10 object-cover" />
+        ) : (
+          <LogoAvatar listing={LISTING} size="lg" />
+        )}
         <div>
-          <DemoButton variant="primary" done="Uploaded (demo)">
-            <ImagePlus size={15} /> Upload logo
-          </DemoButton>
+          <input ref={fileRef} type="file" accept="image/*" onChange={onFile} className="hidden" />
+          <div className="flex items-center gap-2">
+            <button
+              onClick={() => fileRef.current?.click()}
+              className="inline-flex items-center gap-2 rounded-lg bg-navy px-5 py-2.5 text-sm font-semibold text-white hover:bg-navy-deep"
+            >
+              <ImagePlus size={15} /> {logo ? "Replace logo" : "Upload logo"}
+            </button>
+            {logo && (
+              <button
+                onClick={() => setProviderMedia(LISTING.id, { logo: undefined })}
+                className="inline-flex items-center gap-1 rounded-lg border border-ink/15 px-3 py-2.5 text-sm font-semibold text-ink/60 hover:text-red"
+              >
+                <Trash2 size={14} /> Remove
+              </button>
+            )}
+          </div>
           <p className="mt-2 text-xs text-ink/45">PNG, JPG, or SVG · square · at least 200×200px</p>
         </div>
       </div>
@@ -141,8 +177,8 @@ function LogoSlot() {
 }
 
 function ProviderMediaSlot() {
-  const [photos, setPhotos] = useState<string[]>([]);
-  const [videos, setVideos] = useState<ProfileVideo[]>([]);
+  const { media } = useStore();
+  const m = media[LISTING.id] ?? { photos: [], videos: [] };
   return (
     <div className="rounded-2xl border border-ink/10 bg-white p-6">
       <div className="flex items-center gap-2">
@@ -153,7 +189,89 @@ function ProviderMediaSlot() {
         Showcase your facility, training, and highlights — up to 6 photos and 2 videos.
       </p>
       <div className="mt-4">
-        <MediaUploader photos={photos} videos={videos} onPhotos={setPhotos} onVideos={setVideos} />
+        <MediaUploader
+          photos={m.photos}
+          videos={m.videos}
+          onPhotos={(p) => setProviderMedia(LISTING.id, { photos: p })}
+          onVideos={(v) => setProviderMedia(LISTING.id, { videos: v })}
+        />
+      </div>
+    </div>
+  );
+}
+
+function EditProfileCard() {
+  const { overrides } = useStore();
+  const ov = overrides[LISTING.id] ?? {};
+  const [name, setName] = useState(ov.name ?? LISTING.name);
+  const [philosophy, setPhilosophy] = useState(ov.philosophy ?? LISTING.philosophy);
+  const [priceLabel, setPriceLabel] = useState(ov.priceLabel ?? LISTING.priceLabel);
+  const [saved, setSaved] = useState(false);
+
+  const dirty =
+    name !== (ov.name ?? LISTING.name) ||
+    philosophy !== (ov.philosophy ?? LISTING.philosophy) ||
+    priceLabel !== (ov.priceLabel ?? LISTING.priceLabel);
+
+  const save = () => {
+    setOverride(LISTING.id, { name: name.trim() || LISTING.name, philosophy, priceLabel });
+    setSaved(true);
+    setTimeout(() => setSaved(false), 2200);
+  };
+
+  return (
+    <div className="rounded-2xl border border-ink/10 bg-white p-6">
+      <div className="flex items-center gap-2">
+        <Pencil size={18} className="text-navy" />
+        <h3 className="font-semibold text-navy">Edit your profile</h3>
+      </div>
+      <p className="mt-1 text-sm text-ink/55">
+        Control your narrative — changes show on your public listing immediately.
+      </p>
+      <div className="mt-4 space-y-3">
+        <label className="block">
+          <span className="eyebrow text-ink/50">Program name</span>
+          <input
+            value={name}
+            onChange={(e) => setName(e.target.value)}
+            className="mt-1.5 w-full rounded-lg border border-ink/15 px-3 py-2 text-sm outline-none focus:border-navy"
+          />
+        </label>
+        <label className="block">
+          <span className="eyebrow text-ink/50">Philosophy</span>
+          <textarea
+            value={philosophy}
+            onChange={(e) => setPhilosophy(e.target.value)}
+            rows={3}
+            className="mt-1.5 w-full resize-none rounded-lg border border-ink/15 px-3 py-2.5 text-sm outline-none focus:border-navy"
+          />
+        </label>
+        <label className="block">
+          <span className="eyebrow text-ink/50">Pricing</span>
+          <input
+            value={priceLabel}
+            onChange={(e) => setPriceLabel(e.target.value)}
+            className="mt-1.5 w-full rounded-lg border border-ink/15 px-3 py-2 text-sm outline-none focus:border-navy"
+          />
+        </label>
+      </div>
+      <div className="mt-4 flex items-center gap-3">
+        <button
+          onClick={save}
+          disabled={!dirty}
+          className="inline-flex items-center gap-2 rounded-lg bg-navy px-5 py-2.5 text-sm font-semibold text-white hover:bg-navy-deep disabled:opacity-40"
+        >
+          {saved ? (
+            <>
+              <Check size={15} /> Saved
+            </>
+          ) : (
+            "Save changes"
+          )}
+        </button>
+        <Link href={`/app/listing/${LISTING.id}`} className="text-sm font-semibold text-red hover:underline">
+          View public profile
+        </Link>
       </div>
     </div>
   );
@@ -198,6 +316,8 @@ function Unclaimed({ onClaim }: { onClaim: () => void }) {
 }
 
 function ClaimedFree({ onUpgrade }: { onUpgrade: () => void }) {
+  const [checkout, setCheckout] = useState(false);
+  const openCheckout = () => setCheckout(true);
   return (
     <div className="space-y-6">
       <div className="flex flex-wrap items-center justify-between gap-4 rounded-2xl border border-navy/20 bg-navy/[0.04] p-6">
@@ -212,12 +332,19 @@ function ClaimedFree({ onUpgrade }: { onUpgrade: () => void }) {
           </div>
         </div>
         <button
-          onClick={onUpgrade}
+          onClick={openCheckout}
           className="inline-flex items-center gap-2 rounded-lg bg-gold px-6 py-3 text-sm font-semibold text-ink hover:bg-gold-300"
         >
           <Crown size={16} /> Upgrade to Premium
         </button>
       </div>
+
+      <CheckoutModal
+        open={checkout}
+        plan={PREMIUM_PLAN}
+        onClose={() => setCheckout(false)}
+        onSuccess={onUpgrade}
+      />
 
       <div className="grid gap-4 sm:grid-cols-4">
         <Metric icon={Eye} value="1,284" label="Profile views (30d)" />
@@ -226,11 +353,13 @@ function ClaimedFree({ onUpgrade }: { onUpgrade: () => void }) {
         <Metric icon={BarChart3} value="0" label="Analytics" locked />
       </div>
 
+      <EditProfileCard />
+
       <LogoSlot />
 
       <ProviderMediaSlot />
 
-      <LockedFeatures onUpgrade={onUpgrade} />
+      <LockedFeatures onUpgrade={openCheckout} />
     </div>
   );
 }
@@ -269,6 +398,13 @@ function LockedFeatures({ onUpgrade }: { onUpgrade: () => void }) {
 }
 
 function ClaimedPaid() {
+  const { threads } = useStore();
+
+  const leads = threads
+    .filter((t) => t.listingId === LISTING.id)
+    .sort((a, b) => +new Date(b.updatedAt) - +new Date(a.updatedAt));
+  const unread = leads.filter((l) => l.unreadFor === "provider").length;
+
   return (
     <div className="space-y-6">
       <div className="flex flex-wrap items-center justify-between gap-3 rounded-2xl border border-gold bg-gold/[0.1] p-5">
@@ -279,102 +415,106 @@ function ClaimedPaid() {
             <p className="text-sm text-ink/65">Full access to leads, events, and analytics.</p>
           </div>
         </div>
-        <Link
-          href="/app/provider/analytics"
-          className="inline-flex items-center gap-1.5 rounded-lg bg-navy px-5 py-2.5 text-sm font-semibold text-white hover:bg-navy-deep"
-        >
-          <BarChart3 size={15} /> Full analytics
-        </Link>
+        <div className="flex flex-wrap items-center gap-2">
+          <Link
+            href="/app/provider/roster"
+            className="inline-flex items-center gap-1.5 rounded-lg border border-navy/25 px-4 py-2.5 text-sm font-semibold text-navy hover:bg-navy hover:text-white"
+          >
+            <Users size={15} /> Roster
+          </Link>
+          <Link
+            href="/app/provider/billing"
+            className="inline-flex items-center gap-1.5 rounded-lg border border-navy/25 px-4 py-2.5 text-sm font-semibold text-navy hover:bg-navy hover:text-white"
+          >
+            <CreditCard size={15} /> Billing
+          </Link>
+          <Link
+            href="/app/provider/analytics"
+            className="inline-flex items-center gap-1.5 rounded-lg bg-navy px-5 py-2.5 text-sm font-semibold text-white hover:bg-navy-deep"
+          >
+            <BarChart3 size={15} /> Full analytics
+          </Link>
+        </div>
       </div>
 
       <div className="grid gap-4 sm:grid-cols-4">
         <Metric icon={Eye} value="3,910" label="Profile views (30d)" />
-        <Metric icon={Inbox} value="27" label="New leads (30d)" />
+        <Metric icon={Inbox} value={String(leads.length)} label="Active leads" />
         <Metric icon={TrendingUp} value="38%" label="Lead conversion" />
         <Metric icon={Star} value="4.6" label="Avg rating" />
       </div>
+
+      <EditProfileCard />
 
       <LogoSlot />
 
       <ProviderMediaSlot />
 
       <div className="grid gap-6 lg:grid-cols-2">
-        {/* leads */}
-        <div className="rounded-2xl border border-ink/10 bg-white p-6">
-          <div className="flex items-center gap-2">
-            <Inbox size={18} className="text-navy" />
-            <h3 className="font-semibold text-navy">Recent leads</h3>
-          </div>
-          <div className="mt-4 space-y-2.5">
-            {LEADS.map((l) => (
-              <div
-                key={l.parent}
-                className="flex items-center justify-between rounded-xl border border-ink/10 p-3"
-              >
-                <div>
-                  <p className="text-sm font-semibold text-navy">
-                    {l.parent} · <span className="font-normal text-ink/60">{l.athlete}</span>
-                  </p>
-                  <p className="text-xs text-ink/50">{l.note} · {l.when}</p>
-                </div>
-                <span className="rounded-full bg-gold/20 px-2.5 py-1 text-xs font-bold text-ink">
-                  {l.fit}% fit
-                </span>
-              </div>
-            ))}
-          </div>
-          <DemoButton variant="outline" className="mt-4" done="Replied (demo)">
-            Respond to leads
-          </DemoButton>
-        </div>
-
-        {/* events */}
+        {/* leads — live from the inbox */}
         <div className="rounded-2xl border border-ink/10 bg-white p-6">
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-2">
-              <Calendar size={18} className="text-navy" />
-              <h3 className="font-semibold text-navy">Events &amp; promotions</h3>
+              <Inbox size={18} className="text-navy" />
+              <h3 className="font-semibold text-navy">Recent leads</h3>
             </div>
-            <DemoButton variant="primary" done="Created (demo)">
-              + New event
-            </DemoButton>
+            {unread > 0 && (
+              <span className="rounded-full bg-red px-2 py-0.5 text-xs font-bold text-white">
+                {unread} new
+              </span>
+            )}
           </div>
           <div className="mt-4 space-y-2.5">
-            {EVENTS.map((e) => (
-              <div key={e.title} className="rounded-xl border border-ink/10 p-3">
-                <div className="flex items-center justify-between">
-                  <p className="text-sm font-semibold text-navy">{e.title}</p>
-                  <span
-                    className={`rounded-full px-2.5 py-0.5 text-xs font-semibold ${
-                      e.status === "Boosted" ? "bg-gold/25 text-ink" : "bg-cream text-ink/60"
-                    }`}
-                  >
-                    {e.status}
-                  </span>
-                </div>
-                <div className="mt-1 flex items-center justify-between text-xs text-ink/55">
-                  <span>{e.date}</span>
-                  <span>Reach: {e.reach}</span>
-                </div>
-              </div>
-            ))}
+            {leads.length === 0 ? (
+              <p className="rounded-xl border border-dashed border-ink/15 p-4 text-center text-sm text-ink/45">
+                No leads yet.
+              </p>
+            ) : (
+              leads.slice(0, 5).map((l) => (
+                <Link
+                  key={l.id}
+                  href={`/app/inbox?thread=${l.id}`}
+                  className="flex items-center justify-between gap-3 rounded-xl border border-ink/10 p-3 transition-colors hover:border-navy/30"
+                >
+                  <div className="min-w-0">
+                    <p className="flex items-center gap-1.5 text-sm font-semibold text-navy">
+                      {l.kind === "booking" ? (
+                        <CalendarClock size={13} className="text-gold" />
+                      ) : (
+                        <MessageSquare size={13} className="text-ink/40" />
+                      )}
+                      {l.parentName} · <span className="font-normal text-ink/60">{l.athlete}</span>
+                    </p>
+                    <p className="mt-0.5 truncate text-xs text-ink/50">
+                      {l.messages[l.messages.length - 1].body}
+                    </p>
+                  </div>
+                  <div className="flex shrink-0 items-center gap-2">
+                    {l.unreadFor === "provider" && <span className="h-2 w-2 rounded-full bg-red" />}
+                    {l.fit !== undefined && (
+                      <span className="rounded-full bg-gold/20 px-2.5 py-1 text-xs font-bold text-ink">
+                        {l.fit}%
+                      </span>
+                    )}
+                  </div>
+                </Link>
+              ))
+            )}
           </div>
-          <div className="mt-4 rounded-xl bg-cream/60 p-3">
-            <p className="text-xs font-semibold text-navy">Boost an event</p>
-            <div className="mt-2 flex flex-wrap gap-2">
-              <DemoButton variant="gold" done="Boosted!" className="!px-3 !py-1.5 !text-xs">
-                <Megaphone size={13} /> Basic $19
-              </DemoButton>
-              <DemoButton variant="gold" done="Boosted!" className="!px-3 !py-1.5 !text-xs">
-                <Megaphone size={13} /> Standard $39
-              </DemoButton>
-              <DemoButton variant="gold" done="Boosted!" className="!px-3 !py-1.5 !text-xs">
-                <Megaphone size={13} /> Premium $79
-              </DemoButton>
-            </div>
-          </div>
+          <Link
+            href="/app/inbox"
+            className="mt-4 inline-flex items-center gap-1.5 rounded-lg border border-navy/30 px-4 py-2 text-sm font-semibold text-navy transition-colors hover:bg-navy hover:text-white"
+          >
+            <Inbox size={15} /> Open inbox
+          </Link>
         </div>
+
+        {/* events — create, edit, boost, registrants & analytics */}
+        <ProviderEvents listing={LISTING} />
       </div>
+
+      {/* session schedule — live bookings from families */}
+      <ProviderSchedule listing={LISTING} />
     </div>
   );
 }

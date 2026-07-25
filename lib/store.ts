@@ -1,0 +1,1082 @@
+"use client";
+
+import { useSyncExternalStore } from "react";
+import type {
+  AdPlacement,
+  AppNotification,
+  AudienceReach,
+  Campaign,
+  CampaignObjective,
+  EventBoost,
+  Invoice,
+  Listing,
+  PaymentCard,
+  PaymentMethod,
+  PlanTier,
+  ProviderAvailability,
+  ProviderSubscription,
+  RosterMember,
+  RosterStatus,
+  SessionBooking,
+  Team,
+  DevLevel,
+  VettingStatus,
+  ListingOverride,
+  PlatformEvent,
+  ProviderMedia,
+  RecruitingState,
+  ReviewReply,
+  Role,
+  SavedSearch,
+  SchoolDivision,
+  SchoolStatus,
+  Thread,
+  ThreadKind,
+  UserReview,
+} from "./types";
+import {
+  SEED_THREADS,
+  SEED_EVENTS,
+  SEED_NOTIFICATIONS,
+  SEED_CAMPAIGNS,
+  SEED_VETTING,
+  SEED_REVIEWS,
+  SEED_MODERATION,
+  SEED_BOOKINGS,
+  SEED_SUBSCRIPTION,
+  SEED_INVOICES,
+  SEED_TEAMS,
+  SEED_ROSTER,
+  SEED_AVAILABILITY,
+} from "./data/activity";
+import { addDaysISO, flightStatus } from "./promotions";
+import { addMonthsISO, planDef } from "./billing";
+import { localISODate, sortTimes } from "./scheduling";
+
+/*
+  A tiny reactive store (Zustand-lite) backing the demo's "live" platform
+  activity — messages, bookings, events, reviews, and notifications.
+  Persists to localStorage and broadcasts changes so every screen stays in
+  sync. Still 100% client-side: no backend, but it behaves like one.
+*/
+
+const KEY = "csd-activity-v1";
+
+export interface StoreState {
+  threads: Thread[];
+  events: PlatformEvent[];
+  reviews: UserReview[];
+  notifications: AppNotification[];
+  /** Provider responses to reviews, keyed by `${listingId}::${reviewKey}`. */
+  replies: Record<string, ReviewReply>;
+  /** Provider-edited listing fields, keyed by listingId. */
+  overrides: Record<string, ListingOverride>;
+  /** Parent's saved Discover searches. */
+  savedSearches: SavedSearch[];
+  /** Provider-uploaded media, keyed by listingId. */
+  media: Record<string, ProviderMedia>;
+  /** Recruiting Hub: checklist progress + target schools. */
+  recruiting: RecruitingState;
+  /** Paid promotion campaigns. */
+  campaigns: Campaign[];
+  /** Operator vetting overrides, keyed by listingId. */
+  vetting: Record<string, VettingStatus>;
+  /** Operator moderation resolutions, keyed by moderation item id. */
+  moderation: Record<string, "dismissed" | "removed">;
+  /** Booked training sessions across families & providers. */
+  bookings: SessionBooking[];
+  /** The current provider's subscription. */
+  subscription: ProviderSubscription;
+  /** The current provider's billing history. */
+  invoices: Invoice[];
+  /** The current provider's teams. */
+  teams: Team[];
+  /** The current provider's roster (assigned members + prospect pool). */
+  roster: RosterMember[];
+  /** Reviews the viewer has marked helpful, keyed by `${listingId}::${reviewKey}`. */
+  reviewHelpful: Record<string, boolean>;
+  /** Provider-published booking availability, keyed by listingId. */
+  availability: Record<string, ProviderAvailability>;
+}
+
+function seedState(): StoreState {
+  return {
+    threads: SEED_THREADS.map((t) => ({ ...t })),
+    events: SEED_EVENTS.map((e) => ({ ...e })),
+    reviews: SEED_REVIEWS.map((r) => ({ ...r })),
+    notifications: SEED_NOTIFICATIONS.map((n) => ({ ...n })),
+    replies: {},
+    overrides: {},
+    savedSearches: [],
+    media: {},
+    recruiting: { tasks: {}, schools: [] },
+    campaigns: SEED_CAMPAIGNS.map((c) => ({ ...c, metrics: { ...c.metrics } })),
+    vetting: { ...SEED_VETTING },
+    moderation: {},
+    bookings: SEED_BOOKINGS.map((b) => ({ ...b })),
+    subscription: { ...SEED_SUBSCRIPTION, card: { ...SEED_SUBSCRIPTION.card! } },
+    invoices: SEED_INVOICES.map((i) => ({ ...i })),
+    teams: SEED_TEAMS.map((t) => ({ ...t })),
+    roster: SEED_ROSTER.map((m) => ({ ...m })),
+    reviewHelpful: {},
+    availability: Object.fromEntries(
+      Object.entries(SEED_AVAILABILITY).map(([k, v]) => [
+        k,
+        { weekly: { ...v.weekly }, blockedDates: [...v.blockedDates] },
+      ]),
+    ),
+  };
+}
+
+let state: StoreState = seedState();
+let hydrated = false;
+const listeners = new Set<() => void>();
+
+function emit() {
+  for (const l of listeners) l();
+}
+
+function persist() {
+  try {
+    localStorage.setItem(KEY, JSON.stringify(state));
+  } catch {
+    /* ignore quota / privacy errors */
+  }
+}
+
+function hydrate() {
+  if (hydrated || typeof window === "undefined") return;
+  hydrated = true;
+  try {
+    const raw = localStorage.getItem(KEY);
+    if (raw) {
+      const saved = JSON.parse(raw) as Partial<StoreState>;
+      state = {
+        threads: saved.threads ?? state.threads,
+        events: saved.events ?? state.events,
+        reviews: saved.reviews ?? state.reviews,
+        notifications: saved.notifications ?? state.notifications,
+        replies: saved.replies ?? state.replies,
+        overrides: saved.overrides ?? state.overrides,
+        savedSearches: saved.savedSearches ?? state.savedSearches,
+        media: saved.media ?? state.media,
+        recruiting: saved.recruiting ?? state.recruiting,
+        campaigns: saved.campaigns ?? state.campaigns,
+        vetting: saved.vetting ?? state.vetting,
+        moderation: saved.moderation ?? state.moderation,
+        bookings: saved.bookings ?? state.bookings,
+        subscription: saved.subscription ?? state.subscription,
+        invoices: saved.invoices ?? state.invoices,
+        teams: saved.teams ?? state.teams,
+        roster: saved.roster ?? state.roster,
+        reviewHelpful: saved.reviewHelpful ?? state.reviewHelpful,
+        availability: saved.availability ?? state.availability,
+      };
+      emit();
+    }
+  } catch {
+    /* ignore corrupt data */
+  }
+}
+
+function set(next: Partial<StoreState>) {
+  state = { ...state, ...next };
+  persist();
+  emit();
+}
+
+const uid = () => Math.random().toString(36).slice(2, 10);
+const now = () => new Date().toISOString();
+
+function notify(n: Omit<AppNotification, "id" | "at" | "read">) {
+  state = {
+    ...state,
+    notifications: [
+      { ...n, id: uid(), at: now(), read: false },
+      ...state.notifications,
+    ],
+  };
+}
+
+// --- Actions ---------------------------------------------------------------
+
+const PROVIDER_REPLIES = [
+  "Thanks for reaching out! We'd love to have your athlete come check us out. What days work best for a visit?",
+  "Great to hear from you. We have an opening in our next evaluation block — happy to share details.",
+  "Appreciate the interest! Our staff will tailor a plan to your athlete's goals. Want to set up a quick call?",
+];
+
+export interface StartThreadInput {
+  listingId: string;
+  listingName: string;
+  listingLogo?: string;
+  kind: ThreadKind;
+  parentName: string;
+  athlete: string;
+  fit?: number;
+  message: string;
+  bookingDate?: string;
+  bookingTime?: string;
+}
+
+export function startThread(input: StartThreadInput): string {
+  const id = uid();
+  const ts = now();
+  const thread: Thread = {
+    id,
+    listingId: input.listingId,
+    listingName: input.listingName,
+    listingLogo: input.listingLogo,
+    kind: input.kind,
+    parentName: input.parentName,
+    athlete: input.athlete,
+    fit: input.fit,
+    bookingDate: input.bookingDate,
+    bookingTime: input.bookingTime,
+    status: input.kind === "booking" ? "scheduled" : "new",
+    messages: [{ id: uid(), from: "parent", body: input.message, at: ts }],
+    unreadFor: "provider",
+    createdAt: ts,
+    updatedAt: ts,
+  };
+  state = { ...state, threads: [thread, ...state.threads] };
+  notify({
+    role: "provider",
+    icon: input.kind === "booking" ? "calendar" : "message",
+    text:
+      input.kind === "booking"
+        ? `${input.parentName} requested a visit — ${input.athlete}`
+        : `New inquiry from ${input.parentName} — ${input.athlete}`,
+    href: "/app/inbox",
+  });
+  persist();
+  emit();
+  scheduleAutoReply(id, input.parentName, input.listingName);
+  return id;
+}
+
+/** Simulate the provider replying a moment later so the inbox feels alive. */
+function scheduleAutoReply(threadId: string, parentName: string, listingName: string) {
+  if (typeof window === "undefined") return;
+  window.setTimeout(() => {
+    const t = state.threads.find((x) => x.id === threadId);
+    if (!t) return;
+    const reply = PROVIDER_REPLIES[Math.floor(Math.random() * PROVIDER_REPLIES.length)];
+    appendMessage(threadId, "provider", reply, {
+      icon: "message",
+      role: "parent",
+      text: `${listingName} replied to ${parentName.split(" ")[0]}`,
+      href: "/app/inbox",
+    });
+  }, 2600);
+}
+
+export function appendMessage(
+  threadId: string,
+  from: Role,
+  body: string,
+  notification?: Omit<AppNotification, "id" | "at" | "read">,
+) {
+  const ts = now();
+  const threads = state.threads.map((t) =>
+    t.id === threadId
+      ? {
+          ...t,
+          messages: [...t.messages, { id: uid(), from, body, at: ts }],
+          unreadFor: (from === "parent" ? "provider" : "parent") as Role,
+          status: t.status === "new" ? ("active" as const) : t.status,
+          updatedAt: ts,
+        }
+      : t,
+  );
+  state = { ...state, threads };
+  if (notification) notify(notification);
+  persist();
+  emit();
+}
+
+export function markThreadRead(threadId: string, role: Role) {
+  let changed = false;
+  const threads = state.threads.map((t) => {
+    if (t.id === threadId && t.unreadFor === role) {
+      changed = true;
+      return { ...t, unreadFor: null };
+    }
+    return t;
+  });
+  if (changed) set({ threads });
+}
+
+export function createEvent(
+  e: Omit<
+    PlatformEvent,
+    "id" | "createdAt" | "rsvps" | "registered" | "registrants" | "reach" | "boost" | "createdBy"
+  > &
+    Partial<Pick<PlatformEvent, "boost" | "reach">>,
+): string {
+  const id = uid();
+  const reach = e.reach ?? 280;
+  const event: PlatformEvent = {
+    ...e,
+    id,
+    boost: e.boost ?? "none",
+    reach,
+    rsvps: 0,
+    registered: false,
+    registrants: [],
+    createdBy: "provider",
+    createdAt: now(),
+  };
+  set({ events: [event, ...state.events] });
+  return id;
+}
+
+const BOOST_REACH: Record<EventBoost, number> = {
+  none: 280,
+  basic: 1200,
+  standard: 2600,
+  premium: 5400,
+};
+
+export function boostEvent(eventId: string, boost: EventBoost) {
+  const events = state.events.map((e) =>
+    e.id === eventId ? { ...e, boost, reach: BOOST_REACH[boost] } : e,
+  );
+  set({ events });
+}
+
+export function toggleRsvp(eventId: string, athlete: string) {
+  const ev = state.events.find((e) => e.id === eventId);
+  if (!ev) return;
+  const registering = !ev.registered;
+  const events = state.events.map((e) => {
+    if (e.id !== eventId) return e;
+    const registrants = registering
+      ? [{ id: uid(), name: "You", athlete, at: now(), self: true }, ...e.registrants]
+      : e.registrants.filter((r) => !r.self);
+    return {
+      ...e,
+      registered: registering,
+      rsvps: Math.max(0, e.rsvps + (registering ? 1 : -1)),
+      registrants,
+    };
+  });
+  state = { ...state, events };
+  if (registering) {
+    notify({
+      role: "provider",
+      icon: "calendar",
+      text: `${athlete} registered for "${ev.title}"`,
+      href: "/app/provider",
+    });
+    notify({
+      role: "parent",
+      icon: "calendar",
+      text: `You're registered for "${ev.title}" — ${formatEventDate(ev.date)}`,
+      href: "/app/events",
+    });
+  }
+  persist();
+  emit();
+}
+
+export function updateEvent(eventId: string, patch: Partial<PlatformEvent>) {
+  set({ events: state.events.map((e) => (e.id === eventId ? { ...e, ...patch } : e)) });
+}
+
+export function removeEvent(eventId: string) {
+  set({ events: state.events.filter((e) => e.id !== eventId) });
+}
+
+/** Provider-initiated message to a registrant — opens a thread in the inbox. */
+export function messageRegistrant(input: {
+  listingId: string;
+  listingName: string;
+  listingLogo?: string;
+  parentName: string;
+  athlete: string;
+  body: string;
+}): string {
+  const id = uid();
+  const ts = now();
+  const thread: Thread = {
+    id,
+    listingId: input.listingId,
+    listingName: input.listingName,
+    listingLogo: input.listingLogo,
+    kind: "inquiry",
+    parentName: input.parentName,
+    athlete: input.athlete,
+    status: "active",
+    messages: [{ id: uid(), from: "provider", body: input.body, at: ts }],
+    unreadFor: "parent",
+    createdAt: ts,
+    updatedAt: ts,
+  };
+  state = { ...state, threads: [thread, ...state.threads] };
+  notify({
+    role: "parent",
+    icon: "message",
+    text: `${input.listingName} messaged you`,
+    href: "/app/inbox",
+  });
+  persist();
+  emit();
+  return id;
+}
+
+export function addReview(review: Omit<UserReview, "id">) {
+  const full: UserReview = { ...review, id: uid() };
+  state = { ...state, reviews: [full, ...state.reviews] };
+  notify({
+    role: "provider",
+    icon: "star",
+    text: `New ${review.rating}★ review from ${review.author}`,
+    href: "/app/provider",
+  });
+  persist();
+  emit();
+}
+
+export const replyKey = (listingId: string, reviewKey: string) => `${listingId}::${reviewKey}`;
+
+/** A deterministic baseline "found helpful" count for a review (demo depth). */
+export function helpfulBase(fullKey: string): number {
+  let h = 2166136261;
+  for (let i = 0; i < fullKey.length; i++) {
+    h ^= fullKey.charCodeAt(i);
+    h = Math.imul(h, 16777619);
+  }
+  return (h >>> 0) % 19; // 0–18
+}
+
+/** Toggle the viewer's "helpful" vote on a review. */
+export function toggleHelpful(fullKey: string) {
+  const next = { ...state.reviewHelpful };
+  if (next[fullKey]) delete next[fullKey];
+  else next[fullKey] = true;
+  set({ reviewHelpful: next });
+}
+
+export function addReviewReply(
+  listingId: string,
+  listingName: string,
+  reviewKey: string,
+  body: string,
+) {
+  state = {
+    ...state,
+    replies: { ...state.replies, [replyKey(listingId, reviewKey)]: { body, at: now() } },
+  };
+  notify({
+    role: "parent",
+    icon: "star",
+    text: `${listingName} responded to a review`,
+    href: `/app/listing/${listingId}`,
+  });
+  persist();
+  emit();
+}
+
+export function setOverride(listingId: string, patch: ListingOverride) {
+  const next = { ...(state.overrides[listingId] ?? {}), ...patch };
+  set({ overrides: { ...state.overrides, [listingId]: next } });
+}
+
+/** Push a one-off notification (used by checkout, onboarding, alerts). */
+export function addNotification(n: Omit<AppNotification, "id" | "at" | "read">) {
+  notify(n);
+  persist();
+  emit();
+}
+
+export function addSavedSearch(s: Omit<SavedSearch, "id" | "createdAt">): string {
+  const id = uid();
+  const search: SavedSearch = { ...s, id, createdAt: now() };
+  state = { ...state, savedSearches: [search, ...state.savedSearches] };
+  notify({
+    role: "parent",
+    icon: "trophy",
+    text: `Saved search "${s.name}" — we'll alert you to new matches`,
+    href: "/app/discover",
+  });
+  persist();
+  emit();
+  // Simulate a fresh match landing a moment later.
+  if (typeof window !== "undefined") {
+    window.setTimeout(() => {
+      if (state.savedSearches.some((x) => x.id === id)) {
+        addNotification({
+          role: "parent",
+          icon: "trophy",
+          text: `New program matches your saved search "${s.name}"`,
+          href: "/app/discover",
+        });
+      }
+    }, 4000);
+  }
+  return id;
+}
+
+export function removeSavedSearch(id: string) {
+  set({ savedSearches: state.savedSearches.filter((s) => s.id !== id) });
+}
+
+export function setProviderMedia(listingId: string, patch: Partial<ProviderMedia>) {
+  const current = state.media[listingId] ?? { photos: [], videos: [] };
+  set({ media: { ...state.media, [listingId]: { ...current, ...patch } } });
+}
+
+export function toggleRecruitingTask(taskId: string) {
+  const tasks = { ...state.recruiting.tasks, [taskId]: !state.recruiting.tasks[taskId] };
+  set({ recruiting: { ...state.recruiting, tasks } });
+}
+
+export function addTargetSchool(name: string, division: SchoolDivision) {
+  const school = {
+    id: uid(),
+    name,
+    division,
+    status: "Researching" as SchoolStatus,
+    createdAt: now(),
+  };
+  set({ recruiting: { ...state.recruiting, schools: [school, ...state.recruiting.schools] } });
+}
+
+export function setSchoolStatus(id: string, status: SchoolStatus) {
+  set({
+    recruiting: {
+      ...state.recruiting,
+      schools: state.recruiting.schools.map((s) => (s.id === id ? { ...s, status } : s)),
+    },
+  });
+  if (status === "Offer")
+    notify({
+      role: "parent",
+      icon: "trophy",
+      text: "Congrats — a target school is now marked as an Offer!",
+      href: "/app/recruiting",
+    });
+}
+
+export function removeTargetSchool(id: string) {
+  set({
+    recruiting: {
+      ...state.recruiting,
+      schools: state.recruiting.schools.filter((s) => s.id !== id),
+    },
+  });
+}
+
+// --- Promotions / campaigns ------------------------------------------------
+
+export interface CreateCampaignInput {
+  listingId: string;
+  listingName: string;
+  listingLogo?: string;
+  eventId?: string;
+  eventTitle?: string;
+  objective: CampaignObjective;
+  placements: AdPlacement[];
+  audience: AudienceReach;
+  durationDays: number;
+  startDate: string;
+  budget: number;
+  payment: PaymentMethod;
+  headline: string;
+  cta: string;
+  estImpressions: number;
+  estClicks: number;
+  estRsvps: number;
+}
+
+/** Whether a campaign should currently be serving ads. */
+export function isAdLive(c: Campaign): boolean {
+  return c.status === "active";
+}
+
+export function createCampaign(input: CreateCampaignInput): string {
+  const id = uid();
+  const startDate = input.startDate;
+  const endDate = addDaysISO(startDate, input.durationDays);
+  const status = flightStatus(startDate, endDate);
+  // Scheduled campaigns haven't delivered yet; live ones seed a small early read.
+  const f = status === "active" ? 0.06 : 0;
+  const campaign: Campaign = {
+    id,
+    listingId: input.listingId,
+    listingName: input.listingName,
+    listingLogo: input.listingLogo,
+    eventId: input.eventId,
+    eventTitle: input.eventTitle,
+    objective: input.objective,
+    placements: input.placements,
+    audience: input.audience,
+    durationDays: input.durationDays,
+    budget: input.budget,
+    payment: input.payment,
+    status,
+    startDate,
+    endDate,
+    headline: input.headline,
+    cta: input.cta,
+    createdAt: now(),
+    metrics: {
+      impressions: Math.round(input.estImpressions * f),
+      clicks: Math.round(input.estClicks * f),
+      rsvps: Math.round(input.estRsvps * f),
+      spend: Math.round(input.budget * f),
+    },
+  };
+  state = { ...state, campaigns: [campaign, ...state.campaigns] };
+  notify({
+    role: "provider",
+    icon: "trophy",
+    text:
+      status === "scheduled"
+        ? `Campaign scheduled: "${input.headline}" — starts ${startDate}`
+        : `Campaign live: "${input.headline}" — now serving to vetted-provider ad slots`,
+    href: "/app/promote",
+  });
+  persist();
+  emit();
+  return id;
+}
+
+export function endCampaign(id: string) {
+  set({ campaigns: state.campaigns.map((c) => (c.id === id ? { ...c, status: "ended" as const } : c)) });
+}
+
+/** Count an interaction with a served ad (drives live campaign reporting). */
+export function recordAdClick(id: string) {
+  const campaigns = state.campaigns.map((c) =>
+    c.id === id
+      ? {
+          ...c,
+          metrics: {
+            ...c.metrics,
+            impressions: c.metrics.impressions + 1,
+            clicks: c.metrics.clicks + 1,
+            rsvps: c.metrics.rsvps + (c.metrics.clicks % 4 === 3 ? 1 : 0),
+          },
+        }
+      : c,
+  );
+  set({ campaigns });
+}
+
+// --- Session bookings ------------------------------------------------------
+
+export interface BookSessionInput {
+  listingId: string;
+  listingName: string;
+  listingLogo?: string;
+  slotId: string;
+  sessionTypeId: string;
+  sessionTypeName: string;
+  date: string;
+  time: string;
+  durationMin: number;
+  price: number;
+  athlete: string;
+  parentName: string;
+  fit?: number;
+  message?: string;
+}
+
+/** Book a session — creates the booking and opens a linked inbox thread. */
+export function bookSession(input: BookSessionInput): string {
+  const id = uid();
+  const ts = now();
+  const threadId = uid();
+  const booking: SessionBooking = {
+    id,
+    listingId: input.listingId,
+    listingName: input.listingName,
+    listingLogo: input.listingLogo,
+    slotId: input.slotId,
+    sessionTypeId: input.sessionTypeId,
+    sessionTypeName: input.sessionTypeName,
+    date: input.date,
+    time: input.time,
+    durationMin: input.durationMin,
+    price: input.price,
+    athlete: input.athlete,
+    parentName: input.parentName,
+    fit: input.fit,
+    status: "upcoming",
+    threadId,
+    createdAt: ts,
+  };
+  const priceLabel = input.price === 0 ? "Free" : `$${input.price}`;
+  const thread: Thread = {
+    id: threadId,
+    listingId: input.listingId,
+    listingName: input.listingName,
+    listingLogo: input.listingLogo,
+    kind: "booking",
+    parentName: input.parentName,
+    athlete: input.athlete,
+    fit: input.fit,
+    bookingDate: input.date,
+    bookingTime: input.time,
+    status: "scheduled",
+    messages: [
+      {
+        id: uid(),
+        from: "parent",
+        body:
+          input.message?.trim() ||
+          `Booked a ${input.sessionTypeName} (${priceLabel}) on ${formatEventDate(input.date)} at ${input.time}. Looking forward to it!`,
+        at: ts,
+      },
+    ],
+    unreadFor: "provider",
+    createdAt: ts,
+    updatedAt: ts,
+  };
+  state = { ...state, bookings: [booking, ...state.bookings], threads: [thread, ...state.threads] };
+  notify({
+    role: "provider",
+    icon: "calendar",
+    text: `${input.parentName} booked a ${input.sessionTypeName} — ${input.athlete}`,
+    href: "/app/provider",
+  });
+  notify({
+    role: "parent",
+    icon: "calendar",
+    text: `Session booked with ${input.listingName} — ${formatEventDate(input.date)}, ${input.time}`,
+    href: "/app/sessions",
+  });
+  persist();
+  emit();
+  scheduleAutoReply(threadId, input.parentName, input.listingName);
+  return id;
+}
+
+export function cancelBooking(id: string) {
+  const b = state.bookings.find((x) => x.id === id);
+  set({ bookings: state.bookings.map((x) => (x.id === id ? { ...x, status: "canceled" as const } : x)) });
+  if (b)
+    addNotification({
+      role: b.parentName === "You" ? "parent" : "provider",
+      icon: "calendar",
+      text: `Session canceled — ${b.sessionTypeName} with ${b.listingName}`,
+      href: b.parentName === "You" ? "/app/sessions" : "/app/provider",
+    });
+}
+
+export function rescheduleBooking(id: string, slotId: string, date: string, time: string) {
+  set({
+    bookings: state.bookings.map((x) =>
+      x.id === id ? { ...x, slotId, date, time, status: "upcoming" as const } : x,
+    ),
+  });
+  const b = state.bookings.find((x) => x.id === id);
+  if (b)
+    addNotification({
+      role: "parent",
+      icon: "calendar",
+      text: `Session rescheduled to ${formatEventDate(date)}, ${time}`,
+      href: "/app/sessions",
+    });
+}
+
+export function completeBooking(id: string) {
+  set({ bookings: state.bookings.map((x) => (x.id === id ? { ...x, status: "completed" as const } : x)) });
+}
+
+/** Slot ids already taken by an active booking for a listing (to hide from availability). */
+export function takenSlotIds(bookings: SessionBooking[], listingId: string): Set<string> {
+  return new Set(
+    bookings.filter((b) => b.listingId === listingId && b.status !== "canceled").map((b) => b.slotId),
+  );
+}
+
+// --- Provider availability -------------------------------------------------
+
+const EMPTY_AVAIL: ProviderAvailability = { weekly: {}, blockedDates: [] };
+
+/** Toggle a single open time on a weekday for a provider. */
+export function toggleAvailabilityTime(listingId: string, weekday: number, time: string) {
+  const cur = state.availability[listingId] ?? EMPTY_AVAIL;
+  const day = cur.weekly[weekday] ?? [];
+  const nextDay = day.includes(time)
+    ? day.filter((t) => t !== time)
+    : sortTimes([...day, time]);
+  set({
+    availability: {
+      ...state.availability,
+      [listingId]: { ...cur, weekly: { ...cur.weekly, [weekday]: nextDay } },
+    },
+  });
+}
+
+/** Set (replace) all open times for a weekday. */
+export function setAvailabilityDay(listingId: string, weekday: number, times: string[]) {
+  const cur = state.availability[listingId] ?? EMPTY_AVAIL;
+  set({
+    availability: {
+      ...state.availability,
+      [listingId]: { ...cur, weekly: { ...cur.weekly, [weekday]: sortTimes(times) } },
+    },
+  });
+}
+
+/** Block or unblock a specific date. */
+export function toggleBlockedDate(listingId: string, date: string) {
+  const cur = state.availability[listingId] ?? EMPTY_AVAIL;
+  const has = cur.blockedDates.includes(date);
+  const blockedDates = has
+    ? cur.blockedDates.filter((d) => d !== date)
+    : [...cur.blockedDates, date].sort();
+  set({ availability: { ...state.availability, [listingId]: { ...cur, blockedDates } } });
+}
+
+// --- Provider billing & subscription ---------------------------------------
+
+export function setPlan(plan: PlanTier) {
+  const def = planDef(plan);
+  const today = localISODate(new Date());
+  const prev = state.subscription;
+  const subscription: ProviderSubscription = {
+    ...prev,
+    plan,
+    status: "active",
+    boostsIncluded: def.boostsIncluded,
+    renewsOn: addMonthsISO(today, 1),
+  };
+  const invoices =
+    def.price > 0
+      ? [
+          {
+            id: uid(),
+            date: today,
+            description: `${def.name} plan — monthly subscription`,
+            amount: def.price,
+            status: "paid" as const,
+          },
+          ...state.invoices,
+        ]
+      : state.invoices;
+  set({ subscription, invoices });
+  notify({
+    role: "provider",
+    icon: "trophy",
+    text:
+      def.price > 0
+        ? `${def.name} plan is active — $${def.price}/mo`
+        : `Switched to the ${def.name} plan`,
+    href: "/app/provider/billing",
+  });
+  persist();
+  emit();
+}
+
+export function cancelSubscription() {
+  set({ subscription: { ...state.subscription, status: "canceled" } });
+  addNotification({
+    role: "provider",
+    icon: "user",
+    text: "Subscription canceled — access continues until the period ends",
+    href: "/app/provider/billing",
+  });
+}
+
+export function reactivateSubscription() {
+  set({ subscription: { ...state.subscription, status: "active" } });
+}
+
+export function updatePaymentCard(card: PaymentCard) {
+  set({ subscription: { ...state.subscription, card } });
+}
+
+/** Record a one-off charge (e.g. an event boost) on the provider's invoices. */
+export function addInvoice(description: string, amount: number) {
+  const invoice: Invoice = {
+    id: uid(),
+    date: localISODate(new Date()),
+    description,
+    amount,
+    status: "paid",
+  };
+  set({ invoices: [invoice, ...state.invoices] });
+}
+
+// --- Provider roster & teams -----------------------------------------------
+
+export function createTeam(name: string, level: DevLevel): string {
+  const id = uid();
+  const team: Team = { id, name, level, sport: "Basketball" };
+  set({ teams: [...state.teams, team] });
+  return id;
+}
+
+export function removeTeam(id: string) {
+  set({
+    teams: state.teams.filter((t) => t.id !== id),
+    // Members on a deleted team fall back to the prospect pool.
+    roster: state.roster.map((m) =>
+      m.teamId === id ? { ...m, teamId: null, status: "prospect" as RosterStatus } : m,
+    ),
+  });
+}
+
+export function addRosterMember(name: string, parent: string, teamId: string | null = null) {
+  const member: RosterMember = {
+    id: uid(),
+    name,
+    parent,
+    teamId,
+    status: teamId ? "active" : "prospect",
+    addedAt: now(),
+  };
+  set({ roster: [member, ...state.roster] });
+}
+
+export function assignMember(memberId: string, teamId: string | null) {
+  set({
+    roster: state.roster.map((m) =>
+      m.id === memberId
+        ? { ...m, teamId, status: (teamId ? "active" : "prospect") as RosterStatus }
+        : m,
+    ),
+  });
+}
+
+export function removeRosterMember(id: string) {
+  set({ roster: state.roster.filter((m) => m.id !== id) });
+}
+
+/** Pull athletes from real bookings & event registrants into the prospect pool. */
+export function importProspects(listingId: string): number {
+  const existing = new Set(state.roster.map((m) => m.name));
+  const found: { name: string; parent: string }[] = [];
+  for (const b of state.bookings) {
+    if (b.listingId === listingId && b.parentName !== "You" && !existing.has(b.athlete)) {
+      existing.add(b.athlete);
+      found.push({ name: b.athlete, parent: b.parentName });
+    }
+  }
+  for (const e of state.events) {
+    if (e.listingId !== listingId) continue;
+    for (const r of e.registrants) {
+      if (!r.self && r.athlete && !existing.has(r.athlete)) {
+        existing.add(r.athlete);
+        found.push({ name: r.athlete, parent: r.name });
+      }
+    }
+  }
+  if (found.length === 0) return 0;
+  const members: RosterMember[] = found.map((f) => ({
+    id: uid(),
+    name: f.name,
+    parent: f.parent,
+    teamId: null,
+    status: "prospect",
+    addedAt: now(),
+  }));
+  set({ roster: [...members, ...state.roster] });
+  return found.length;
+}
+
+// --- Operator: vetting & moderation ----------------------------------------
+
+/** A listing's effective vetting status (operator override, else its default). */
+export function vettingStatusFor(
+  listing: Pick<Listing, "id" | "verified">,
+  vetting: StoreState["vetting"],
+): VettingStatus {
+  return vetting[listing.id] ?? (listing.verified ? "verified" : "pending");
+}
+
+/** Whether a provider is publicly listable (not suspended by an operator). */
+export function isPubliclyVisible(
+  listing: Pick<Listing, "id" | "verified">,
+  vetting: StoreState["vetting"],
+): boolean {
+  return vettingStatusFor(listing, vetting) !== "suspended";
+}
+
+/** IDs of reviews an operator has removed via moderation. */
+export function removedReviewIds(moderation: StoreState["moderation"]): Set<string> {
+  const ids = new Set<string>();
+  for (const item of SEED_MODERATION) {
+    if (item.reviewId && moderation[item.id] === "removed") ids.add(item.reviewId);
+  }
+  return ids;
+}
+
+export function setVetting(listingId: string, status: VettingStatus) {
+  set({ vetting: { ...state.vetting, [listingId]: status } });
+}
+
+export function resolveModeration(itemId: string, action: "dismissed" | "removed") {
+  state = { ...state, moderation: { ...state.moderation, [itemId]: action } };
+  // Apply the real-world consequence of a removal.
+  if (action === "removed") {
+    const item = SEED_MODERATION.find((i) => i.id === itemId);
+    if (item?.type === "listing") {
+      state = { ...state, vetting: { ...state.vetting, [item.listingId]: "suspended" } };
+    } else if (item?.type === "event" && item.eventId) {
+      state = { ...state, events: state.events.filter((e) => e.id !== item.eventId) };
+    }
+    // "review" removals are applied where reviews render, via removedReviewIds().
+  }
+  persist();
+  emit();
+}
+
+/** Wipe all demo state (activity, profile, saved, Prospect IQ, role) and reload. */
+export function resetDemo() {
+  if (typeof window === "undefined") return;
+  for (const k of [
+    KEY,
+    "csd-athlete-profile",
+    "csd-saved-listings",
+    "csd-piq-result",
+    "csd-piq-history",
+    "csd-settings",
+    "csd-role",
+  ]) {
+    localStorage.removeItem(k);
+  }
+  state = seedState();
+  window.location.href = "/app";
+}
+
+export function markAllNotificationsRead(role: Role) {
+  const notifications = state.notifications.map((n) =>
+    n.role === role ? { ...n, read: true } : n,
+  );
+  set({ notifications });
+}
+
+export function resetActivity() {
+  state = seedState();
+  persist();
+  emit();
+}
+
+// --- Helpers ---------------------------------------------------------------
+
+export function formatEventDate(iso: string): string {
+  const d = new Date(iso + "T00:00:00");
+  return d.toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric" });
+}
+
+// --- React bindings --------------------------------------------------------
+
+function subscribe(cb: () => void) {
+  hydrate();
+  listeners.add(cb);
+  return () => listeners.delete(cb);
+}
+
+const getSnapshot = () => state;
+const serverState = seedState();
+const getServerSnapshot = () => serverState;
+
+export function useStore(): StoreState {
+  return useSyncExternalStore(subscribe, getSnapshot, getServerSnapshot);
+}

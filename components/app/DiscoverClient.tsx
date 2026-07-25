@@ -1,8 +1,8 @@
 "use client";
 
 import { useMemo, useState } from "react";
-import { Search, SlidersHorizontal, X } from "lucide-react";
-import type { Category } from "@/lib/types";
+import { Search, SlidersHorizontal, X, GitCompareArrows, Check, BookmarkPlus, Bell, LayoutGrid, Map } from "lucide-react";
+import type { Category, SavedSearch } from "@/lib/types";
 import { computeCsdScore, averageRating } from "@/lib/scoring";
 import {
   LISTINGS,
@@ -12,6 +12,10 @@ import {
   CATEGORY_PLURAL,
 } from "@/lib/data/listings";
 import { ListingCard } from "@/components/listing/ListingCard";
+import { CompareBar } from "@/components/app/CompareBar";
+import { MapView } from "@/components/app/MapView";
+import { PromotedCard } from "@/components/app/PromotedCard";
+import { useStore, addSavedSearch, removeSavedSearch, isPubliclyVisible } from "@/lib/store";
 import { Eyebrow } from "@/components/ui/Eyebrow";
 
 type Sort = "score" | "rating" | "name";
@@ -31,9 +35,45 @@ export function DiscoverClient({ initialCategory }: { initialCategory?: Category
   const [minScore, setMinScore] = useState(0);
   const [sort, setSort] = useState<Sort>("score");
   const [showFilters, setShowFilters] = useState(false);
+  const [view, setView] = useState<"list" | "map">("list");
+  const [compareIds, setCompareIds] = useState<string[]>([]);
+
+  const toggleCompare = (id: string) =>
+    setCompareIds((ids) =>
+      ids.includes(id) ? ids.filter((x) => x !== id) : ids.length >= 3 ? ids : [...ids, id],
+    );
+  const compareListings = LISTINGS.filter((l) => compareIds.includes(l.id));
+
+  const { savedSearches, vetting } = useStore();
+
+  const searchName = () => {
+    const parts = [
+      sport !== "all" ? sport : null,
+      level !== "all" ? level : null,
+      county !== "all" ? `${county} Co.` : null,
+      category !== "all" ? CATEGORY_PLURAL[category as Category].split(" ")[0] : null,
+      minScore > 0 ? `${minScore}+ CSD` : null,
+      query ? `"${query}"` : null,
+    ].filter(Boolean);
+    return parts.length ? parts.join(" · ") : "All programs";
+  };
+
+  const saveCurrent = () =>
+    addSavedSearch({ name: searchName(), query, category, sport, level, county, minScore, sort });
+
+  const applySearch = (s: SavedSearch) => {
+    setQuery(s.query);
+    setCategory(s.category as Category | "all");
+    setSport(s.sport);
+    setLevel(s.level);
+    setCounty(s.county);
+    setMinScore(s.minScore);
+    setSort(s.sort as Sort);
+  };
 
   const results = useMemo(() => {
     return SCORED.filter(({ listing, score }) => {
+      if (!isPubliclyVisible(listing, vetting)) return false;
       if (category !== "all" && listing.category !== category) return false;
       if (sport !== "all" && !listing.sports.includes(sport as never)) return false;
       if (level !== "all" && !listing.levels.includes(level as never)) return false;
@@ -54,7 +94,7 @@ export function DiscoverClient({ initialCategory }: { initialCategory?: Category
       if (sort === "rating") return b.rating - a.rating;
       return a.listing.name.localeCompare(b.listing.name);
     });
-  }, [query, category, sport, level, county, minScore, sort]);
+  }, [query, category, sport, level, county, minScore, sort, vetting]);
 
   const reset = () => {
     setQuery("");
@@ -121,8 +161,8 @@ export function DiscoverClient({ initialCategory }: { initialCategory?: Category
       <h1 className="display mt-3 text-4xl text-navy">FIND A PROGRAM</h1>
 
       {/* search + sort bar */}
-      <div className="mt-6 flex flex-col gap-3 sm:flex-row sm:items-center">
-        <div className="relative flex-1">
+      <div className="mt-6 flex flex-col gap-3 lg:flex-row lg:items-center">
+        <div className="relative lg:flex-1">
           <Search size={18} className="absolute left-3.5 top-1/2 -translate-y-1/2 text-ink/40" />
           <input
             value={query}
@@ -131,6 +171,7 @@ export function DiscoverClient({ initialCategory }: { initialCategory?: Category
             className="w-full rounded-xl border border-ink/15 bg-white py-3 pl-11 pr-4 text-sm outline-none focus:border-navy"
           />
         </div>
+        <div className="flex flex-wrap items-center gap-2">
         <select
           value={sort}
           onChange={(e) => setSort(e.target.value as Sort)}
@@ -146,7 +187,57 @@ export function DiscoverClient({ initialCategory }: { initialCategory?: Category
         >
           <SlidersHorizontal size={16} /> Filters
         </button>
+        <button
+          onClick={saveCurrent}
+          className="inline-flex items-center justify-center gap-2 rounded-xl border border-navy/30 bg-white px-4 py-3 text-sm font-semibold text-navy transition-colors hover:bg-navy hover:text-white"
+        >
+          <BookmarkPlus size={16} /> Save search
+        </button>
+        <div className="flex rounded-xl border border-ink/15 bg-white p-1">
+          {([
+            { v: "list", icon: LayoutGrid, label: "List" },
+            { v: "map", icon: Map, label: "Map" },
+          ] as const).map((o) => (
+            <button
+              key={o.v}
+              onClick={() => setView(o.v)}
+              aria-label={o.label}
+              className={`inline-flex items-center gap-1.5 rounded-lg px-3 py-2 text-sm font-semibold transition-colors ${
+                view === o.v ? "bg-navy text-white" : "text-ink/55 hover:text-navy"
+              }`}
+            >
+              <o.icon size={16} /> <span className="hidden sm:inline">{o.label}</span>
+            </button>
+          ))}
+        </div>
+        </div>
       </div>
+
+      {/* saved searches */}
+      {savedSearches.length > 0 && (
+        <div className="mt-4 flex flex-wrap items-center gap-2">
+          <span className="inline-flex items-center gap-1.5 text-xs font-semibold text-ink/55">
+            <Bell size={13} /> Saved &amp; alerting:
+          </span>
+          {savedSearches.map((s) => (
+            <span
+              key={s.id}
+              className="inline-flex items-center gap-1.5 rounded-full bg-cream px-3 py-1.5 text-xs font-medium text-navy"
+            >
+              <button onClick={() => applySearch(s)} className="hover:underline">
+                {s.name}
+              </button>
+              <button
+                onClick={() => removeSavedSearch(s.id)}
+                aria-label={`Remove saved search ${s.name}`}
+                className="text-ink/40 hover:text-red"
+              >
+                <X size={13} />
+              </button>
+            </span>
+          ))}
+        </div>
+      )}
 
       <div className="mt-8 grid gap-8 lg:grid-cols-[260px_1fr]">
         {/* sidebar filters (desktop) */}
@@ -160,6 +251,7 @@ export function DiscoverClient({ initialCategory }: { initialCategory?: Category
         )}
 
         <div>
+          <PromotedCard />
           <p className="mb-4 text-sm text-ink/55">
             <span className="font-semibold text-navy">{results.length}</span> results
           </p>
@@ -167,15 +259,50 @@ export function DiscoverClient({ initialCategory }: { initialCategory?: Category
             <div className="rounded-2xl border border-dashed border-ink/20 p-12 text-center text-ink/50">
               No programs match those filters. Try widening your search.
             </div>
+          ) : view === "map" ? (
+            <div className={compareIds.length ? "pb-24" : undefined}>
+              <MapView listings={results.map((r) => r.listing)} />
+            </div>
           ) : (
-            <div className="grid gap-6 sm:grid-cols-2 xl:grid-cols-3">
-              {results.map(({ listing }) => (
-                <ListingCard key={listing.id} listing={listing} />
-              ))}
+            <div className="grid gap-6 pb-20 sm:grid-cols-2 xl:grid-cols-3">
+              {results.map(({ listing }) => {
+                const selected = compareIds.includes(listing.id);
+                const disabled = !selected && compareIds.length >= 3;
+                return (
+                  <div key={listing.id} className="flex flex-col gap-2">
+                    <ListingCard listing={listing} />
+                    <button
+                      onClick={() => toggleCompare(listing.id)}
+                      disabled={disabled}
+                      className={`inline-flex items-center justify-center gap-1.5 rounded-lg border px-3 py-1.5 text-xs font-semibold transition-colors disabled:opacity-40 ${
+                        selected
+                          ? "border-navy bg-navy text-white"
+                          : "border-ink/15 text-ink/60 hover:border-navy/40 hover:text-navy"
+                      }`}
+                    >
+                      {selected ? (
+                        <>
+                          <Check size={13} /> Comparing
+                        </>
+                      ) : (
+                        <>
+                          <GitCompareArrows size={13} /> Compare
+                        </>
+                      )}
+                    </button>
+                  </div>
+                );
+              })}
             </div>
           )}
         </div>
       </div>
+
+      <CompareBar
+        listings={compareListings}
+        onRemove={toggleCompare}
+        onClear={() => setCompareIds([])}
+      />
     </div>
   );
 }

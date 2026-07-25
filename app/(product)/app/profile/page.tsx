@@ -16,9 +16,12 @@ import {
   Images,
   ScanLine,
   ShieldCheck,
+  Share2,
 } from "lucide-react";
+import { MessageSquare, CalendarCheck, Ticket } from "lucide-react";
 import { useProfile } from "@/lib/useProfile";
 import { useProspectIQ } from "@/lib/useProspectIQ";
+import { useStore } from "@/lib/store";
 import { PILLAR_NAME, TIER_META } from "@/lib/prospectiq";
 import { rankMatches, PRICE_LABEL } from "@/lib/scoring";
 import { formatHeight } from "@/lib/location";
@@ -27,10 +30,12 @@ import { Eyebrow } from "@/components/ui/Eyebrow";
 import { AthleteAvatar } from "@/components/app/AthleteAvatar";
 import { LogoAvatar } from "@/components/listing/LogoAvatar";
 import { MediaUploader } from "@/components/app/MediaUploader";
+import { OverridableText } from "@/components/app/OverridableText";
 
 export default function ProfilePage() {
   const { profile, ready } = useProfile();
   const { result: piq } = useProspectIQ();
+  const { threads, events } = useStore();
 
   if (!ready) return null;
 
@@ -58,16 +63,33 @@ export default function ProfilePage() {
   const matches = rankMatches(profile, LISTINGS).slice(0, 4);
   const fullName = `${profile.firstName ?? ""} ${profile.lastName ?? ""}`.trim() || "Your athlete";
 
+  const myThreads = threads.filter((t) => !t.seeded);
+  const bookings = myThreads.filter((t) => t.kind === "booking").length;
+  const registered = events.filter((e) => e.registered).length;
+  const activity = [
+    { icon: MessageSquare, n: myThreads.length, label: "Conversations", href: "/app/inbox" },
+    { icon: CalendarCheck, n: bookings, label: "Visits booked", href: "/app/inbox" },
+    { icon: Ticket, n: registered, label: "Events registered", href: "/app/events" },
+  ];
+
   return (
     <div className="mx-auto max-w-5xl px-6 py-10">
       <div className="flex items-center justify-between">
         <Eyebrow>Athlete profile</Eyebrow>
-        <Link
-          href="/app/profile/create"
-          className="inline-flex items-center gap-1.5 rounded-lg border border-navy/30 px-4 py-2 text-sm font-semibold text-navy hover:bg-navy hover:text-white"
-        >
-          <Pencil size={14} /> Edit profile
-        </Link>
+        <div className="flex items-center gap-2">
+          <Link
+            href="/athlete"
+            className="inline-flex items-center gap-1.5 rounded-lg border border-navy/30 px-4 py-2 text-sm font-semibold text-navy hover:bg-navy hover:text-white"
+          >
+            <Share2 size={14} /> Share profile
+          </Link>
+          <Link
+            href="/app/profile/create"
+            className="inline-flex items-center gap-1.5 rounded-lg border border-navy/30 px-4 py-2 text-sm font-semibold text-navy hover:bg-navy hover:text-white"
+          >
+            <Pencil size={14} /> Edit profile
+          </Link>
+        </div>
       </div>
 
       {/* identity card */}
@@ -120,6 +142,23 @@ export default function ProfilePage() {
             </div>
           )}
         </section>
+      </div>
+
+      {/* live activity */}
+      <div className="mt-6 grid gap-4 sm:grid-cols-3">
+        {activity.map((a) => (
+          <Link
+            key={a.label}
+            href={a.href}
+            className="group flex items-center justify-between rounded-2xl border border-ink/10 bg-white p-5 transition-colors hover:border-navy/30"
+          >
+            <div>
+              <p className="display text-3xl text-navy">{a.n}</p>
+              <p className="eyebrow mt-1 text-ink/50">{a.label}</p>
+            </div>
+            <a.icon size={22} className="text-ink/30 transition-colors group-hover:text-navy" />
+          </Link>
+        ))}
       </div>
 
       {/* Prospect IQ */}
@@ -227,7 +266,13 @@ export default function ProfilePage() {
                 <span className="display w-6 text-xl text-ink/30">{i + 1}</span>
                 <LogoAvatar listing={m.listing} size="sm" />
                 <div className="flex-1">
-                  <p className="font-bold text-navy">{m.listing.name}</p>
+                  <OverridableText
+                    as="p"
+                    listingId={m.listing.id}
+                    field="name"
+                    fallback={m.listing.name}
+                    className="font-bold text-navy"
+                  />
                   <p className="text-xs text-ink/55">
                     {CATEGORY_LABEL[m.listing.category]} · {m.listing.city}, {m.listing.county} Co.
                   </p>

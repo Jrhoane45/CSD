@@ -1,0 +1,565 @@
+import type {
+  AppNotification,
+  Campaign,
+  Invoice,
+  ModerationItem,
+  PlatformEvent,
+  ProviderAvailability,
+  ProviderSubscription,
+  RosterMember,
+  SessionBooking,
+  Team,
+  Thread,
+  UserReview,
+  VettingStatus,
+} from "../types";
+import { defaultSubscription, seedInvoices } from "../billing";
+import { localISODate, slotId } from "../scheduling";
+
+/*
+  Seed activity so the "live" platform never looks empty on first load.
+  These represent inbound leads, scheduled platform events, and recent
+  notifications a real operator would already have.
+*/
+
+const daysAgo = (n: number) => new Date(Date.now() - n * 86400000).toISOString();
+/** Date-only ISO offset from today (+n future, -n past). */
+const dateISO = (n: number) => new Date(Date.now() + n * 86400000).toISOString().slice(0, 10);
+const inDays = (n: number) => {
+  const d = new Date(Date.now() + n * 86400000);
+  return d.toISOString().slice(0, 10);
+};
+
+export const SEED_THREADS: Thread[] = [
+  {
+    id: "seed-lead-1",
+    listingId: "hoop-prodigy",
+    listingName: "Hoop Prodigy",
+    listingLogo: "/logos/hoop-prodigy.jpg",
+    kind: "inquiry",
+    parentName: "Maria G.",
+    athlete: "Diego, 14 · Competitive",
+    fit: 94,
+    status: "new",
+    unreadFor: "provider",
+    createdAt: daysAgo(0),
+    updatedAt: daysAgo(0),
+    seeded: true,
+    messages: [
+      {
+        id: "m1",
+        from: "parent",
+        body: "Hi! Diego is a 14U guard in Fullerton looking to step up to competitive. Do you have room in your HP Select program, and when are evaluations?",
+        at: daysAgo(0),
+      },
+    ],
+  },
+  {
+    id: "seed-lead-2",
+    listingId: "hoop-prodigy",
+    listingName: "Hoop Prodigy",
+    listingLogo: "/logos/hoop-prodigy.jpg",
+    kind: "booking",
+    parentName: "James T.",
+    athlete: "Aaliyah, 16 · Elite",
+    fit: 91,
+    bookingDate: inDays(4),
+    bookingTime: "5:30 PM",
+    status: "scheduled",
+    unreadFor: "provider",
+    createdAt: daysAgo(1),
+    updatedAt: daysAgo(1),
+    seeded: true,
+    messages: [
+      {
+        id: "m2",
+        from: "parent",
+        body: "We'd like to book a visit. Aaliyah is focused on college recruiting — hoping to see a session and talk about your placement track record.",
+        at: daysAgo(1),
+      },
+    ],
+  },
+  {
+    id: "seed-lead-3",
+    listingId: "hoop-prodigy",
+    listingName: "Hoop Prodigy",
+    listingLogo: "/logos/hoop-prodigy.jpg",
+    kind: "inquiry",
+    parentName: "Priya S.",
+    athlete: "Rohan, 13 · Competitive",
+    fit: 88,
+    status: "active",
+    unreadFor: null,
+    createdAt: daysAgo(2),
+    updatedAt: daysAgo(2),
+    seeded: true,
+    messages: [
+      {
+        id: "m3",
+        from: "parent",
+        body: "Is the Skills Academy a good fit for a 13U just getting serious about guard play?",
+        at: daysAgo(2),
+      },
+      {
+        id: "m4",
+        from: "provider",
+        body: "Absolutely — the Academy is built exactly for that stage. We'll assess Rohan and place him in the right group. Want to come by this week?",
+        at: daysAgo(2),
+      },
+    ],
+  },
+];
+
+export const SEED_EVENTS: PlatformEvent[] = [
+  {
+    id: "seed-evt-1",
+    listingId: "hoop-prodigy",
+    listingName: "Hoop Prodigy",
+    title: "Fall Tryouts — 14U & 16U",
+    type: "Tryout",
+    sport: "Basketball",
+    date: inDays(12),
+    time: "9:00 AM – 12:00 PM",
+    city: "Fullerton",
+    county: "Orange",
+    description:
+      "Open tryouts for HP Select competitive teams. Bring water and indoor court shoes. Evaluations across shooting, ball-handling, and live play.",
+    priceLabel: "Free",
+    boost: "premium",
+    reach: 5400,
+    rsvps: 38,
+    registered: false,
+    registrants: [
+      { id: "reg-1", name: "Maria G.", athlete: "Diego, 14 · Competitive", at: daysAgo(2) },
+      { id: "reg-2", name: "James T.", athlete: "Aaliyah, 16 · Elite", at: daysAgo(2) },
+      { id: "reg-3", name: "Priya S.", athlete: "Rohan, 13 · Competitive", at: daysAgo(1) },
+      { id: "reg-4", name: "Tom W.", athlete: "Ella, 15 · Intermediate", at: daysAgo(1) },
+      { id: "reg-5", name: "Andre M.", athlete: "Marcus, 14 · Competitive", at: daysAgo(0) },
+    ],
+    createdBy: "seed",
+    createdAt: daysAgo(6),
+  },
+  {
+    id: "seed-evt-2",
+    listingId: "westside-fc",
+    listingName: "Westside Football Club",
+    title: "ECNL ID Camp",
+    type: "Showcase",
+    sport: "Soccer",
+    date: inDays(18),
+    time: "4:00 PM – 6:30 PM",
+    city: "Santa Monica",
+    county: "Los Angeles",
+    description:
+      "College ID camp for competitive and elite players. College coaches in attendance. Position-specific evaluations and small-sided games.",
+    priceLabel: "$45",
+    boost: "standard",
+    reach: 2600,
+    rsvps: 21,
+    registered: false,
+    registrants: [],
+    createdBy: "seed",
+    createdAt: daysAgo(9),
+  },
+  {
+    id: "seed-evt-3",
+    listingId: "socal-storm-volleyball",
+    listingName: "SoCal Storm Volleyball Club",
+    title: "Winter Skills Clinic — Setters & Liberos",
+    type: "Clinic",
+    sport: "Volleyball",
+    date: inDays(8),
+    time: "10:00 AM – 1:00 PM",
+    city: "Long Beach",
+    county: "Los Angeles",
+    description:
+      "Position-specific clinic for girls 13s–18s. Setting footwork, hands, and serve-receive platform work with the Storm coaching staff.",
+    priceLabel: "$60",
+    boost: "basic",
+    reach: 1200,
+    rsvps: 14,
+    registered: false,
+    registrants: [],
+    createdBy: "seed",
+    createdAt: daysAgo(3),
+  },
+  {
+    id: "seed-evt-4",
+    listingId: "la-arsenal-baseball",
+    listingName: "LA Arsenal Baseball",
+    title: "Summer Showcase & Exposure Camp",
+    type: "Showcase",
+    sport: "Baseball",
+    date: inDays(25),
+    time: "8:00 AM – 2:00 PM",
+    city: "El Segundo",
+    county: "Los Angeles",
+    description:
+      "Pro-style showcase with 60-yard, exit velo, and arm-strength metrics. College and scout exposure for competitive and elite athletes.",
+    priceLabel: "$95",
+    boost: "standard",
+    reach: 2600,
+    rsvps: 31,
+    registered: false,
+    registrants: [],
+    createdBy: "seed",
+    createdAt: daysAgo(5),
+  },
+  {
+    id: "seed-evt-5",
+    listingId: "gridiron-prep-academy",
+    listingName: "Gridiron Prep Academy",
+    title: "Linemen Combine Prep Clinic",
+    type: "Camp",
+    sport: "Football",
+    date: inDays(15),
+    time: "9:00 AM – 12:00 PM",
+    city: "Long Beach",
+    county: "Los Angeles",
+    description:
+      "Position-specific combine prep for O-line and D-line. Footwork, hand placement, and tested combine drills.",
+    priceLabel: "$50",
+    boost: "none",
+    reach: 280,
+    rsvps: 9,
+    registered: false,
+    registrants: [],
+    createdBy: "seed",
+    createdAt: daysAgo(2),
+  },
+  {
+    id: "seed-evt-6",
+    listingId: "la-heat-fastpitch",
+    listingName: "LA Heat Fastpitch",
+    title: "Fall Fastpitch Open House & Tryouts",
+    type: "Tryout",
+    sport: "Softball",
+    date: inDays(20),
+    time: "1:00 PM – 4:00 PM",
+    city: "Torrance",
+    county: "Los Angeles",
+    description:
+      "Meet the staff and try out for our 14U–18U teams. Hitting, fielding, and pitching evaluations. Recruiting Q&A for families.",
+    priceLabel: "Free",
+    boost: "basic",
+    reach: 1200,
+    rsvps: 17,
+    registered: false,
+    registrants: [],
+    createdBy: "seed",
+    createdAt: daysAgo(4),
+  },
+];
+
+export const SEED_CAMPAIGNS: Campaign[] = [
+  {
+    id: "seed-camp-1",
+    listingId: "hoop-prodigy",
+    listingName: "Hoop Prodigy",
+    listingLogo: "/logos/hoop-prodigy.jpg",
+    eventId: "seed-evt-1",
+    eventTitle: "Fall Tryouts — 14U & 16U",
+    objective: "Fill an event",
+    placements: ["discover-spotlight", "in-app-popup", "events-featured"],
+    audience: "Statewide",
+    durationDays: 14,
+    budget: 1232,
+    payment: "Card",
+    status: "active",
+    startDate: dateISO(-5),
+    endDate: dateISO(9),
+    headline: "Fall Tryouts — HP Select 14U & 16U",
+    cta: "Reserve a tryout spot",
+    createdAt: daysAgo(5),
+    metrics: { impressions: 18420, clicks: 642, rsvps: 77, spend: 612 },
+  },
+  {
+    id: "seed-camp-2",
+    listingId: "westside-fc",
+    listingName: "Westside Football Club",
+    listingLogo: "/logos/westside-fc.svg",
+    objective: "Grow awareness",
+    placements: ["discover-spotlight", "in-app-banner"],
+    audience: "Regional",
+    durationDays: 10,
+    budget: 550,
+    payment: "PayPal",
+    status: "active",
+    startDate: dateISO(-3),
+    endDate: dateISO(7),
+    headline: "Winter ID Camp — College Showcase",
+    cta: "Learn more",
+    createdAt: daysAgo(3),
+    metrics: { impressions: 9120, clicks: 287, rsvps: 31, spend: 198 },
+  },
+  {
+    id: "seed-camp-3",
+    listingId: "gridiron-prep-academy",
+    listingName: "Gridiron Prep Academy",
+    listingLogo: "/logos/gridiron-prep-academy.svg",
+    objective: "Fill an event",
+    placements: ["events-featured"],
+    audience: "Local",
+    durationDays: 7,
+    budget: 280,
+    payment: "Card",
+    status: "ended",
+    startDate: dateISO(-16),
+    endDate: dateISO(-9),
+    headline: "7v7 Spring Tournament",
+    cta: "Register your team",
+    createdAt: daysAgo(16),
+    metrics: { impressions: 4200, clicks: 165, rsvps: 22, spend: 280 },
+  },
+  {
+    id: "seed-camp-4",
+    listingId: "harbor-city-fastpitch",
+    listingName: "Harbor City Fastpitch",
+    objective: "Drive profile visits",
+    placements: ["in-app-popup", "discover-spotlight"],
+    audience: "Statewide",
+    durationDays: 14,
+    budget: 1960,
+    payment: "Bank (ACH)",
+    status: "scheduled",
+    startDate: dateISO(4),
+    endDate: dateISO(18),
+    headline: "Elite Fastpitch Showcase — Recruiters Attending",
+    cta: "Reserve a spot",
+    createdAt: daysAgo(1),
+    metrics: { impressions: 0, clicks: 0, rsvps: 0, spend: 0 },
+  },
+];
+
+/** Operator overrides for provider vetting status (beyond each listing's default). */
+export const SEED_VETTING: Record<string, VettingStatus> = {
+  "metro-hoops-collective": "suspended",
+};
+
+/*
+  Flagged reviews are seeded as *real* reviews so they appear publicly on the
+  listing page — until an operator removes them via the moderation queue, which
+  makes them disappear. This closes the trust-&-safety loop visibly.
+*/
+export const SEED_REVIEWS: UserReview[] = [
+  {
+    id: "rev-flag-1",
+    listingId: "valley-elite-hoops",
+    author: "Anonymous",
+    rating: 5,
+    date: dateISO(-1),
+    title: "BEST PROGRAM EVER!!!",
+    body: "Best program ever!!! Coach gave us a discount to post this 5 star review so honestly everyone should join no questions asked!!!",
+    dimensions: [
+      { label: "Communication", value: 5 },
+      { label: "Professionalism", value: 5 },
+      { label: "Value", value: 5 },
+    ],
+  },
+  {
+    id: "rev-flag-2",
+    listingId: "inland-thunder-baseball",
+    author: "Frustrated Dad",
+    rating: 1,
+    date: dateISO(-2),
+    title: "Stay away",
+    body: "Coach is a complete fraud and an idiot who has no business being anywhere near kids. Absolute clown — someone should run him out of town.",
+    dimensions: [
+      { label: "Communication", value: 1 },
+      { label: "Professionalism", value: 1 },
+      { label: "Value", value: 1 },
+    ],
+  },
+];
+
+export const SEED_MODERATION: ModerationItem[] = [
+  {
+    id: "mod-1",
+    type: "review",
+    listingId: "valley-elite-hoops",
+    listingName: "Valley Elite Hoops",
+    reason: "Suspected fake / incentivized review",
+    excerpt: "Best program ever!!! Coach gave us a discount to post this 5 star review…",
+    reportedBy: "Parent report",
+    reportedAt: daysAgo(1),
+    reviewId: "rev-flag-1",
+  },
+  {
+    id: "mod-2",
+    type: "listing",
+    listingId: "metro-hoops-collective",
+    listingName: "Metro Hoops Collective",
+    reason: "Unverified credentials claim",
+    excerpt: "Profile claims “USA Basketball certified staff” — certification could not be confirmed.",
+    reportedBy: "Automated check",
+    reportedAt: daysAgo(2),
+  },
+  {
+    id: "mod-3",
+    type: "review",
+    listingId: "inland-thunder-baseball",
+    listingName: "Inland Thunder Baseball",
+    reason: "Abusive language",
+    excerpt: "Personal attacks against a named coach (“complete fraud… clown… run him out of town”).",
+    reportedBy: "Provider report",
+    reportedAt: daysAgo(3),
+    reviewId: "rev-flag-2",
+  },
+  {
+    id: "mod-4",
+    type: "event",
+    listingId: "coast-united-soccer",
+    listingName: "Coast United Soccer",
+    reason: "Possible duplicate / spam event",
+    excerpt: "Same “Winter Showcase” event posted 4 times in 24 hours.",
+    reportedBy: "Automated check",
+    reportedAt: daysAgo(0),
+  },
+];
+
+// --- Session bookings ------------------------------------------------------
+// Both sides seeded: a family's own booked sessions ("You"), plus inbound
+// bookings on the current provider (Hoop Prodigy) so the schedule isn't empty.
+
+export const SEED_BOOKINGS: SessionBooking[] = [
+  {
+    id: "seed-bk-1",
+    listingId: "skill-at-will-hoops",
+    listingName: "Skill At Will Hoops",
+    listingLogo: "/logos/skill-at-will-hoops.svg",
+    slotId: slotId("skill-at-will-hoops", inDays(3), "4:30 PM"),
+    sessionTypeId: "1on1",
+    sessionTypeName: "1-on-1 Skills Session",
+    date: inDays(3),
+    time: "4:30 PM",
+    durationMin: 60,
+    price: 90,
+    athlete: "You",
+    parentName: "You",
+    status: "upcoming",
+    createdAt: daysAgo(2),
+  },
+  {
+    id: "seed-bk-2",
+    listingId: "skill-at-will-hoops",
+    listingName: "Skill At Will Hoops",
+    listingLogo: "/logos/skill-at-will-hoops.svg",
+    slotId: slotId("skill-at-will-hoops", inDays(-6), "5:30 PM"),
+    sessionTypeId: "assessment",
+    sessionTypeName: "Skills Assessment",
+    date: inDays(-6),
+    time: "5:30 PM",
+    durationMin: 45,
+    price: 60,
+    athlete: "You",
+    parentName: "You",
+    status: "completed",
+    createdAt: daysAgo(13),
+  },
+  {
+    id: "seed-bk-3",
+    listingId: "hoop-prodigy",
+    listingName: "Hoop Prodigy",
+    listingLogo: "/logos/hoop-prodigy.jpg",
+    slotId: slotId("hoop-prodigy", inDays(2), "4:30 PM"),
+    sessionTypeId: "tryout",
+    sessionTypeName: "Tryout / Evaluation",
+    date: inDays(2),
+    time: "4:30 PM",
+    durationMin: 90,
+    price: 0,
+    athlete: "Jordan, 15 · Competitive",
+    parentName: "Marcus B.",
+    fit: 90,
+    status: "upcoming",
+    createdAt: daysAgo(1),
+  },
+  {
+    id: "seed-bk-4",
+    listingId: "hoop-prodigy",
+    listingName: "Hoop Prodigy",
+    listingLogo: "/logos/hoop-prodigy.jpg",
+    slotId: slotId("hoop-prodigy", inDays(5), "5:30 PM"),
+    sessionTypeId: "practice",
+    sessionTypeName: "Practice Visit",
+    date: inDays(5),
+    time: "5:30 PM",
+    durationMin: 60,
+    price: 0,
+    athlete: "Sofia, 13 · Intermediate",
+    parentName: "Elena V.",
+    fit: 82,
+    status: "upcoming",
+    createdAt: daysAgo(0),
+  },
+];
+
+// --- Provider roster & teams (current provider: Hoop Prodigy) ---------------
+
+export const SEED_TEAMS: Team[] = [
+  { id: "team-14u", name: "HP Select 14U", level: "Competitive", sport: "Basketball" },
+  { id: "team-16u", name: "HP Select 16U", level: "Elite", sport: "Basketball" },
+  { id: "team-academy", name: "Skills Academy", level: "Intermediate", sport: "Basketball" },
+];
+
+export const SEED_ROSTER: RosterMember[] = [
+  { id: "rm-1", name: "Diego, 14 · Competitive", parent: "Maria G.", teamId: "team-14u", status: "active", addedAt: daysAgo(40) },
+  { id: "rm-2", name: "Marcus, 14 · Competitive", parent: "Andre M.", teamId: "team-14u", status: "active", addedAt: daysAgo(35) },
+  { id: "rm-3", name: "Aaliyah, 16 · Elite", parent: "James T.", teamId: "team-16u", status: "active", addedAt: daysAgo(60) },
+  { id: "rm-4", name: "Jordan, 15 · Competitive", parent: "Marcus B.", teamId: "team-16u", status: "active", addedAt: daysAgo(20) },
+  { id: "rm-5", name: "Rohan, 13 · Competitive", parent: "Priya S.", teamId: "team-academy", status: "active", addedAt: daysAgo(15) },
+  { id: "rm-6", name: "Ella, 15 · Intermediate", parent: "Tom W.", teamId: null, status: "prospect", addedAt: daysAgo(3) },
+  { id: "rm-7", name: "Sofia, 13 · Intermediate", parent: "Elena V.", teamId: null, status: "prospect", addedAt: daysAgo(1) },
+];
+
+// --- Provider subscription & billing ---------------------------------------
+
+const TODAY_ISO = localISODate(new Date());
+export const SEED_SUBSCRIPTION: ProviderSubscription = defaultSubscription(TODAY_ISO);
+export const SEED_INVOICES: Invoice[] = seedInvoices(TODAY_ISO);
+
+// Current provider's published weekly availability (0 = Sun … 6 = Sat).
+export const SEED_AVAILABILITY: Record<string, ProviderAvailability> = {
+  "hoop-prodigy": {
+    weekly: {
+      0: [], // Sunday closed
+      1: ["4:30 PM", "5:30 PM", "6:30 PM"],
+      2: ["3:30 PM", "4:30 PM", "5:30 PM", "6:30 PM"],
+      3: ["4:30 PM", "5:30 PM", "6:30 PM", "7:30 PM"],
+      4: ["3:30 PM", "4:30 PM", "5:30 PM"],
+      5: ["3:30 PM", "4:30 PM"],
+      6: ["9:00 AM", "10:30 AM", "12:00 PM", "1:30 PM"],
+    },
+    blockedDates: [],
+  },
+};
+
+export const SEED_NOTIFICATIONS: AppNotification[] = [
+  {
+    id: "seed-n1",
+    role: "provider",
+    icon: "message",
+    text: "New inquiry from Maria G. — Diego, 14",
+    href: "/app/inbox",
+    at: daysAgo(0),
+    read: false,
+  },
+  {
+    id: "seed-n2",
+    role: "provider",
+    icon: "calendar",
+    text: "James T. requested a visit — Aaliyah, 16",
+    href: "/app/inbox",
+    at: daysAgo(1),
+    read: false,
+  },
+  {
+    id: "seed-n3",
+    role: "parent",
+    icon: "trophy",
+    text: "3 new programs match your athlete profile",
+    href: "/app/match",
+    at: daysAgo(1),
+    read: false,
+  },
+];

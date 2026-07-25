@@ -21,8 +21,10 @@ import {
 import { SPORTS_LIST } from "@/lib/data/listings";
 import { useProfile } from "@/lib/useProfile";
 import { useProspectIQ } from "@/lib/useProspectIQ";
+import { usePiqHistory } from "@/lib/usePiqHistory";
 import { Eyebrow } from "@/components/ui/Eyebrow";
 import { ScoutingReport } from "@/components/app/ScoutingReport";
+import { PiqProgress } from "@/components/app/PiqProgress";
 
 type Stage = "intro" | "capture" | "analyzing" | "report";
 
@@ -44,6 +46,7 @@ const ANALYZE_STEPS = [
 export function CombineFlow() {
   const { profile } = useProfile();
   const { save } = useProspectIQ();
+  const { history, add: addHistory } = usePiqHistory();
 
   const [stage, setStage] = useState<Stage>("intro");
   const [sport, setSport] = useState<Sport>("Basketball");
@@ -91,6 +94,7 @@ export function CombineFlow() {
     });
     setResult(r);
     save(r);
+    addHistory(r);
   };
 
   // advance the analyzing animation, then reveal the report
@@ -165,8 +169,15 @@ export function CombineFlow() {
             onClick={() => setStage("capture")}
             className="mt-7 inline-flex items-center gap-2 rounded-lg bg-navy px-6 py-3 text-sm font-semibold text-white hover:bg-navy-deep"
           >
-            Start the Combine <ArrowRight size={16} />
+            {history.length > 0 ? "Re-evaluate" : "Start the Combine"} <ArrowRight size={16} />
           </button>
+        </div>
+      )}
+
+      {/* progress over time — appears once there's history */}
+      {stage === "intro" && history.length > 0 && (
+        <div className="mt-6">
+          <PiqProgress history={history} />
         </div>
       )}
 

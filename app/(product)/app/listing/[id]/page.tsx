@@ -9,19 +9,21 @@ import {
   Trophy,
   GraduationCap,
   Award,
+  Dumbbell,
   Clock,
   DollarSign,
 } from "lucide-react";
 import { LISTINGS, getListing, CATEGORY_LABEL } from "@/lib/data/listings";
-import { computeCsdScore, averageRating } from "@/lib/scoring";
+import { computeCsdScore, derivedGoals } from "@/lib/scoring";
 import { CsdScoreBadge } from "@/components/ui/CsdScoreBadge";
-import { StarRating } from "@/components/ui/StarRating";
 import { Eyebrow } from "@/components/ui/Eyebrow";
 import { LogoAvatar } from "@/components/listing/LogoAvatar";
 import { ScoreBreakdown } from "@/components/listing/ScoreBreakdown";
-import { ReviewList } from "@/components/listing/ReviewList";
-import { SaveButton } from "@/components/app/SaveButton";
-import { DemoButton } from "@/components/app/DemoButton";
+import { ListingReviews } from "@/components/listing/ListingReviews";
+import { ListingHeadlineRating } from "@/components/listing/ListingHeadlineRating";
+import { ListingActions } from "@/components/app/ListingActions";
+import { OverridableText } from "@/components/app/OverridableText";
+import { ListingSuspendedNotice } from "@/components/app/ListingSuspendedNotice";
 
 export function generateStaticParams() {
   return LISTINGS.map((l) => ({ id: l.id }));
@@ -47,20 +49,6 @@ export default async function ListingPage({ params }: { params: Promise<{ id: st
   if (!listing) notFound();
 
   const { score, parts } = computeCsdScore(listing);
-  const rating = averageRating(listing);
-
-  // Average each review dimension for the category-specific summary.
-  const dimMap = new Map<string, { sum: number; n: number }>();
-  for (const r of listing.reviews) {
-    for (const d of r.dimensions) {
-      const cur = dimMap.get(d.label) ?? { sum: 0, n: 0 };
-      dimMap.set(d.label, { sum: cur.sum + d.value, n: cur.n + 1 });
-    }
-  }
-  const dimAverages = [...dimMap.entries()].map(([label, v]) => ({
-    label,
-    value: v.sum / v.n,
-  }));
 
   const alumniTotal =
     listing.alumni.pro + listing.alumni.d1 + listing.alumni.d2 + listing.alumni.d3;
@@ -73,6 +61,8 @@ export default async function ListingPage({ params }: { params: Promise<{ id: st
       >
         <ArrowLeft size={15} /> Back to directory
       </Link>
+
+      <ListingSuspendedNotice listingId={listing.id} verified={listing.verified} />
 
       {/* claim banner */}
       {listing.claimState === "unclaimed" && (
@@ -112,13 +102,19 @@ export default async function ListingPage({ params }: { params: Promise<{ id: st
               </span>
             )}
           </div>
-          <h1 className="display mt-2 text-4xl text-navy">{listing.name}</h1>
+          <OverridableText
+            as="h1"
+            listingId={listing.id}
+            field="name"
+            fallback={listing.name}
+            className="display mt-2 text-4xl text-navy"
+          />
           <div className="mt-3 flex flex-wrap items-center gap-x-4 gap-y-1.5 text-sm text-ink/65">
             <span className="font-semibold text-ink/85">{listing.sports.join(" · ")}</span>
             <span className="inline-flex items-center gap-1">
               <MapPin size={14} /> {listing.city}, {listing.county} County
             </span>
-            <StarRating value={rating} count={listing.reviews.length} />
+            <ListingHeadlineRating listingId={listing.id} seedReviews={listing.reviews} />
           </div>
           <div className="mt-4 flex flex-wrap gap-2">
             {listing.levels.map((l) => (
@@ -132,13 +128,7 @@ export default async function ListingPage({ params }: { params: Promise<{ id: st
               </span>
             ))}
           </div>
-          <div className="mt-6 flex flex-wrap gap-3">
-            <DemoButton variant="red">Request info</DemoButton>
-            <DemoButton variant="outline" done="Added (demo)">
-              Book a visit
-            </DemoButton>
-            <SaveButton id={listing.id} />
-          </div>
+          <ListingActions listing={listing} />
           </div>
         </div>
 
@@ -154,11 +144,26 @@ export default async function ListingPage({ params }: { params: Promise<{ id: st
           {/* overview */}
           <section className="rounded-2xl border border-ink/10 bg-white p-7">
             <h2 className="display text-2xl text-navy">OVERVIEW</h2>
-            <p className="mt-3 text-ink/70">{listing.philosophy}</p>
+            <OverridableText
+              as="p"
+              listingId={listing.id}
+              field="philosophy"
+              fallback={listing.philosophy}
+              className="mt-3 text-ink/70"
+            />
             <div className="mt-5 grid gap-3 sm:grid-cols-2">
               {listing.goals.map((g) => (
                 <div key={g} className="flex items-center gap-2 rounded-lg bg-cream/60 px-3 py-2 text-sm">
                   <Award size={15} className="text-gold" /> {g}
+                </div>
+              ))}
+              {derivedGoals(listing).map((g) => (
+                <div
+                  key={g}
+                  className="flex items-center gap-2 rounded-lg border border-navy/15 bg-navy/[0.04] px-3 py-2 text-sm"
+                  title="Matched from this program's specialties"
+                >
+                  <Dumbbell size={15} className="text-navy" /> {g}
                 </div>
               ))}
             </div>
@@ -202,35 +207,13 @@ export default async function ListingPage({ params }: { params: Promise<{ id: st
             )}
           </section>
 
-          {/* reviews */}
-          <section>
-            <div className="flex items-center justify-between">
-              <h2 className="display text-2xl text-navy">REVIEWS</h2>
-              <StarRating value={rating} count={listing.reviews.length} />
-            </div>
-            {/* dimension summary */}
-            <div className="mt-4 grid gap-2 rounded-2xl border border-ink/10 bg-cream-200 p-5 sm:grid-cols-2">
-              {dimAverages.map((d) => (
-                <div key={d.label} className="flex items-center justify-between gap-3">
-                  <span className="text-sm text-ink/65">{d.label}</span>
-                  <div className="flex items-center gap-2">
-                    <div className="h-1.5 w-20 rounded-full bg-white">
-                      <div
-                        className="h-1.5 rounded-full bg-gold"
-                        style={{ width: `${(d.value / 5) * 100}%` }}
-                      />
-                    </div>
-                    <span className="w-7 text-right text-sm font-semibold text-navy">
-                      {d.value.toFixed(1)}
-                    </span>
-                  </div>
-                </div>
-              ))}
-            </div>
-            <div className="mt-5">
-              <ReviewList reviews={listing.reviews} />
-            </div>
-          </section>
+          {/* reviews (live — merges user-submitted reviews) */}
+          <ListingReviews
+            listingId={listing.id}
+            listingName={listing.name}
+            category={listing.category}
+            seedReviews={listing.reviews}
+          />
         </div>
 
         {/* sidebar */}
@@ -259,7 +242,8 @@ export default async function ListingPage({ params }: { params: Promise<{ id: st
                   <Clock size={16} className="text-navy" /> {listing.yearsInOperation} years operating
                 </li>
                 <li className="flex items-center gap-2.5 text-ink/75">
-                  <DollarSign size={16} className="text-navy" /> {listing.priceLabel}
+                  <DollarSign size={16} className="text-navy" />{" "}
+                  <OverridableText listingId={listing.id} field="priceLabel" fallback={listing.priceLabel} />
                 </li>
                 {listing.certifications.map((c) => (
                   <li key={c} className="flex items-center gap-2.5 text-ink/75">

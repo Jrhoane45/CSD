@@ -21,8 +21,10 @@ import {
 } from "@/lib/data/listings";
 import { CsdScoreBadge } from "@/components/ui/CsdScoreBadge";
 import { computeCsdScore } from "@/lib/scoring";
+import { useStore, isPubliclyVisible } from "@/lib/store";
 import { SaveButton } from "@/components/app/SaveButton";
 import { LogoAvatar } from "@/components/listing/LogoAvatar";
+import { OverridableText } from "@/components/app/OverridableText";
 
 const LEVELS: { value: DevLevel; blurb: string }[] = [
   { value: "Recreational", blurb: "First exposure — fun and fundamentals." },
@@ -47,6 +49,7 @@ export function MatchFlow() {
   const [step, setStep] = useState(0);
   const [profile, setProfile] = useState<AthleteProfile>(EMPTY);
   const [done, setDone] = useState(false);
+  const { vetting } = useStore();
 
   const set = (patch: Partial<AthleteProfile>) => setProfile((p) => ({ ...p, ...patch }));
   const toggleGoal = (g: string) =>
@@ -63,8 +66,14 @@ export function MatchFlow() {
     step === 3;
 
   const results = useMemo(
-    () => (done ? rankMatches(profile, LISTINGS).slice(0, 6) : []),
-    [done, profile],
+    () =>
+      done
+        ? rankMatches(
+            profile,
+            LISTINGS.filter((l) => isPubliclyVisible(l, vetting)),
+          ).slice(0, 6)
+        : [],
+    [done, profile, vetting],
   );
 
   if (done) {
@@ -371,7 +380,8 @@ function MatchCard({
               href={`/app/listing/${listing.id}`}
               className="block text-lg font-bold text-navy hover:underline"
             >
-              {rank}. {listing.name}
+              {rank}.{" "}
+              <OverridableText as="span" listingId={listing.id} field="name" fallback={listing.name} />
             </Link>
             <div className="mt-1 flex flex-wrap items-center gap-x-3 gap-y-1 text-sm text-ink/60">
               <span className="font-medium text-ink/80">{CATEGORY_LABEL[listing.category]}</span>
