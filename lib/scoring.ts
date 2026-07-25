@@ -207,6 +207,17 @@ function goalMatchesListing(goal: string, listing: Listing): boolean {
   return synonyms ? synonyms.some((s) => listing.goals.includes(s)) : false;
 }
 
+/**
+ * Broad goals a listing qualifies for via its specialty tags but doesn't list
+ * explicitly (e.g. "Athletic Development" from a strength/speed tag). Surfaced
+ * on profiles so what drives matching is visible to families.
+ */
+export function derivedGoals(listing: Listing): string[] {
+  return Object.entries(GOAL_SYNONYMS)
+    .filter(([goal, syns]) => !listing.goals.includes(goal) && syns.some((s) => listing.goals.includes(s)))
+    .map(([goal]) => goal);
+}
+
 function goalsFactor(profile: AthleteProfile, listing: Listing): MatchFactor {
   const max = 10;
   if (profile.goals.length === 0) {

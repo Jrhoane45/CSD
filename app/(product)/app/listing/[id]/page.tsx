@@ -9,17 +9,18 @@ import {
   Trophy,
   GraduationCap,
   Award,
+  Dumbbell,
   Clock,
   DollarSign,
 } from "lucide-react";
 import { LISTINGS, getListing, CATEGORY_LABEL } from "@/lib/data/listings";
-import { computeCsdScore, averageRating } from "@/lib/scoring";
+import { computeCsdScore, derivedGoals } from "@/lib/scoring";
 import { CsdScoreBadge } from "@/components/ui/CsdScoreBadge";
-import { StarRating } from "@/components/ui/StarRating";
 import { Eyebrow } from "@/components/ui/Eyebrow";
 import { LogoAvatar } from "@/components/listing/LogoAvatar";
 import { ScoreBreakdown } from "@/components/listing/ScoreBreakdown";
 import { ListingReviews } from "@/components/listing/ListingReviews";
+import { ListingHeadlineRating } from "@/components/listing/ListingHeadlineRating";
 import { ListingActions } from "@/components/app/ListingActions";
 import { OverridableText } from "@/components/app/OverridableText";
 import { ListingSuspendedNotice } from "@/components/app/ListingSuspendedNotice";
@@ -48,7 +49,6 @@ export default async function ListingPage({ params }: { params: Promise<{ id: st
   if (!listing) notFound();
 
   const { score, parts } = computeCsdScore(listing);
-  const rating = averageRating(listing);
 
   const alumniTotal =
     listing.alumni.pro + listing.alumni.d1 + listing.alumni.d2 + listing.alumni.d3;
@@ -114,7 +114,7 @@ export default async function ListingPage({ params }: { params: Promise<{ id: st
             <span className="inline-flex items-center gap-1">
               <MapPin size={14} /> {listing.city}, {listing.county} County
             </span>
-            <StarRating value={rating} count={listing.reviews.length} />
+            <ListingHeadlineRating listingId={listing.id} seedReviews={listing.reviews} />
           </div>
           <div className="mt-4 flex flex-wrap gap-2">
             {listing.levels.map((l) => (
@@ -155,6 +155,15 @@ export default async function ListingPage({ params }: { params: Promise<{ id: st
               {listing.goals.map((g) => (
                 <div key={g} className="flex items-center gap-2 rounded-lg bg-cream/60 px-3 py-2 text-sm">
                   <Award size={15} className="text-gold" /> {g}
+                </div>
+              ))}
+              {derivedGoals(listing).map((g) => (
+                <div
+                  key={g}
+                  className="flex items-center gap-2 rounded-lg border border-navy/15 bg-navy/[0.04] px-3 py-2 text-sm"
+                  title="Matched from this program's specialties"
+                >
+                  <Dumbbell size={15} className="text-navy" /> {g}
                 </div>
               ))}
             </div>

@@ -12,10 +12,12 @@ import {
   Inbox,
   AlertTriangle,
   ArrowRight,
+  Lock,
 } from "lucide-react";
 import { LISTINGS } from "@/lib/data/listings";
 import { SEED_MODERATION } from "@/lib/data/activity";
 import { useStore, vettingStatusFor } from "@/lib/store";
+import { lockOperator } from "@/lib/useOperatorAuth";
 import { Eyebrow } from "@/components/ui/Eyebrow";
 
 const fmt = (n: number) => n.toLocaleString();
@@ -41,12 +43,22 @@ export function OperatorConsole() {
 
   return (
     <div className="mx-auto max-w-5xl px-6 py-10">
-      <Eyebrow>CSD operator · internal</Eyebrow>
-      <h1 className="mt-3 display text-4xl text-navy">OPERATOR CONSOLE</h1>
-      <p className="mt-1 max-w-xl text-sm text-ink/60">
-        Platform health at a glance — provider vetting, content moderation, and the promotions
-        marketplace, all in one place.
-      </p>
+      <div className="flex items-start justify-between gap-4">
+        <div>
+          <Eyebrow>CSD operator · internal</Eyebrow>
+          <h1 className="mt-3 display text-4xl text-navy">OPERATOR CONSOLE</h1>
+          <p className="mt-1 max-w-xl text-sm text-ink/60">
+            Platform health at a glance — provider vetting, content moderation, and the promotions
+            marketplace, all in one place.
+          </p>
+        </div>
+        <button
+          onClick={() => lockOperator()}
+          className="inline-flex shrink-0 items-center gap-1.5 rounded-lg border border-ink/15 px-3 py-2 text-xs font-semibold text-ink/60 hover:border-navy/40 hover:text-navy"
+        >
+          <Lock size={14} /> Lock console
+        </button>
+      </div>
 
       {/* platform KPIs */}
       <div className="mt-6 grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
