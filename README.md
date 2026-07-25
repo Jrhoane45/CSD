@@ -168,6 +168,28 @@ docs/
   DEMO_SPEC.md        The signed-off build specification
 ```
 
+## Path to production (backend, auth & payments)
+
+The app runs **fully in demo mode with no configuration** — identity is a local role
+toggle, data lives in `localStorage`, and checkout is simulated. A configuration seam
+lets a real backend switch on **purely by adding env vars** (see `.env.example`), with
+no code changes at call sites:
+
+- **`lib/config.ts`** — reads env and reports `authMode()` / `paymentMode()` (`demo` until
+  Supabase / Stripe keys are present).
+- **`lib/auth/`** — an `AuthAdapter` seam with a `useSession()` hook. The **demo adapter**
+  composes the role toggle + a local identity today; a **Supabase adapter** (stub in place)
+  implements the same surface for real accounts. Swapping is one line in `lib/auth/index.ts`.
+- **`supabase/schema.sql`** — the full Postgres schema (accounts & roles, listings, reviews,
+  events, campaigns, threads, bookings, operator vetting & moderation, saved data) with
+  Row-Level Security starter policies.
+
+**To go live** (owner-provided, can't be done from the sandbox):
+1. Create a Supabase project; run `supabase/schema.sql`.
+2. Set `NEXT_PUBLIC_SUPABASE_URL` + `NEXT_PUBLIC_SUPABASE_ANON_KEY` (and `SUPABASE_SERVICE_ROLE_KEY`).
+3. For payments, set the `STRIPE_*` keys.
+4. Implement the Supabase auth adapter + data repositories (follow-up), then flip `lib/auth/index.ts`.
+
 ## Notes & next steps
 - Brand visuals are derived from the CSD logo/one-pager. The badge is an SVG recreation — drop the
   official logo into `public/` to swap it in.
