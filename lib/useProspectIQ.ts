@@ -1,34 +1,17 @@
 "use client";
 
-import { useCallback, useEffect, useState } from "react";
+import { useCallback } from "react";
 import type { PiqResult } from "./prospectiq";
+import { createPersistentStore } from "./persistentStore";
 
-const KEY = "csd-piq-result";
+const store = createPersistentStore<PiqResult | null>("csd-piq-result", null);
 
 /** localStorage-backed latest Prospect IQ result (demo, no backend). */
 export function useProspectIQ() {
-  const [result, setResult] = useState<PiqResult | null>(null);
-  const [ready, setReady] = useState(false);
+  const { value: result, ready } = store.useValue();
 
-  useEffect(() => {
-    try {
-      const raw = localStorage.getItem(KEY);
-      if (raw) setResult(JSON.parse(raw));
-    } catch {
-      /* ignore */
-    }
-    setReady(true);
-  }, []);
-
-  const save = useCallback((r: PiqResult) => {
-    localStorage.setItem(KEY, JSON.stringify(r));
-    setResult(r);
-  }, []);
-
-  const clear = useCallback(() => {
-    localStorage.removeItem(KEY);
-    setResult(null);
-  }, []);
+  const save = useCallback((r: PiqResult) => store.set(r), []);
+  const clear = useCallback(() => store.clear(), []);
 
   return { result, ready, save, clear };
 }

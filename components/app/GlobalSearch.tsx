@@ -86,10 +86,6 @@ export function GlobalSearch() {
     return { sections: secs, flat: secs.flatMap((s) => s.items) };
   }, [query, events, vetting]);
 
-  useEffect(() => {
-    setActive(0);
-  }, [query]);
-
   const close = useCallback(() => {
     setOpen(false);
     setQuery("");
@@ -169,7 +165,10 @@ export function GlobalSearch() {
               <input
                 ref={inputRef}
                 value={query}
-                onChange={(e) => setQuery(e.target.value)}
+                onChange={(e) => {
+                  setQuery(e.target.value);
+                  setActive(0);
+                }}
                 placeholder="Search programs, events, and pages…"
                 className="w-full text-sm text-ink outline-none placeholder:text-ink/40"
               />

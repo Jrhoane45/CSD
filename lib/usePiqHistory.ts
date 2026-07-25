@@ -1,7 +1,8 @@
 "use client";
 
-import { useCallback, useEffect, useState } from "react";
+import { useCallback } from "react";
 import type { PiqResult } from "./prospectiq";
+import { createPersistentStore } from "./persistentStore";
 
 /*
   localStorage-backed history of Prospect IQ evaluations (demo, no backend).
@@ -10,41 +11,21 @@ import type { PiqResult } from "./prospectiq";
   this keeps the full ordered series so improvement is visible.
 */
 
-const KEY = "csd-piq-history";
+const store = createPersistentStore<PiqResult[]>("csd-piq-history", []);
 
 export function usePiqHistory() {
-  const [history, setHistory] = useState<PiqResult[]>([]);
-  const [ready, setReady] = useState(false);
-
-  useEffect(() => {
-    try {
-      const raw = localStorage.getItem(KEY);
-      if (raw) setHistory(JSON.parse(raw));
-    } catch {
-      /* ignore */
-    }
-    setReady(true);
-  }, []);
+  const { value: history, ready } = store.useValue();
 
   const add = useCallback((r: PiqResult) => {
-    setHistory((prev) => {
+    store.update((prev) =>
       // De-dupe an immediate re-save of the exact same evaluation (e.g. verify toggle).
-      const next = [...prev.filter((h) => h.createdAt !== r.createdAt), r].sort(
+      [...prev.filter((h) => h.createdAt !== r.createdAt), r].sort(
         (a, b) => +new Date(a.createdAt) - +new Date(b.createdAt),
-      );
-      try {
-        localStorage.setItem(KEY, JSON.stringify(next));
-      } catch {
-        /* ignore */
-      }
-      return next;
-    });
+      ),
+    );
   }, []);
 
-  const clear = useCallback(() => {
-    localStorage.removeItem(KEY);
-    setHistory([]);
-  }, []);
+  const clear = useCallback(() => store.clear(), []);
 
   return { history, ready, add, clear };
 }
