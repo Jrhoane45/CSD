@@ -178,17 +178,22 @@ no code changes at call sites:
 - **`lib/config.ts`** — reads env and reports `authMode()` / `paymentMode()` (`demo` until
   Supabase / Stripe keys are present).
 - **`lib/auth/`** — an `AuthAdapter` seam with a `useSession()` hook. The **demo adapter**
-  composes the role toggle + a local identity today; a **Supabase adapter** (stub in place)
-  implements the same surface for real accounts. Swapping is one line in `lib/auth/index.ts`.
-- **`supabase/schema.sql`** — the full Postgres schema (accounts & roles, listings, reviews,
-  events, campaigns, threads, bookings, operator vetting & moderation, saved data) with
-  Row-Level Security starter policies.
+  composes the role toggle + a local identity; the **Supabase adapter** (implemented) uses
+  Supabase Auth + the `profiles` role. The factory in `lib/auth/index.ts` picks automatically.
+- **`lib/db/`** — a repository seam (`getRepositories()`): identical call sites resolve to
+  **demo** (seed data) or **Supabase** (row-mapped) implementations based on config. Listings +
+  reviews are modelled; remaining domains follow the same pattern.
+- **`lib/supabase/`** — lazily-created browser + service-role clients (only when configured).
+- **`supabase/schema.sql`** — the full Postgres schema + RLS starter policies + a
+  `handle_new_user` trigger that provisions a `profiles` row (with role) on sign-up.
 
 **To go live** (owner-provided, can't be done from the sandbox):
 1. Create a Supabase project; run `supabase/schema.sql`.
-2. Set `NEXT_PUBLIC_SUPABASE_URL` + `NEXT_PUBLIC_SUPABASE_ANON_KEY` (and `SUPABASE_SERVICE_ROLE_KEY`).
-3. For payments, set the `STRIPE_*` keys.
-4. Implement the Supabase auth adapter + data repositories (follow-up), then flip `lib/auth/index.ts`.
+2. Set `NEXT_PUBLIC_SUPABASE_URL` + `NEXT_PUBLIC_SUPABASE_ANON_KEY` (and `SUPABASE_SERVICE_ROLE_KEY`)
+   in Vercel — auth + data switch to Supabase automatically.
+3. Seed the `listings` table (import the current seed data) and verify sign-in (magic link).
+4. Remaining wiring: a server-side Supabase client for RLS-scoped server reads, and migrating the
+   rest of the domains + write paths onto repositories. For payments, set the `STRIPE_*` keys.
 
 ## Notes & next steps
 - Brand visuals are derived from the CSD logo/one-pager. The badge is an SVG recreation — drop the
