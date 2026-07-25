@@ -26,6 +26,7 @@ import {
 import { CsdBadge } from "@/components/brand/CsdBadge";
 import { NotificationBell } from "@/components/app/NotificationBell";
 import { GlobalSearch } from "@/components/app/GlobalSearch";
+import { AccountMenu } from "@/components/app/AccountMenu";
 import { useRole, setRole } from "@/lib/useRole";
 import { useStore } from "@/lib/store";
 import type { Role } from "@/lib/types";
@@ -144,9 +145,10 @@ export function AppShell({ children }: { children: React.ReactNode }) {
                 <Settings size={18} />
               </Link>
             )}
+            <AccountMenu />
             <Link
               href="/"
-              className="ml-1 hidden items-center gap-1 text-sm font-medium text-ink/55 hover:text-navy sm:inline-flex"
+              className="ml-0.5 hidden items-center gap-1 text-sm font-medium text-ink/55 hover:text-navy sm:inline-flex"
             >
               Exit <ArrowUpRight size={15} />
             </Link>
