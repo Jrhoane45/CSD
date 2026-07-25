@@ -1,37 +1,19 @@
 "use client";
 
-import { useCallback, useEffect, useState } from "react";
+import { useCallback } from "react";
+import { createPersistentStore } from "./persistentStore";
 
-const KEY = "csd-saved-listings";
+const store = createPersistentStore<string[]>("csd-saved-listings", []);
 
-/** Tiny localStorage-backed store for "saved" listings (demo, no backend). */
+/** localStorage-backed "saved" listings, synced across components (demo, no backend). */
 export function useSaved() {
-  const [ids, setIds] = useState<string[]>([]);
-  const [ready, setReady] = useState(false);
+  const { value: ids, ready } = store.useValue();
 
-  useEffect(() => {
-    try {
-      const raw = localStorage.getItem(KEY);
-      if (raw) setIds(JSON.parse(raw));
-    } catch {
-      /* ignore */
-    }
-    setReady(true);
+  const toggle = useCallback((id: string) => {
+    store.update((prev) => (prev.includes(id) ? prev.filter((x) => x !== id) : [...prev, id]));
   }, []);
 
-  const persist = useCallback((next: string[]) => {
-    setIds(next);
-    localStorage.setItem(KEY, JSON.stringify(next));
-  }, []);
-
-  const toggle = useCallback(
-    (id: string) => {
-      persist(ids.includes(id) ? ids.filter((x) => x !== id) : [...ids, id]);
-    },
-    [ids, persist],
-  );
-
-  const has = useCallback((id: string) => ids.includes(id), [ids]);
+  const has = (id: string) => ids.includes(id);
 
   return { ids, has, toggle, ready };
 }

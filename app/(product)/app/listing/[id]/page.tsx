@@ -24,6 +24,7 @@ import { ListingHeadlineRating } from "@/components/listing/ListingHeadlineRatin
 import { ListingActions } from "@/components/app/ListingActions";
 import { OverridableText } from "@/components/app/OverridableText";
 import { ListingSuspendedNotice } from "@/components/app/ListingSuspendedNotice";
+import { ListingVerifiedBadge } from "@/components/app/ListingVerifiedBadge";
 
 export function generateStaticParams() {
   return LISTINGS.map((l) => ({ id: l.id }));
@@ -92,15 +93,7 @@ export default async function ListingPage({ params }: { params: Promise<{ id: st
           <div className="flex-1">
           <div className="flex items-center gap-3">
             <Eyebrow tone="red">{CATEGORY_LABEL[listing.category]}</Eyebrow>
-            {listing.verified ? (
-              <span className="inline-flex items-center gap-1 text-xs font-semibold text-navy">
-                <BadgeCheck size={14} /> Verified
-              </span>
-            ) : (
-              <span className="inline-flex items-center gap-1 text-xs font-semibold text-gold">
-                <Sparkles size={13} /> Unclaimed
-              </span>
-            )}
+            <ListingVerifiedBadge listingId={listing.id} verified={listing.verified} />
           </div>
           <OverridableText
             as="h1"

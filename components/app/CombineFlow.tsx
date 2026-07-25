@@ -57,15 +57,18 @@ export function CombineFlow() {
   const [result, setResult] = useState<PiqResult | null>(null);
   const [locked, setLocked] = useState(true);
 
-  // Prefill from the athlete profile if present.
-  useEffect(() => {
-    if (!profile) return;
+  // Prefill from the athlete profile once it loads — adjust state during render
+  // (the React-recommended alternative to a prop-sync effect).
+  const [prefilledKey, setPrefilledKey] = useState<string | null>(null);
+  const profileKey = profile ? `${profile.sport}:${profile.age}` : null;
+  if (profile && profileKey !== prefilledKey) {
+    setPrefilledKey(profileKey);
     if (profile.sport) {
       setSport(profile.sport);
       setPosition(POSITIONS_BY_SPORT[profile.sport]?.[0] ?? "Guard");
     }
     if (profile.age) setAge(String(profile.age));
-  }, [profile]);
+  }
 
   const drills = sport === "Basketball" ? BASKETBALL_DRILLS : GENERIC_DRILLS;
   const positions = POSITIONS_BY_SPORT[sport] ?? ["General"];
@@ -73,7 +76,8 @@ export function CombineFlow() {
   const toggle = (id: string) =>
     setCaptured((prev) => {
       const next = new Set(prev);
-      next.has(id) ? next.delete(id) : next.add(id);
+      if (next.has(id)) next.delete(id);
+      else next.add(id);
       return next;
     });
 

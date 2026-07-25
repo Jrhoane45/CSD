@@ -1,17 +1,16 @@
 "use client";
 
-import { useEffect, useState } from "react";
 import { Info, X, RotateCcw } from "lucide-react";
 import { resetDemo } from "@/lib/store";
+import { createPersistentStore } from "@/lib/persistentStore";
+
+const dismissed = createPersistentStore<boolean>("csd-demo-banner-dismissed", false);
 
 export function DemoBanner() {
-  const [hidden, setHidden] = useState(true);
+  const { value: isDismissed, ready } = dismissed.useValue();
 
-  useEffect(() => {
-    setHidden(localStorage.getItem("csd-demo-banner") === "dismissed");
-  }, []);
-
-  if (hidden) return null;
+  // Hidden until we know the persisted state, then hidden once dismissed.
+  if (!ready || isDismissed) return null;
 
   return (
     <div className="relative z-50 bg-ink text-cream">
@@ -33,10 +32,7 @@ export function DemoBanner() {
         </button>
         <button
           aria-label="Dismiss demo notice"
-          onClick={() => {
-            localStorage.setItem("csd-demo-banner", "dismissed");
-            setHidden(true);
-          }}
+          onClick={() => dismissed.set(true)}
           className="absolute right-3 top-1/2 -translate-y-1/2 rounded p-1 hover:bg-white/10"
         >
           <X size={14} />
