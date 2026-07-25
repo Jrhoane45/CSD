@@ -2,7 +2,6 @@ import type { Metadata } from "next";
 import Link from "next/link";
 import { ArrowRight, Clock, BookOpen } from "lucide-react";
 import { PageHero } from "@/components/site/PageHero";
-import { Eyebrow } from "@/components/ui/Eyebrow";
 import { ARTICLES } from "@/lib/data/resources";
 
 export const metadata: Metadata = {

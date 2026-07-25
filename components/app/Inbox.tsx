@@ -38,16 +38,19 @@ export function Inbox() {
   );
 
   // Initialize selection from a deep link (/app/inbox?thread=<id>) or, on a
-  // wide screen, the first conversation.
-  useEffect(() => {
-    if (selected) return;
-    const id = new URLSearchParams(window.location.search).get("thread");
-    if (id && threads.some((t) => t.id === id)) {
-      setSelected(id);
-    } else if (visible.length && window.innerWidth >= 1024) {
-      setSelected(visible[0].id);
+  // wide screen, the first conversation — once, on the client, during render.
+  const [initialized, setInitialized] = useState(false);
+  if (!initialized && typeof window !== "undefined") {
+    setInitialized(true);
+    if (!selected) {
+      const id = new URLSearchParams(window.location.search).get("thread");
+      if (id && threads.some((t) => t.id === id)) {
+        setSelected(id);
+      } else if (visible.length && window.innerWidth >= 1024) {
+        setSelected(visible[0].id);
+      }
     }
-  }, [selected, threads, visible]);
+  }
 
   const active = visible.find((t) => t.id === selected) ?? null;
 

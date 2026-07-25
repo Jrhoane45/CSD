@@ -15,13 +15,14 @@ export function PromoPopup() {
     (c) => c.status === "active" && c.placements.includes("in-app-popup"),
   );
   const [show, setShow] = useState(false);
+  const campId = camp?.id;
 
   useEffect(() => {
-    if (!camp) return;
-    if (sessionStorage.getItem(`csd-promo-seen-${camp.id}`)) return;
+    if (!campId) return;
+    if (sessionStorage.getItem(`csd-promo-seen-${campId}`)) return;
     const t = setTimeout(() => setShow(true), 1400);
     return () => clearTimeout(t);
-  }, [camp?.id]);
+  }, [campId]);
 
   if (!camp || !show) return null;
   const listing = getListing(camp.listingId);

@@ -1,35 +1,20 @@
 "use client";
 
-import { useCallback, useEffect, useState } from "react";
+import { useCallback } from "react";
 import type { AthleteProfile } from "./types";
+import { createPersistentStore } from "./persistentStore";
 
-const KEY = "csd-athlete-profile";
+const store = createPersistentStore<AthleteProfile | null>("csd-athlete-profile", null);
 
-/** localStorage-backed athlete profile (demo, no backend). */
+/** localStorage-backed athlete profile, synced across components (demo, no backend). */
 export function useProfile() {
-  const [profile, setProfile] = useState<AthleteProfile | null>(null);
-  const [ready, setReady] = useState(false);
-
-  useEffect(() => {
-    try {
-      const raw = localStorage.getItem(KEY);
-      if (raw) setProfile(JSON.parse(raw));
-    } catch {
-      /* ignore */
-    }
-    setReady(true);
-  }, []);
+  const { value: profile, ready } = store.useValue();
 
   const save = useCallback((p: AthleteProfile) => {
-    const withMeta = { ...p, createdAt: p.createdAt ?? new Date().toISOString() };
-    localStorage.setItem(KEY, JSON.stringify(withMeta));
-    setProfile(withMeta);
+    store.set({ ...p, createdAt: p.createdAt ?? new Date().toISOString() });
   }, []);
 
-  const clear = useCallback(() => {
-    localStorage.removeItem(KEY);
-    setProfile(null);
-  }, []);
+  const clear = useCallback(() => store.clear(), []);
 
   return { profile, ready, save, clear };
 }

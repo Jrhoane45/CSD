@@ -13,7 +13,6 @@ import {
   AGE_BANDS,
   RANKING_COUNTIES,
   type AgeBand,
-  type RankFilter,
   type RankedAthlete,
 } from "@/lib/rankings";
 import { Eyebrow } from "@/components/ui/Eyebrow";
@@ -45,8 +44,10 @@ export function RankingsClient() {
   const [band, setBand] = useState<AgeBand>("all");
   const [county, setCounty] = useState<County | "all">("all");
 
-  const filter: RankFilter = { sport, band, county };
-  const list = useMemo(() => rankedList(filter, you), [sport, band, county, you]);
+  const list = useMemo(
+    () => rankedList({ sport, band, county }, you),
+    [sport, band, county, you],
+  );
   const yourRow = list.find((r) => r.a.isYou);
   const podium = list.slice(0, 3);
 

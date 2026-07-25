@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useState } from "react";
 import Link from "next/link";
 import {
   UserRound,
@@ -18,6 +18,7 @@ import {
 import { useProfile } from "@/lib/useProfile";
 import { useRole } from "@/lib/useRole";
 import { resetDemo } from "@/lib/store";
+import { createPersistentStore } from "@/lib/persistentStore";
 import { Eyebrow } from "@/components/ui/Eyebrow";
 import { AthleteAvatar } from "@/components/app/AthleteAvatar";
 
@@ -41,6 +42,11 @@ const DEFAULTS: Settings = {
   channelSms: false,
 };
 
+const settingsStore = createPersistentStore<Settings>(KEY, DEFAULTS, (stored) => ({
+  ...DEFAULTS,
+  ...stored,
+}));
+
 const PREFS: { key: keyof Settings; label: string; sub: string }[] = [
   { key: "newMessages", label: "New messages & leads", sub: "When a program or family messages you." },
   { key: "bookingReminders", label: "Booking reminders", sub: "Reminders before an upcoming session." },
@@ -51,28 +57,11 @@ const PREFS: { key: keyof Settings; label: string; sub: string }[] = [
 export function SettingsClient() {
   const { profile } = useProfile();
   const role = useRole();
-  const [settings, setSettings] = useState<Settings>(DEFAULTS);
+  const { value: settings } = settingsStore.useValue();
   const [saved, setSaved] = useState(false);
 
-  useEffect(() => {
-    try {
-      const raw = localStorage.getItem(KEY);
-      if (raw) setSettings({ ...DEFAULTS, ...JSON.parse(raw) });
-    } catch {
-      /* ignore */
-    }
-  }, []);
-
   const update = (patch: Partial<Settings>) => {
-    setSettings((prev) => {
-      const next = { ...prev, ...patch };
-      try {
-        localStorage.setItem(KEY, JSON.stringify(next));
-      } catch {
-        /* ignore */
-      }
-      return next;
-    });
+    settingsStore.update((prev) => ({ ...prev, ...patch }));
     setSaved(true);
     setTimeout(() => setSaved(false), 1600);
   };
@@ -216,8 +205,7 @@ export function SettingsClient() {
           <button
             onClick={() => {
               if (confirm("Clear notification settings?")) {
-                localStorage.removeItem(KEY);
-                setSettings(DEFAULTS);
+                settingsStore.clear();
               }
             }}
             className="inline-flex items-center gap-1.5 rounded-lg border border-ink/15 px-4 py-2 text-sm font-semibold text-ink/60 hover:text-navy"
