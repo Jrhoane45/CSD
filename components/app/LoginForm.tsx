@@ -29,12 +29,13 @@ const ROLES: { value: SignupRole; label: string; sub: string; icon: typeof UserR
 
 export function LoginForm() {
   const router = useRouter();
-  const { signIn, setRole } = useSession();
+  const { signIn, setRole, mode } = useSession();
 
   const [role, setRoleChoice] = useState<SignupRole>("parent");
   const [email, setEmail] = useState("");
   const [name, setName] = useState("");
   const [busy, setBusy] = useState(false);
+  const [sent, setSent] = useState(false);
 
   const submit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -42,12 +43,32 @@ export function LoginForm() {
     setBusy(true);
     try {
       await signIn({ email: email.trim() || `demo@${role}.csd`, name: name.trim() || undefined });
+      if (mode === "supabase") {
+        // Real backend: a magic link was emailed; the session lands on return.
+        setSent(true);
+        return;
+      }
       setRole(role);
       router.push(ROLES.find((r) => r.value === role)?.home ?? "/app");
     } finally {
       setBusy(false);
     }
   };
+
+  if (sent) {
+    return (
+      <div className="mx-auto max-w-md px-6 py-20 text-center">
+        <div className="mx-auto flex h-14 w-14 items-center justify-center rounded-full bg-navy text-white">
+          <Mail size={26} />
+        </div>
+        <h1 className="mt-4 display text-2xl text-navy">CHECK YOUR EMAIL</h1>
+        <p className="mt-1 text-sm text-ink/60">
+          We sent a magic sign-in link to <span className="font-semibold text-navy">{email}</span>.
+          Open it on this device to finish signing in.
+        </p>
+      </div>
+    );
+  }
 
   return (
     <div className="mx-auto max-w-md px-6 py-16">

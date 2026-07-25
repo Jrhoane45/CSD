@@ -69,6 +69,8 @@ create table if not exists listings (
   price_label        text,
   goals              text[] not null default '{}',
   specialties        text[] not null default '{}',
+  alumni             jsonb not null default '{"pro":0,"d1":0,"d2":0,"d3":0}',
+  notable_athletes   text[] not null default '{}',
   featured           boolean not null default false,
   created_at         timestamptz not null default now(),
   updated_at         timestamptz not null default now()
@@ -311,3 +313,27 @@ create policy events_owner_write on events
 
 create policy moderation_operator_only on moderation_reports
   for all using (is_operator()) with check (is_operator());
+
+-- ---------------------------------------------------------------------------
+-- Auto-provision a profile row when a new auth user signs up
+-- ---------------------------------------------------------------------------
+
+create or replace function handle_new_user() returns trigger
+language plpgsql security definer set search_path = public as $$
+begin
+  insert into public.profiles (id, email, full_name, role)
+  values (
+    new.id,
+    new.email,
+    coalesce(new.raw_user_meta_data ->> 'full_name', split_part(new.email, '@', 1)),
+    'parent'
+  )
+  on conflict (id) do nothing;
+  return new;
+end;
+$$;
+
+drop trigger if exists on_auth_user_created on auth.users;
+create trigger on_auth_user_created
+  after insert on auth.users
+  for each row execute function handle_new_user();
