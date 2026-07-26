@@ -32,6 +32,7 @@ import {
   type CampaignPlan,
 } from "@/lib/promotions";
 import { useStore, createCampaign } from "@/lib/store";
+import { payments } from "@/lib/payments";
 import { Modal } from "@/components/ui/Modal";
 import { AdBadge } from "@/components/app/AdBadge";
 import { LogoAvatar } from "@/components/listing/LogoAvatar";
@@ -101,30 +102,36 @@ export function CampaignBuilder({
     onClose();
   };
 
-  const pay = () => {
+  const pay = async () => {
     setStage("processing");
-    setTimeout(() => {
-      createCampaign({
-        listingId: listing.id,
-        listingName: listing.name,
-        listingLogo: listing.logo,
-        eventId: selectedEvent?.id,
-        eventTitle: selectedEvent?.title,
-        objective,
-        placements,
-        audience,
-        durationDays: duration,
-        startDate,
-        budget: est.budget,
-        payment,
-        headline,
-        cta,
-        estImpressions: est.impressions,
-        estClicks: est.clicks,
-        estRsvps: est.rsvps,
-      });
-      setStage("done");
-    }, 1500);
+    const outcome = await payments.checkout({
+      kind: "campaign",
+      listingId: listing.id,
+      amountUsd: est.budget,
+      label: headline,
+    });
+    // Stripe navigates away to Checkout; fulfillment happens via webhook.
+    if (outcome.status === "redirected") return;
+    createCampaign({
+      listingId: listing.id,
+      listingName: listing.name,
+      listingLogo: listing.logo,
+      eventId: selectedEvent?.id,
+      eventTitle: selectedEvent?.title,
+      objective,
+      placements,
+      audience,
+      durationDays: duration,
+      startDate,
+      budget: est.budget,
+      payment,
+      headline,
+      cta,
+      estImpressions: est.impressions,
+      estClicks: est.clicks,
+      estRsvps: est.rsvps,
+    });
+    setStage("done");
   };
 
   return (
