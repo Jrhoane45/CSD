@@ -1,40 +1,25 @@
 "use client";
 
-import { useSyncExternalStore } from "react";
 import type { Role } from "./types";
+import { createPersistentStore } from "./persistentStore";
 
 /*
-  Shared Parent ⇄ Provider role, persisted to localStorage and synced across
-  every component (app shell, inbox, notifications) via a tiny store.
+  Shared Parent ⇄ Provider ⇄ Operator role, persisted to localStorage and synced
+  across every component. Built on the same external-store primitive as the rest
+  of the app; the underlying `roleStore` is exported so the auth/session layer
+  can compose it.
 */
 
-const KEY = "csd-role";
-let role: Role = "parent";
-let hydrated = false;
-const listeners = new Set<() => void>();
+const VALID: Role[] = ["parent", "provider", "operator"];
 
-function hydrate() {
-  if (hydrated || typeof window === "undefined") return;
-  hydrated = true;
-  const saved = localStorage.getItem(KEY) as Role | null;
-  if (saved === "parent" || saved === "provider" || saved === "operator") {
-    role = saved;
-    for (const l of listeners) l();
-  }
-}
+export const roleStore = createPersistentStore<Role>("csd-role", "parent", (stored) =>
+  VALID.includes(stored) ? stored : "parent",
+);
 
 export function setRole(r: Role) {
-  role = r;
-  if (typeof window !== "undefined") localStorage.setItem(KEY, r);
-  for (const l of listeners) l();
-}
-
-function subscribe(cb: () => void) {
-  hydrate();
-  listeners.add(cb);
-  return () => listeners.delete(cb);
+  roleStore.set(r);
 }
 
 export function useRole(): Role {
-  return useSyncExternalStore(subscribe, () => role, () => "parent");
+  return roleStore.useValue().value;
 }

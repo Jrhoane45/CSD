@@ -14,6 +14,10 @@ export interface PersistentStore<T> {
   set(next: T): void;
   update(fn: (prev: T) => T): void;
   clear(): void;
+  /** Subscribe to changes; the first client subscription hydrates from storage. */
+  subscribe(cb: () => void): () => void;
+  /** Whether the value has been hydrated from storage yet (client). */
+  ready(): boolean;
   useValue(): { value: T; ready: boolean };
 }
 
@@ -91,5 +95,5 @@ export function createPersistentStore<T>(
     return { value: v, ready: r };
   }
 
-  return { get, set, update, clear, useValue };
+  return { get, set, update, clear, subscribe, ready: () => ready, useValue };
 }
