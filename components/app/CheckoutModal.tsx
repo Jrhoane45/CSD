@@ -4,6 +4,7 @@ import { useState } from "react";
 import { Check, Lock, ShieldCheck } from "lucide-react";
 import { Modal } from "@/components/ui/Modal";
 import { addNotification } from "@/lib/store";
+import { payments } from "@/lib/payments";
 
 export interface Plan {
   name: string;
@@ -31,19 +32,26 @@ export function CheckoutModal({
     onClose();
   };
 
-  const pay = () => {
+  const pay = async () => {
+    if (!plan) return;
     setStage("processing");
-    setTimeout(() => {
-      setStage("done");
-      if (plan)
-        addNotification({
-          role: "provider",
-          icon: "trophy",
-          text: `${plan.name} subscription is active — premium tools unlocked`,
-          href: "/app/provider",
-        });
-      onSuccess?.();
-    }, 1400);
+    const amountUsd = Number(plan.price.replace(/[^0-9.]/g, "")) || 0;
+    const outcome = await payments.checkout({
+      kind: "subscription",
+      plan: plan.name,
+      priceLabel: `${plan.price}${plan.period}`,
+      amountUsd,
+    });
+    // Stripe navigates away to Checkout; fulfillment happens via webhook.
+    if (outcome.status === "redirected") return;
+    setStage("done");
+    addNotification({
+      role: "provider",
+      icon: "trophy",
+      text: `${plan.name} subscription is active — premium tools unlocked`,
+      href: "/app/provider",
+    });
+    onSuccess?.();
   };
 
   if (!plan) return null;
